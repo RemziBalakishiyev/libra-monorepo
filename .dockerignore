@@ -1,0 +1,11 @@
+.git
+.github
+docs
+src/mobile
+tests
+**/bin
+**/obj
+**/node_modules
+.env
+.env.*
+*.md

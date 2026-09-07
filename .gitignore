@@ -1,0 +1,32 @@
+# Environment
+.env
+.env.*
+!.env.example
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+*.trx
+artifacts/
+
+# Node / Expo (see src/mobile/.gitignore for app-specific entries)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# IDE / OS
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude local settings
+.claude/settings.local.json
+
+# Agent tooling (kept out of the application repository)
+.agents/
+.claude/
+skills-lock.json

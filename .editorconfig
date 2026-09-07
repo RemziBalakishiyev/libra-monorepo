@@ -1,0 +1,50 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.{cs,csx}]
+indent_size = 4
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = true:suggestion
+csharp_prefer_braces = true:warning
+csharp_new_line_before_open_brace = all
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+dotnet_diagnostic.IDE0005.severity = warning
+dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA1873.severity = none
+dotnet_diagnostic.CA2007.severity = none
+
+[*.{csproj,props,targets,slnx}]
+indent_size = 2
+
+[*.{json,yml,yaml}]
+indent_size = 2
+
+[*.{ts,tsx,js,jsx,mjs,cjs}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{cmd,bat,ps1}]
+end_of_line = crlf
+
+# EF Core migrations are generated; keep them compiling but do not enforce style analyzers on them.
+[**/Persistence/Migrations/*.cs]
+generated_code = true
+dotnet_diagnostic.IDE0005.severity = none
+dotnet_diagnostic.IDE0161.severity = none
+csharp_style_namespace_declarations = block_scoped:silent

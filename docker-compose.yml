@@ -1,0 +1,42 @@
+# Local infrastructure for Libra.
+#   docker compose up -d              -> PostgreSQL only (default)
+#   docker compose --profile api up   -> PostgreSQL + API built from src/backend/Dockerfile
+# Values come from .env (copy .env.example). Defaults are development-only.
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: libra-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-libra}
+      POSTGRES_USER: ${POSTGRES_USER:-libra}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-libra_dev}
+    ports:
+      - "${POSTGRES_PORT:-5440}:5432"
+    volumes:
+      - libra-postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-libra} -d ${POSTGRES_DB:-libra}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    profiles: ["api"]
+    build:
+      context: .
+      dockerfile: src/backend/Dockerfile
+    container_name: libra-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__Libra: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-libra};Username=${POSTGRES_USER:-libra};Password=${POSTGRES_PASSWORD:-libra_dev}"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:-}
+      Database__MigrateOnStartup: ${DATABASE_MIGRATE_ON_STARTUP:-true}
+    ports:
+      - "${API_PORT:-5134}:8080"
+
+volumes:
+  libra-postgres-data:

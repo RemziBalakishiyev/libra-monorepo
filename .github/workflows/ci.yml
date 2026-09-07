@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (.NET)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Libra.slnx
+
+      - name: Format check
+        run: dotnet format Libra.slnx --verify-no-changes --no-restore
+
+      - name: Build
+        run: dotnet build Libra.slnx --configuration Release --no-restore
+
+      - name: Test
+        # Integration tests start PostgreSQL through Testcontainers; Docker is available on ubuntu-latest.
+        run: dotnet test Libra.slnx --configuration Release --no-build --logger "trx;LogFileName=results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: "**/TestResults/*.trx"
+          if-no-files-found: ignore
+
+      - name: Docker image builds
+        run: docker build -f src/backend/Dockerfile -t libra-api:ci .
+
+  mobile:
+    name: Mobile (Expo)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/mobile/.nvmrc
+          cache: npm
+          cache-dependency-path: src/mobile/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test -- --ci

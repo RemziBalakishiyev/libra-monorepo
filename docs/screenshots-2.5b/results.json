@@ -1,0 +1,246 @@
+{
+  "shots": [
+    {
+      "name": "01-login-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": [
+          "css-view-g5y9jx r-borderRadius-lk5b07 r-height-15z",
+          "css-view-g5y9jx r-borderRadius-1xtugu0 r-height-9z"
+        ]
+      }
+    },
+    {
+      "name": "01b-login-validation-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": [
+          "css-view-g5y9jx r-borderRadius-lk5b07 r-height-15z",
+          "css-view-g5y9jx r-borderRadius-1xtugu0 r-height-9z"
+        ]
+      }
+    },
+    {
+      "name": "13-finance-empty-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "13b-home-empty-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "02-home-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "03-finance-dashboard-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": [
+          "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi"
+        ]
+      }
+    },
+    {
+      "name": "04-quick-add-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": [
+          "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi"
+        ]
+      }
+    },
+    {
+      "name": "05-create-expense-empty-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "06-create-expense-validation-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "07-create-expense-filled-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "08-create-expense-success-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "08b-finance-after-insert-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": [
+          "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi"
+        ]
+      }
+    },
+    {
+      "name": "09-transactions-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "09b-transactions-confirm-delete-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "10-accounts-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "11-budgets-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "12-profile-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "14-finance-loading-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "15-finance-error-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "16-finance-reduced-motion-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": [
+          "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi"
+        ]
+      }
+    },
+    {
+      "name": "17-finance-dashboard-360x800",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": [
+          "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi"
+        ]
+      }
+    },
+    {
+      "name": "17-finance-dashboard-430x932",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": [
+          "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi"
+        ]
+      }
+    },
+    {
+      "name": "17-finance-dashboard-768x1024",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": [
+          "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi"
+        ]
+      }
+    },
+    {
+      "name": "20-home-1440x900",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "21-finance-dashboard-1440x900",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "22-create-expense-1440x900",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "23-transactions-1440x900",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "24-finance-dashboard-1280x800",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": []
+      }
+    },
+    {
+      "name": "30-finance-dashboard-dark-390x844",
+      "overflow": {
+        "pageOverflow": false,
+        "wide": [
+          "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi"
+        ]
+      }
+    }
+  ],
+  "checks": {
+    "emptyHidesQuickAdd": true,
+    "fabPresent": true,
+    "noPermanentDelete": true,
+    "noIsoDates": true,
+    "validationShown": true,
+    "insertedVisible": true,
+    "deletedToast": true,
+    "reducedMotionVisible": true,
+    "desktopSidebar": true,
+    "desktopNoBottomBar": true
+  },
+  "consoleErrors": [],
+  "consoleWarnings": [
+    "props.pointerEvents is deprecated. Use style.pointerEvents",
+    "[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for indi"
+  ]
+}

@@ -1,0 +1,692 @@
+{
+  "shots": [
+    {
+      "name": "01-login-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderRadius-lk5b07 r-height-15z",
+        "css-view-g5y9jx r-borderRadius-1xtugu0 r-height-9z"
+      ],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "01b-login-validation-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderRadius-lk5b07 r-height-15z",
+        "css-view-g5y9jx r-borderRadius-1xtugu0 r-height-9z"
+      ],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "13-finance-empty-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "13b-home-empty-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "02-home-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "02b-home-quick-add-sheet-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [
+        "Köçürmə"
+      ],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "03-finance-dashboard-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "03e-finance-estimate-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "03b-finance-dashboard-bottom-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "03c-finance-insight-expanded-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "03d-finance-keyboard-focus-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "04-quick-add-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [
+        "Köçürmə"
+      ],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "05-create-expense-empty-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": {
+        "top": 0,
+        "bottom": 0,
+        "vh": 844
+      }
+    },
+    {
+      "name": "06-create-expense-validation-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": {
+        "top": 0,
+        "bottom": 0,
+        "vh": 844
+      }
+    },
+    {
+      "name": "06b-category-sheet-search-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": {
+        "top": 0,
+        "bottom": 0,
+        "vh": 844
+      }
+    },
+    {
+      "name": "07-create-expense-filled-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": {
+        "top": 0,
+        "bottom": 0,
+        "vh": 844
+      }
+    },
+    {
+      "name": "07b-create-expense-saving-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": {
+        "top": 0,
+        "bottom": 0,
+        "vh": 844
+      }
+    },
+    {
+      "name": "08-create-expense-success-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": {
+        "top": 0,
+        "bottom": 0,
+        "vh": 844
+      }
+    },
+    {
+      "name": "08b-finance-after-insert-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "09-transactions-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "09b-transactions-confirm-delete-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "10-accounts-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "11-budgets-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "12-profile-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "12b-profile-diagnostics-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "12c-profile-language-sheet-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "14-finance-loading-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "15-finance-error-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "15b-finance-stale-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "15c-finance-stale-recovered-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "16-finance-reduced-motion-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "18-finance-large-text-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 732,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "18b-create-expense-large-text-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "19-home-long-name-large-value-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "19b-finance-large-value-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "18c-create-expense-keyboard-height-390x520",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "17-finance-dashboard-360x800",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 722,
+        "bottom": 800,
+        "vh": 800
+      }
+    },
+    {
+      "name": "17-finance-dashboard-430x932",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 854,
+        "bottom": 932,
+        "vh": 932
+      }
+    },
+    {
+      "name": "17-finance-dashboard-768x1024",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 946,
+        "bottom": 1024,
+        "vh": 1024
+      }
+    },
+    {
+      "name": "17b-create-expense-360x800",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "20-home-1440x900",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "21-finance-dashboard-1440x900",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "21b-finance-quick-add-popover-1440x900",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "22-create-expense-1440x900",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "23-transactions-1440x900",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "25-profile-1440x900",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "24-finance-dashboard-1280x800",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "24b-home-1280x800",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "30-finance-dashboard-dark-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "30b-finance-dashboard-dark-usd-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "30c-finance-dashboard-dark-reduced-motion-390x844",
+      "pageOverflow": false,
+      "wide": [
+        "css-view-g5y9jx r-borderColor-1g868lv r-borderRadi",
+        "css-view-g5y9jx r-borderColor-1wioyrx r-borderRadi"
+      ],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    },
+    {
+      "name": "31-create-expense-dark-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": null
+    },
+    {
+      "name": "32-home-dark-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "behindBar": [],
+      "tabBar": {
+        "top": 766,
+        "bottom": 844,
+        "vh": 844
+      }
+    }
+  ],
+  "checks": {
+    "emptyHidesQuickAdd": true,
+    "homeQuickAddInHeader": true,
+    "homeNoFloatingButton": true,
+    "homeBalanceSeparateFromFlow": true,
+    "quickAddIsSheetOnPhone": true,
+    "modalContainsFocus": true,
+    "firstFoldSectionsFound": true,
+    "recentTransactionsAboveNav": true,
+    "noIsoDates": true,
+    "noEnglishGrouping": true,
+    "budgetStatusAndPaceDistinct": true,
+    "insightPeriodAndCurrency": true,
+    "estimateMatchesUnroundedMath": true,
+    "bottomContentClearsTabBar": true,
+    "focusedControlVisible": true,
+    "formShowsDateWithoutScrolling": true,
+    "categoryShortcutsAtMostSix": true,
+    "validationShown": true,
+    "validationIsAlert": true,
+    "typeSelectionNotRedOutline": true,
+    "categorySheetClosesOnSelect": true,
+    "categoryFieldShowsSelection": true,
+    "shortcutSelectsCategory": true,
+    "impactStableThroughSave": true,
+    "successNotDimmed": true,
+    "noToastOnForm": true,
+    "toastAfterReturn": true,
+    "toastNotOverTitle": true,
+    "toastAboveTabBar": true,
+    "insertedVisible": true,
+    "noDuplicateTitle": true,
+    "confirmIdentifiesTransaction": true,
+    "deletedToast": true,
+    "profileReadableLabels": true,
+    "profileUrlHiddenByDefault": true,
+    "profileUrlInDiagnostics": true,
+    "errorNotClaimingOffline": true,
+    "staleNoticeShown": true,
+    "staleKeepsCachedFigures": true,
+    "staleRecovers": true,
+    "reducedMotionVisible": true,
+    "largeTextBottomClearsTabBar": true,
+    "largeValueGrouped": true,
+    "keyboardFocusedFieldVisible": true,
+    "desktopNoHeaderQuickAdd": true,
+    "desktopSidebar": true,
+    "desktopNoBottomBar": true,
+    "desktopSingleQuickAdd": true,
+    "desktopQuickAddIsPopover": true,
+    "escapeClosesPopover": true,
+    "darkHeroAmountWhite": true
+  },
+  "measurements": {
+    "modalTabCycle": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "financeFirstFold": {
+      "hero": 96,
+      "summary": 250,
+      "actions": 368,
+      "budget": 457,
+      "recent": 563,
+      "tabBarTop": 766,
+      "firstTransactionRowTop": 598
+    },
+    "estimate": {
+      "expense": "693,59",
+      "days": "7",
+      "estimate": "2.972,53",
+      "expected": 2972.53
+    },
+    "focusedAfterTabs": {
+      "label": "USD",
+      "top": 96,
+      "bottom": 126,
+      "visible": true,
+      "outline": "solid"
+    },
+    "impactBefore": "Market büdcəsi: qalıq 25,90 → 12,50 AZN",
+    "impactDuringSave": "Market büdcəsi: qalıq 25,90 → 12,50 AZN",
+    "impactAtSuccess": "Market büdcəsi: qalıq 25,90 → 12,50 AZN",
+    "toastPosition": {
+      "top": 707,
+      "bottom": 756,
+      "headerBottom": 59,
+      "tabBarTop": 766
+    },
+    "scaledElementsFinance": 161,
+    "keyboardViewport": {
+      "inputTop": 379,
+      "inputBottom": 417,
+      "submitTop": 460,
+      "submitBottom": 508,
+      "vh": 520,
+      "focused": true
+    },
+    "darkHero": {
+      "coldLoad": "rgb(255, 255, 255)",
+      "coldLoadEarly": "rgb(255, 255, 255)",
+      "coldLoadText": "3.126,41",
+      "afterLight": "rgb(255, 255, 255)",
+      "afterDarkAgain": "rgb(255, 255, 255)",
+      "afterLightAgain": "rgb(255, 255, 255)",
+      "duringCurrencySwitch": "rgb(255, 255, 255)",
+      "afterCurrencySwitch": "rgb(255, 255, 255)",
+      "afterCurrencySwitchText": "300,00",
+      "duringTicker": "rgb(255, 255, 255)",
+      "afterTicker": "rgb(255, 255, 255)",
+      "afterTickerText": "3.121,16",
+      "reducedMotion": "rgb(255, 255, 255)"
+    },
+    "recording:walkthrough-normal": 84,
+    "recording:walkthrough-reduced-motion": 28
+  },
+  "consoleErrors": [],
+  "consoleWarnings": [
+    "[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for indi"
+  ]
+}
