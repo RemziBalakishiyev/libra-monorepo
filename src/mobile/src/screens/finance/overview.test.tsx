@@ -100,6 +100,31 @@ describe('FinanceOverview', () => {
     expect(await view.findByText('Bu gün')).toBeTruthy();
   });
 
+  it('links to Təkrarlananlar and Borclar and shows the debt position apart from income and expense', async () => {
+    const debts = { monthlyPrincipalNet: -300, monthlyCashChange: -49.5, receivablesOutstanding: 300, payablesOutstanding: 500, overdueReceivables: 300, overduePayables: 0, overdueCount: 1, netPosition: 50.5 };
+    fetchMock.mockImplementation(
+      fetchByPath({
+        '/api/finance/accounts': () => jsonResponse([cashAccount]),
+        '/api/finance/dashboard': () => jsonResponse({ ...dashboard, debts }),
+        '/api/finance/transactions': () => jsonResponse(monthExpenses),
+      }),
+    );
+
+    const view = await renderScreen();
+    await view.findByText('Sentyabr 2026');
+
+    // Income − expense stays what it was; the principal line is separate and explicitly labelled.
+    expect(view.getByText('Xalis axın')).toBeTruthy();
+    expect(view.getByTestId('dashboard-principal').props.accessibilityLabel).toBe('Borc hərəkətləri: −300,00 AZN; nağd dəyişimi: −49,50 AZN');
+    expect(view.getByTestId('dashboard-net-position').props.accessibilityLabel).toBe('Alacaq 300,00 AZN, borc 500,00 AZN, xalis mövqe 50,50 AZN');
+    expect(view.getByText(/1 gecikib/)).toBeTruthy();
+
+    await fireEvent.press(view.getByTestId('finance-link-recurring'));
+    expect(mockPush).toHaveBeenCalledWith('/finance/recurring');
+    await fireEvent.press(view.getByTestId('finance-link-debts'));
+    expect(mockPush).toHaveBeenCalledWith('/finance/debts');
+  });
+
   it('keeps the monthly totals and marks the daily breakdown unavailable when a later page fails', async () => {
     let transactionCalls = 0;
     fetchMock.mockImplementation(

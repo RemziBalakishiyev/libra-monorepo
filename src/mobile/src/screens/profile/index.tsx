@@ -26,6 +26,7 @@ import { confirmAsync } from '@/lib/confirm';
 import { env } from '@/lib/env';
 import { profileSchema, type ProfileForm } from '@/lib/validation/auth';
 import { ApiStatusCard } from '@/screens/home/api-status-card';
+import { AppearanceSection } from '@/screens/profile/appearance-section';
 
 type SubmitPhase = 'idle' | 'submitting' | 'success';
 
@@ -237,15 +238,21 @@ function ProfileEditor({ profile }: { profile: Profile }) {
             {form}
           </Entrance>
           <View style={styles.columnSide}>
-            <Entrance index={2}>{diagnostics}</Entrance>
-            <Entrance index={3}>{signOut}</Entrance>
+            <Entrance index={2}>
+              <AppearanceSection />
+            </Entrance>
+            <Entrance index={3}>{diagnostics}</Entrance>
+            <Entrance index={4}>{signOut}</Entrance>
           </View>
         </View>
       ) : (
         <>
           <Entrance index={1}>{form}</Entrance>
-          <Entrance index={2}>{diagnostics}</Entrance>
-          <Entrance index={3}>{signOut}</Entrance>
+          <Entrance index={2}>
+            <AppearanceSection />
+          </Entrance>
+          <Entrance index={3}>{diagnostics}</Entrance>
+          <Entrance index={4}>{signOut}</Entrance>
         </>
       )}
 

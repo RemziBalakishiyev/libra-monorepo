@@ -1,0 +1,276 @@
+{
+  "capturedAt": "2026-09-07T19:20:17.794Z",
+  "passed": 51,
+  "total": 51,
+  "checks": {
+    "diaryHasPhotoAction": true,
+    "emptyStateHasPhotoAction": true,
+    "uploadAnnouncedBeforeItHappens": true,
+    "manualPathStaysAvailable": true,
+    "previewBeforeUpload": true,
+    "replacementOffered": true,
+    "nothingSentBeforeAnalyze": true,
+    "estimateLabelledAsEstimate": true,
+    "modelSelfAssessmentShown": true,
+    "picturedPortionIsOnePortion": true,
+    "perHundredCarriesTheWeight": true,
+    "unknownMacroLeftEmpty": true,
+    "reviewChangesNoTotals": true,
+    "missingValueReportedAtTheField": true,
+    "blockedConfirmationWroteNothing": true,
+    "oneDestinationToast": true,
+    "confirmationCreatedExactlyOneMeal": true,
+    "confirmedTotalsMatchTheReview": true,
+    "portionItemContributesOnce": true,
+    "gramItemScaledOnce": true,
+    "apiDraftIsPending": true,
+    "apiDraftKeepsUnknownMacroNull": true,
+    "apiDraftNormalizesBothBases": true,
+    "apiDraftAddsNothingToTheDay": true,
+    "confirmationIsCreatedOnce": true,
+    "retryUnderANewKeyReturnsTheSameMeal": true,
+    "confirmedDraftKeepsTheOriginalEstimate": true,
+    "pictureIsRemovedOnceTheMealExists": true,
+    "storedPictureNoLongerServed": true,
+    "exactlyOneExtraMealAfterTheRetry": true,
+    "anotherUserCannotSeeTheDraft": true,
+    "homeShowsTheConfirmedMeals": true,
+    "cancellingCreatesNoMeal": true,
+    "cancelReturnsToThePicker": true,
+    "unavailableStateExplained": true,
+    "timeoutStateExplained": true,
+    "rateLimitStateExplained": true,
+    "rejectedImageExplained": true,
+    "noFoodStateExplained": true,
+    "noFoodStateOffersAnotherPhoto": true,
+    "unclearPictureExplained": true,
+    "connectionFailureExplained": true,
+    "reviewFitsAt360": true,
+    "reviewFitsOnTablet": true,
+    "reviewFitsOnDesktop": true,
+    "reviewFitsInDark": true,
+    "reviewFitsWithReducedMotion": true,
+    "confirmReachableAtKeyboardHeight": true,
+    "diaryFitsOnDesktop": true,
+    "noExtraMealsFromTheFailurePaths": true,
+    "noUnexpectedConsoleErrors": true
+  },
+  "measurements": {
+    "uploadedBytes": 10947,
+    "reviewFields": {
+      "name0": "Omlet",
+      "quantity0": "1",
+      "energy0": "250",
+      "name1": "Düyü",
+      "quantity1": "180",
+      "energy1": "130",
+      "protein1": "",
+      "total": "484 kkal"
+    },
+    "totalBeforeConfirm": "484 kkal",
+    "confirmedDay": {
+      "entryCount": 1,
+      "totals": {
+        "energyKcal": 484,
+        "proteinGrams": 22.86,
+        "carbGrams": 53.76,
+        "fatGrams": 19.54
+      }
+    },
+    "entryItems": [
+      {
+        "name": "Omlet",
+        "mode": "PerPortion",
+        "quantity": 1,
+        "energy": 250
+      },
+      {
+        "name": "Düyü",
+        "mode": "Per100Grams",
+        "quantity": 180,
+        "energy": 234
+      }
+    ],
+    "apiDraft": {
+      "status": "PendingConfirmation",
+      "outcome": "Success",
+      "model": "development-fixture",
+      "schemaVersion": "food-analysis.v1",
+      "items": 2
+    },
+    "confirmStatuses": {
+      "first": 201,
+      "second": 200
+    },
+    "confirmedDraft": {
+      "status": "Confirmed",
+      "hasImage": false,
+      "firstEstimate": 250
+    },
+    "homeText": true,
+    "footerVisible": {
+      "bottom": 508,
+      "viewport": 520
+    },
+    "finalDay": {
+      "date": "2026-09-07",
+      "timeZone": "Asia/Baku",
+      "startUtc": "2026-09-06T20:00:00Z",
+      "endUtc": "2026-09-07T20:00:00Z",
+      "totals": {
+        "energyKcal": 968,
+        "proteinGrams": 45.72,
+        "carbGrams": 107.52,
+        "fatGrams": 39.08
+      },
+      "entryCount": 2,
+      "goal": null,
+      "meals": [
+        {
+          "mealType": "Breakfast",
+          "totals": {
+            "energyKcal": 0,
+            "proteinGrams": 0,
+            "carbGrams": 0,
+            "fatGrams": 0
+          },
+          "entries": []
+        },
+        {
+          "mealType": "Lunch",
+          "totals": {
+            "energyKcal": 0,
+            "proteinGrams": 0,
+            "carbGrams": 0,
+            "fatGrams": 0
+          },
+          "entries": []
+        },
+        {
+          "mealType": "Dinner",
+          "totals": {
+            "energyKcal": 0,
+            "proteinGrams": 0,
+            "carbGrams": 0,
+            "fatGrams": 0
+          },
+          "entries": []
+        },
+        {
+          "mealType": "Snack",
+          "totals": {
+            "energyKcal": 968,
+            "proteinGrams": 45.72,
+            "carbGrams": 107.52,
+            "fatGrams": 39.08
+          },
+          "entries": [
+            {
+              "id": "01a07d4e-da73-7eca-8306-5e3f2b52a057",
+              "mealType": "Snack",
+              "consumedAtUtc": "2026-09-07T19:18:00Z",
+              "note": null,
+              "clientRequestId": "9b03f89a-2cd4-4f58-b346-3996c9efafec",
+              "energyKcal": 484,
+              "proteinGrams": 22.86,
+              "carbGrams": 53.76,
+              "fatGrams": 19.54,
+              "items": [
+                {
+                  "id": "01a07d4e-da74-77b1-aa95-e4ced3a09da0",
+                  "name": "Omlet",
+                  "quantityMode": "PerPortion",
+                  "quantity": 1,
+                  "energyKcalPerUnit": 250,
+                  "proteinGramsPerUnit": 18,
+                  "carbGramsPerUnit": 3,
+                  "fatGramsPerUnit": 19,
+                  "energyKcal": 250,
+                  "proteinGrams": 18,
+                  "carbGrams": 3,
+                  "fatGrams": 19,
+                  "position": 0
+                },
+                {
+                  "id": "01a07d4e-da74-7095-97ce-811eda261b0c",
+                  "name": "Düyü",
+                  "quantityMode": "Per100Grams",
+                  "quantity": 180,
+                  "energyKcalPerUnit": 130,
+                  "proteinGramsPerUnit": 2.7,
+                  "carbGramsPerUnit": 28.2,
+                  "fatGramsPerUnit": 0.3,
+                  "energyKcal": 234,
+                  "proteinGrams": 4.86,
+                  "carbGrams": 50.76,
+                  "fatGrams": 0.54,
+                  "position": 1
+                }
+              ],
+              "createdAtUtc": "2026-09-07T19:18:34.867937Z",
+              "updatedAtUtc": "2026-09-07T19:18:34.867937Z"
+            },
+            {
+              "id": "01a07d4e-e4b9-7fb8-8d8f-0a693cd11144",
+              "mealType": "Snack",
+              "consumedAtUtc": "2026-09-07T19:18:37.487Z",
+              "note": null,
+              "clientRequestId": "71ad5090-2575-43ba-bf6d-ef75d045f877",
+              "energyKcal": 484,
+              "proteinGrams": 22.86,
+              "carbGrams": 53.76,
+              "fatGrams": 19.54,
+              "items": [
+                {
+                  "id": "01a07d4e-e4b9-71cc-bef4-ed33dbf371af",
+                  "name": "Omlet",
+                  "quantityMode": "PerPortion",
+                  "quantity": 1,
+                  "energyKcalPerUnit": 250,
+                  "proteinGramsPerUnit": 18,
+                  "carbGramsPerUnit": 3,
+                  "fatGramsPerUnit": 19,
+                  "energyKcal": 250,
+                  "proteinGrams": 18,
+                  "carbGrams": 3,
+                  "fatGrams": 19,
+                  "position": 0
+                },
+                {
+                  "id": "01a07d4e-e4b9-7e47-ba0b-28c1e0d4ff6a",
+                  "name": "Düyü",
+                  "quantityMode": "Per100Grams",
+                  "quantity": 180,
+                  "energyKcalPerUnit": 130,
+                  "proteinGramsPerUnit": 2.7,
+                  "carbGramsPerUnit": 28.2,
+                  "fatGramsPerUnit": 0.3,
+                  "energyKcal": 234,
+                  "proteinGrams": 4.86,
+                  "carbGrams": 50.76,
+                  "fatGrams": 0.54,
+                  "position": 1
+                }
+              ],
+              "createdAtUtc": "2026-09-07T19:18:37.497359Z",
+              "updatedAtUtc": "2026-09-07T19:18:37.497359Z"
+            }
+          ]
+        }
+      ]
+    },
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+      "Failed to load resource: the server responded with a status of 504 (Gateway Timeout)",
+      "Failed to load resource: the server responded with a status of 429 (Too Many Requests)",
+      "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+    ],
+    "unexpectedConsoleErrors": []
+  },
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+    "Failed to load resource: the server responded with a status of 504 (Gateway Timeout)",
+    "Failed to load resource: the server responded with a status of 429 (Too Many Requests)",
+    "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+  ]
+}

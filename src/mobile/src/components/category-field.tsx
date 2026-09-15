@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { FieldMessage } from '@/components/form-field';
@@ -9,6 +9,7 @@ import { AppText } from '@/components/text';
 import { categoryColor, categoryVisual } from '@/constants/categories';
 import { MinTouchTarget, Radius, Spacing, Type } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useRovingRadioGroup } from '@/lib/a11y';
 import { withAlpha } from '@/lib/color';
 
 export interface CategoryOption {
@@ -52,12 +53,20 @@ export function orderCategories<T extends { id: string }>(categories: readonly T
 export function CategoryField({ categories, value, onChange, error, disabled = false, label = 'Kateqoriya', emptyMessage = 'Bu növ üçün aktiv kateqoriya yoxdur.', recentIds = [], shortcutLimit = 6 }: CategoryFieldProps) {
   const { colors, scheme } = useTheme();
   const [open, setOpen] = useState(false);
+  const chipGroupRef = useRef<View>(null);
   const selected = categories.find((category) => category.id === value);
   const ordered = orderCategories(categories, recentIds);
   const shortcuts = ordered.slice(0, shortcutLimit);
   const hasRecent = recentIds.some((id) => categories.some((category) => category.id === id));
   const selectedVisual = selected ? categoryVisual(selected.name, selected.kind) : null;
   const selectedColor = selected ? categoryColor(selected.name, scheme, selected.kind) : colors.textMuted;
+  const selectShortcut = useCallback((position: number) => {
+    const category = shortcuts[position];
+    if (category) {
+      onChange(category.id);
+    }
+  }, [shortcuts, onChange]);
+  useRovingRadioGroup(chipGroupRef, { onSelect: selectShortcut, enabled: !disabled });
 
   return (
     <View style={styles.container}>
@@ -93,35 +102,40 @@ export function CategoryField({ categories, value, onChange, error, disabled = f
           {emptyMessage}
         </AppText>
       ) : (
-        <View style={styles.shortcuts} accessibilityRole="radiogroup" accessibilityLabel={hasRecent ? 'Tez seçim: bu ay istifadə olunanlar' : 'Tez seçim'}>
-          {shortcuts.map((category) => {
+        <View style={styles.shortcutRow}>
+          <View ref={chipGroupRef} style={styles.shortcuts} accessibilityRole="radiogroup" accessibilityLabel={hasRecent ? 'Tez seçim: bu ay istifadə olunanlar' : 'Tez seçim'} testID="category-shortcuts">
+            {shortcuts.map((category) => {
             const active = category.id === value;
             const visual = categoryVisual(category.name, category.kind);
             const color = categoryColor(category.name, scheme, category.kind);
             return (
-              <PressableScale
-                key={category.id}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: active, checked: active, disabled }}
-                accessibilityLabel={category.name}
-                disabled={disabled}
-                onPress={() => onChange(category.id)}
-                scaleTo={0.96}
-                containerStyle={styles.chipSlot}
-                pressedStyle={{ backgroundColor: colors.surfaceInteractive }}
-                style={[styles.chip, { backgroundColor: active ? withAlpha(color, scheme === 'dark' ? 0.24 : 0.12) : colors.surface, borderColor: active ? color : colors.border }]}>
-                <Ionicons name={active ? 'checkmark-circle' : visual.icon} size={16} color={color} />
-                <AppText variant="meta" color={active ? 'textPrimary' : 'textSecondary'} numberOfLines={1}>
-                  {category.name}
-                </AppText>
-              </PressableScale>
-            );
-          })}
+                <PressableScale
+                  key={category.id}
+                  accessibilityRole="radio"
+                  aria-checked={active}
+                  aria-disabled={disabled}
+                  accessibilityLabel={category.name}
+                  disabled={disabled}
+                  tabIndex={active ? 0 : -1}
+                  onPress={() => onChange(category.id)}
+                  scaleTo={0.96}
+                  containerStyle={styles.chipSlot}
+                  pressedStyle={{ backgroundColor: colors.surfaceInteractive }}
+                  style={[styles.chip, { backgroundColor: active ? withAlpha(color, scheme === 'dark' ? 0.24 : 0.12) : colors.surface, borderColor: active ? color : colors.border }]}>
+                  <Ionicons name={active ? 'checkmark-circle' : visual.icon} size={16} color={color} />
+                  <AppText variant="meta" color={active ? 'textPrimary' : 'textSecondary'} numberOfLines={1}>
+                    {category.name}
+                  </AppText>
+                </PressableScale>
+              );
+            })}
+          </View>
+          {/* Outside the radiogroup: it opens a sheet, it is not one of the choices. */}
           <PressableScale
             accessibilityRole="button"
             accessibilityLabel="Hamısı"
             accessibilityHint="Bütün kateqoriyaları axtarışla açır"
-            accessibilityState={{ disabled }}
+            aria-disabled={disabled}
             disabled={disabled}
             onPress={() => setOpen(true)}
             scaleTo={0.96}
@@ -165,7 +179,7 @@ type CategorySheetProps = {
 
 /** Searchable list of every category of the current kind. */
 export function CategorySheet({ visible, categories, value, title, recentCount = 0, onClose, onSelect }: CategorySheetProps) {
-  const { colors, scheme } = useTheme();
+  const { colors } = useTheme();
   const [query, setQuery] = useState('');
   const filtered = query.trim() === '' ? categories : categories.filter((category) => matches(category.name, query));
 
@@ -195,42 +209,78 @@ export function CategorySheet({ visible, categories, value, title, recentCount =
         <AppText color="textSecondary" style={styles.empty}>
           Uyğun kateqoriya tapılmadı.
         </AppText>
-      ) : (
-        filtered.map((category, index) => {
-          const active = category.id === value;
-          const visual = categoryVisual(category.name, category.kind);
-          const color = categoryColor(category.name, scheme, category.kind);
-          const recent = query.trim() === '' && index < recentCount;
-          return (
-            <PressableScale
-              key={category.id}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: active, checked: active }}
-              accessibilityLabel={recent ? `${category.name}, bu ay istifadə olunub` : category.name}
-              onPress={() => onSelect(category.id)}
-              scaleTo={0.99}
-              containerStyle={styles.full}
-              pressedStyle={{ backgroundColor: colors.surfaceSubtle }}
-              style={[styles.option, { backgroundColor: active ? colors.primarySoft : 'transparent' }]}>
-              <View style={[styles.optionIcon, { backgroundColor: withAlpha(color, scheme === 'dark' ? 0.22 : 0.12) }]}>
-                <Ionicons name={visual.icon} size={18} color={color} />
-              </View>
-              <View style={styles.flex}>
-                <AppText variant="bodyStrong" numberOfLines={1}>
-                  {category.name}
-                </AppText>
-                {recent ? (
-                  <AppText variant="caption" color="textMuted">
-                    Bu ay istifadə olunub
-                  </AppText>
-                ) : null}
-              </View>
-              {active ? <Ionicons name="checkmark" size={20} color={colors.primaryText} /> : null}
-            </PressableScale>
-          );
-        })
-      )}
+      ) : visible ? (
+        // Mounted only while open, so the pending choice always starts from the committed category.
+        <CategoryOptions categories={filtered} value={value} title={title} recentCount={query.trim() === '' ? recentCount : 0} onSelect={onSelect} />
+      ) : null}
     </Sheet>
+  );
+}
+
+type CategoryOptionsProps = {
+  categories: CategoryOption[];
+  value: string;
+  title: string;
+  recentCount: number;
+  onSelect: (id: string) => void;
+};
+
+/** The radio group itself: arrows move the pending choice, Space or Enter commits it to the form field. */
+function CategoryOptions({ categories, value, title, recentCount, onSelect }: CategoryOptionsProps) {
+  const { colors, scheme } = useTheme();
+  const listRef = useRef<View>(null);
+  const [pending, setPending] = useState(value);
+  const moveTo = (position: number) => {
+    const category = categories[position];
+    if (category) {
+      setPending(category.id);
+    }
+  };
+  const commitAt = (position: number) => {
+    const category = categories[position];
+    if (category) {
+      onSelect(category.id);
+    }
+  };
+  useRovingRadioGroup(listRef, { onSelect: moveTo, onActivate: commitAt });
+
+  return (
+    <View ref={listRef} accessibilityRole="radiogroup" accessibilityLabel={title} testID="category-options">
+      {categories.map((category, index) => {
+        const active = category.id === pending;
+        const visual = categoryVisual(category.name, category.kind);
+        const color = categoryColor(category.name, scheme, category.kind);
+        const recent = index < recentCount;
+        return (
+          <PressableScale
+            key={category.id}
+            accessibilityRole="radio"
+            aria-checked={active}
+            accessibilityLabel={recent ? `${category.name}, bu ay istifadə olunub` : category.name}
+            tabIndex={active ? 0 : -1}
+            onPress={() => onSelect(category.id)}
+            scaleTo={0.99}
+            containerStyle={styles.full}
+            pressedStyle={{ backgroundColor: colors.surfaceSubtle }}
+            style={[styles.option, { backgroundColor: active ? colors.primarySoft : 'transparent' }]}>
+            <View style={[styles.optionIcon, { backgroundColor: withAlpha(color, scheme === 'dark' ? 0.22 : 0.12) }]}>
+              <Ionicons name={visual.icon} size={18} color={color} />
+            </View>
+            <View style={styles.flex}>
+              <AppText variant="bodyStrong" numberOfLines={1}>
+                {category.name}
+              </AppText>
+              {recent ? (
+                <AppText variant="caption" color="textMuted">
+                  Bu ay istifadə olunub
+                </AppText>
+              ) : null}
+            </View>
+            {active ? <Ionicons name="checkmark" size={20} color={colors.primaryText} /> : null}
+          </PressableScale>
+        );
+      })}
+    </View>
   );
 }
 
@@ -262,11 +312,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  shortcuts: {
+  shortcutRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.sm,
     paddingTop: Spacing.xs,
+    alignItems: 'center',
+  },
+  shortcuts: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    alignItems: 'center',
   },
   chipSlot: {
     minHeight: 40,

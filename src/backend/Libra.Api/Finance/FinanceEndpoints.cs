@@ -30,6 +30,8 @@ internal static class FinanceEndpoints
         MapTransfers(finance);
         MapBudgets(finance);
         MapDashboard(finance);
+        finance.MapRecurringEndpoints();
+        finance.MapDebtEndpoints();
 
         return endpoints;
     }

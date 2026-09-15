@@ -4,6 +4,9 @@ using Libra.Api.Cors;
 using Libra.Api.Finance;
 using Libra.Api.Health;
 using Libra.Api.Identity;
+using Libra.Api.Nutrition;
+using Libra.Api.Sleep;
+using Libra.Api.Tasks;
 using Libra.Application;
 using Libra.Infrastructure;
 using Serilog;
@@ -26,7 +29,7 @@ try
     builder.Services.AddOpenApi();
     builder.Services.AddDevelopmentCors(builder.Configuration);
     builder.Services.AddApplication(builder.Configuration);
-    builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
     builder.Services.AddJwtAuthentication(builder.Configuration, builder.Environment);
     builder.Services.AddAuthRateLimiting(builder.Configuration);
 
@@ -51,6 +54,10 @@ try
     app.MapAuthEndpoints();
     app.MapProfileEndpoints();
     app.MapFinanceEndpoints();
+    app.MapNutritionEndpoints();
+    app.MapFoodAnalysisEndpoints();
+    app.MapTaskEndpoints();
+    app.MapSleepEndpoints();
 
     if (app.Services.GetRequiredService<JwtSigningMaterial>().IsEphemeral)
     {

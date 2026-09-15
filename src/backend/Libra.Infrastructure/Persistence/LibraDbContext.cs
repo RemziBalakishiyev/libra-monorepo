@@ -1,6 +1,9 @@
 using Libra.Application.Common;
 using Libra.Domain.Finance;
 using Libra.Domain.Identity;
+using Libra.Domain.Nutrition;
+using Libra.Domain.Sleep;
+using Libra.Domain.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace Libra.Infrastructure.Persistence;
@@ -26,6 +29,34 @@ public sealed class LibraDbContext(DbContextOptions<LibraDbContext> options) : D
     public DbSet<AccountTransfer> AccountTransfers => Set<AccountTransfer>();
 
     public DbSet<MonthlyBudget> MonthlyBudgets => Set<MonthlyBudget>();
+
+    public DbSet<RecurringTransaction> RecurringTransactions => Set<RecurringTransaction>();
+
+    public DbSet<RecurringOccurrence> RecurringOccurrences => Set<RecurringOccurrence>();
+
+    public DbSet<Debt> Debts => Set<Debt>();
+
+    public DbSet<DebtMovement> DebtMovements => Set<DebtMovement>();
+
+    public DbSet<NutritionEntry> NutritionEntries => Set<NutritionEntry>();
+
+    public DbSet<NutritionEntryItem> NutritionEntryItems => Set<NutritionEntryItem>();
+
+    public DbSet<NutritionGoal> NutritionGoals => Set<NutritionGoal>();
+
+    public DbSet<FoodAnalysisDraft> FoodAnalysisDrafts => Set<FoodAnalysisDraft>();
+
+    public DbSet<FoodAnalysisItem> FoodAnalysisItems => Set<FoodAnalysisItem>();
+
+    public DbSet<FoodAnalysisImage> FoodAnalysisImages => Set<FoodAnalysisImage>();
+
+    public DbSet<TaskItem> Tasks => Set<TaskItem>();
+
+    public DbSet<TaskSeries> TaskSeries => Set<TaskSeries>();
+
+    public DbSet<TaskCompletionEvent> TaskCompletionEvents => Set<TaskCompletionEvent>();
+
+    public DbSet<SleepSession> SleepSessions => Set<SleepSession>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

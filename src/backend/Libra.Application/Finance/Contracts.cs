@@ -116,7 +116,25 @@ public sealed record DashboardResponse(
     IReadOnlyList<AccountBalanceItem> Accounts,
     IReadOnlyList<AccountBalanceItem> NegativeAccounts,
     IReadOnlyList<CurrencyTotal> OtherCurrencies,
-    IReadOnlyList<string> AvailableCurrencies);
+    IReadOnlyList<string> AvailableCurrencies,
+    DebtPosition Debts);
+
+/// <summary>
+/// The part of the picture that ordinary income and expense leave out, in the dashboard currency.
+/// <c>MonthlyPrincipalNet</c> is the month's net cash from lending, borrowing and repaying; it is kept apart
+/// from <c>MonthlyNet</c> (income − expense) and the two add up to <c>MonthlyCashChange</c>, the total change
+/// in cash. Outstanding receivables are not cash; <c>NetPosition</c> is cash + receivables − payables and is
+/// labelled as such wherever it is shown.
+/// </summary>
+public sealed record DebtPosition(
+    decimal MonthlyPrincipalNet,
+    decimal MonthlyCashChange,
+    decimal ReceivablesOutstanding,
+    decimal PayablesOutstanding,
+    decimal OverdueReceivables,
+    decimal OverduePayables,
+    int OverdueCount,
+    decimal NetPosition);
 
 public sealed record FinanceSetupResponse(
     bool IsComplete,
@@ -124,9 +142,6 @@ public sealed record FinanceSetupResponse(
     bool AccountCreated,
     IReadOnlyList<CategoryResponse> Categories,
     IReadOnlyList<AccountResponse> Accounts);
-
-/// <summary>Outcome of an idempotent create: the record plus whether this call created it.</summary>
-public sealed record CreateOutcome<TResponse>(TResponse Response, bool Created);
 
 internal static class FinanceMapping
 {
@@ -166,6 +181,8 @@ internal static class FinanceErrors
     public const string CategoryNameTaken = "A category with this name already exists";
     public const string BudgetExists = "A budget already exists for this month, currency, and category";
     public const string BudgetCategoryNotExpense = "Budget category must be an active expense category";
+
+    public const string TransactionLinkedToRecurring = "This transaction records a recurring month";
 
     public const string SameAccountTransfer = "Source and destination accounts must differ";
     public const string SameCurrencyAmountsDiffer = "Same-currency transfers must have equal source and destination amounts";

@@ -75,6 +75,60 @@ export const budgetFormSchema = z.object({
   amount: amountText('Büdcə məbləğini daxil edin.'),
 });
 
+/** A monthly plan. The day is the *requested* day; short months clamp it on the server and ask again next month. */
+export const recurringTemplateFormSchema = z
+  .object({
+    title: z.string().trim().min(1, 'Ad daxil edin.').max(120, 'Ad çox uzundur.'),
+    type: z.enum(['Income', 'Expense']),
+    amount: amountText('Məbləğ daxil edin.'),
+    categoryId: z.string().min(1, 'Kateqoriya seçin.'),
+    accountId: z.string().min(1, 'Hesab seçin.'),
+    dayOfMonth: z.number().int().min(1, 'Ayın gününü seçin.').max(31, 'Ayın gününü seçin.'),
+    startDate: isoDateSchema,
+    endDate: z.union([isoDateSchema, z.literal('')]),
+    note: z.string().trim().max(500, 'Qeyd çox uzundur.'),
+  })
+  .refine((form) => form.endDate === '' || form.endDate >= form.startDate, { message: 'Bitmə tarixi başlanğıcdan əvvəl ola bilməz.', path: ['endDate'] });
+
+/** The review before a month is recorded: the account, the actual amount and the actual date. */
+export const recordOccurrenceFormSchema = z.object({
+  accountId: z.string().min(1, 'Hesab seçin.'),
+  amount: amountText('Məbləğ daxil edin.'),
+  date: isoDateSchema,
+  note: z.string().trim().max(500, 'Qeyd çox uzundur.'),
+});
+
+/**
+ * A debt. `movesCash` is the explicit choice: an obligation that already exists needs no account and changes no
+ * balance; money lent or borrowed now needs the account it moves through.
+ */
+export const debtFormSchema = z
+  .object({
+    direction: z.enum(['Receivable', 'Payable']),
+    counterpartyName: z.string().trim().min(1, 'Qarşı tərəfin adını daxil edin.').max(120, 'Ad çox uzundur.'),
+    principal: amountText('Məbləğ daxil edin.'),
+    currencyCode: currencyCodeSchema,
+    openedOn: isoDateSchema,
+    dueOn: z.union([isoDateSchema, z.literal('')]),
+    note: z.string().trim().max(500, 'Qeyd çox uzundur.'),
+    movesCash: z.boolean(),
+    accountId: z.string(),
+  })
+  .refine((form) => form.dueOn === '' || form.dueOn >= form.openedOn, { message: 'Son tarix açılış tarixindən əvvəl ola bilməz.', path: ['dueOn'] })
+  .refine((form) => !form.movesCash || form.accountId !== '', { message: 'Pulun hansı hesabdan hərəkət etdiyini seçin.', path: ['accountId'] });
+
+export const debtPaymentFormSchema = z.object({
+  accountId: z.string().min(1, 'Hesab seçin.'),
+  amount: amountText('Məbləğ daxil edin.'),
+  date: isoDateSchema,
+  note: z.string().trim().max(500, 'Qeyd çox uzundur.'),
+});
+
+export type RecurringTemplateForm = z.infer<typeof recurringTemplateFormSchema>;
+export type RecordOccurrenceForm = z.infer<typeof recordOccurrenceFormSchema>;
+export type DebtForm = z.infer<typeof debtFormSchema>;
+export type DebtPaymentForm = z.infer<typeof debtPaymentFormSchema>;
+
 export type AccountForm = z.infer<typeof accountFormSchema>;
 export type CategoryForm = z.infer<typeof categoryFormSchema>;
 export type TransactionForm = z.infer<typeof transactionFormSchema>;

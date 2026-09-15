@@ -100,6 +100,87 @@ Checks: `source_account_id <> destination_account_id`. Index `(user_id, occurred
 
 Unique index `(user_id, year, month, currency_code, category_id)` declared `NULLS NOT DISTINCT`, so there is at most one overall budget and one budget per category for each month and currency.
 
+### recurring_transactions (Phase 3)
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | pk |
+| user_id | uuid | fk users cascade |
+| title | varchar(120) | |
+| type | varchar(10) | check `IN ('Income','Expense')` |
+| amount | numeric(18,2) | check `amount > 0` |
+| currency_code | char(3) | copied from the account |
+| category_id | uuid | fk finance_categories restrict |
+| account_id | uuid | fk financial_accounts restrict |
+| day_of_month | integer | check `BETWEEN 1 AND 31`; clamped to the month's last day when due |
+| start_date, end_date | date | check `end_date IS NULL OR end_date >= start_date` |
+| is_active | boolean | |
+| note | varchar(500) | nullable |
+| client_request_id | uuid | nullable; unique per user where not null |
+| created_at_utc, updated_at_utc | timestamptz | |
+| xmin | xid | row version for optimistic concurrency |
+
+Index `(user_id, is_active)`.
+
+### recurring_occurrences
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | pk |
+| user_id | uuid | fk users cascade |
+| template_id | uuid | fk recurring_transactions restrict |
+| year, month | integer | check `month BETWEEN 1 AND 12` |
+| due_date | date | the clamped due date as computed when the row was stored |
+| status | varchar(10) | check `IN ('Recorded','Skipped')` — `Pending` is never stored |
+| transaction_id | uuid | nullable; fk financial_transactions restrict; unique where not null; check `ck_recurring_occurrences_link`: `Recorded` ⇔ `transaction_id IS NOT NULL` |
+| title, amount, currency_code | varchar(120), numeric(18,2), char(3) | snapshot of what was recorded |
+| client_request_id | uuid | nullable; unique per user where not null |
+| created_at_utc, updated_at_utc | timestamptz | |
+| xmin | xid | row version |
+
+Unique index `ix_recurring_occurrences_template_month (template_id, year, month)` is what makes a concurrent or
+retried confirmation of one month resolve to the one stored row. Index `(user_id, year, month)`. The `restrict`
+foreign key to the transaction is why the generic transaction delete answers 409 for a linked transaction.
+
+### debts
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | pk |
+| user_id | uuid | fk users cascade |
+| direction | varchar(10) | check `IN ('Receivable','Payable')` |
+| counterparty_name | varchar(120) | |
+| principal | numeric(18,2) | check `principal > 0` |
+| currency_code | char(3) | |
+| opened_on, due_on | date | `due_on` nullable; check `due_on IS NULL OR due_on >= opened_on` |
+| note | varchar(500) | nullable |
+| client_request_id | uuid | nullable; unique per user where not null |
+| created_at_utc, updated_at_utc | timestamptz | `updated_at_utc` is bumped by every payment and undo |
+| xmin | xid | row version — the payment race guard |
+
+Index `(user_id, direction)`. Remaining amount, status and overdue are derived, never stored.
+
+### debt_movements
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | pk |
+| user_id | uuid | fk users cascade |
+| debt_id | uuid | fk debts cascade |
+| kind | varchar(10) | check `IN ('Opening','Payment')` |
+| account_id | uuid | fk financial_accounts restrict |
+| amount | numeric(18,2) | check `amount > 0` |
+| occurred_at_utc | timestamptz | |
+| note | varchar(500) | nullable |
+| reversed_at_utc | timestamptz | nullable; set by undo, never deleted |
+| client_request_id | uuid | nullable; unique per user where not null |
+| created_at_utc, updated_at_utc | timestamptz | |
+
+Indexes `(debt_id, occurred_at_utc)`, `(user_id, account_id)`; unique `ix_debt_movements_opening (debt_id) WHERE
+kind = 'Opening'`, so a debt moves its principal at most once. The cash effect of a movement is derived from the
+debt's direction and the kind (see DOMAIN.md); the account-balance calculator groups non-reversed movements per
+account in one query.
+
 ## Migrations
 
 - Location: `src/backend/Libra.Infrastructure/Persistence/Migrations` (generated code; style analyzers are relaxed for this folder in `.editorconfig`). Run `dotnet format` once after generating a migration so line endings match the repo.
@@ -117,7 +198,14 @@ Unique index `(user_id, year, month, currency_code, category_id)` declared `NULL
   ```
 
 - Automatic apply: when `Database:MigrateOnStartup` is `true` the API applies pending migrations at startup. It is `true` in Development and in integration tests, `false` everywhere else (D-020). Destructive migrations are never auto-applied in production.
-- Current migrations: `InitialIdentity` (Phase 1), `AddFinanceCore` (Phase 2: the five finance tables, their indexes, check constraints, and foreign keys).
+- Current migrations: `InitialIdentity` (Phase 1), `AddFinanceCore` (Phase 2: the five finance tables, their
+  indexes, check constraints, and foreign keys), `AddNutrition` and `AddFoodAnalysis` (Phase 3), `AddTasks`
+  (Phase 4A), `AddSleep` (Phase 4B), `AddRecurringAndDebts` (Phase 3: `recurring_transactions`,
+  `recurring_occurrences`, `debts`, `debt_movements`, generated as `20260915131248_AddRecurringAndDebts`).
+- `AddSleep` is hand-augmented after generation, because EF Core models neither construct: it runs
+  `CREATE EXTENSION IF NOT EXISTS btree_gist` and then adds `ex_sleep_sessions_no_overlap`, an
+  `EXCLUDE USING gist (user_id WITH =, tstzrange(started_at_utc, ended_at_utc, '[)') WITH &&)` restricted to
+  completed rows. Regenerating the migration would drop both; keep them when scaffolding over it.
 
 ## Test databases
 

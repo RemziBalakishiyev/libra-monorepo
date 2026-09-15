@@ -7,8 +7,8 @@ One deployable API (modular monolith) plus one Expo mobile app, backed by Postgr
 ```text
 mobile (Expo)  --HTTPS/JSON-->  Libra.Api (ASP.NET Core)  --EF Core-->  PostgreSQL
                                     |
-                                    +--> AI provider adapter (Phase 6+)
-                                    +--> Object storage adapter (Phase 6+)
+                                    +--> AI provider adapter (OpenAI Responses, Phase 3B)
+                                    +--> Image store (file system today, Phase 3B)
 ```
 
 ## Backend layers
@@ -32,14 +32,30 @@ Libra.Application/
     Transactions/
       CreateTransaction/    CreateTransactionCommand.cs, Handler.cs, Validator.cs
       ListTransactions/     ListTransactionsQuery.cs, Handler.cs, TransactionListItem.cs
-  Debts/
+  Tasks/                    TaskContracts.cs, TaskCommands.cs, TaskOccurrenceGenerator.cs, TasksHandler.cs,
+                            TaskSeriesHandler.cs
+  Nutrition/                Contracts.cs, NutritionCommands.cs, NutritionEntriesHandler.cs, NutritionDayHandler.cs, NutritionGoalsHandler.cs
+    FoodAnalysis/           IAiFoodAnalyzer.cs, FoodAnalysisContracts.cs, FoodAnalysisNormalization.cs,
+                            FoodAnalysisOptions.cs, FoodAnalysisCommands.cs, ImageServices.cs, FoodAnalysisHandler.cs
+  Sleep/                    SleepContracts.cs, SleepCommands.cs, SleepHandler.cs
+  Finance/Recurring/        RecurringContracts.cs, RecurringHandler.cs
+  Finance/Debts/            DebtContracts.cs, DebtsHandler.cs
   ...
 Libra.Domain/
-  Finance/                  Transaction.cs, FinanceCategory.cs, ...
+  Finance/                  FinancialTransaction.cs, FinanceCategory.cs, ...
+  Tasks/                    TaskItem.cs, TaskSeries.cs, TaskRecurrence.cs, TaskEnums.cs
+  Nutrition/                NutritionEntry.cs, NutritionEntryItem.cs, NutritionGoal.cs, NutritionAmounts.cs,
+                            FoodAnalysisDraft.cs, FoodAnalysisImage.cs, FoodAnalysisEnums.cs
+  Sleep/                    SleepSession.cs
 Libra.Infrastructure/
+  Ai/                       OpenAiFoodAnalyzer.cs, FoodImageProcessor.cs, FileSystemImageStore.cs,
+                            FoodAnalysisCleanupService.cs
   Persistence/              LibraDbContext.cs, Configurations/<Module>/*.cs, Migrations/
 Libra.Api/
   Finance/                  endpoint mapping for the module (Minimal APIs)
+  Nutrition/                NutritionEndpoints.cs, FoodAnalysisEndpoints.cs
+  Tasks/                    TaskEndpoints.cs
+  Sleep/                    SleepEndpoints.cs
 ```
 
 Rules:
@@ -65,6 +81,27 @@ Rules:
 - Read shapes: list endpoints project directly into init-only response records so filters, ordering, and paging compose in SQL; no entity graph is loaded for reads.
 - Idempotency: creates accept `clientRequestId`; the handler checks for an existing record, then relies on the filtered unique index and a unique-violation catch for concurrent retries.
 - Api: `FinanceEndpoints` maps `/api/finance/*` under `RequireAuthorization()`; `ToCreatedOrReplayed` renders 201 for a new record and 200 for a replayed create.
+
+
+### Sleep module (Phase 4B)
+
+- Domain: `SleepSession` — two UTC instants plus an optional quality and note. It owns the rules: an end after the
+  start, no instant more than five minutes ahead of the injected clock, a completed interval of at most 24 hours,
+  quality within 1–5, and a note within 500 characters. `Stop` returns `false` for a session that is already
+  closed instead of moving its end, which is what makes a retried stop idempotent. Every instant is rounded to
+  the microsecond PostgreSQL stores, so an in-memory session and one read back compare equal.
+- Application: a single `SleepHandler` (start, stop, record, correct, delete, get, list, summary). The summary
+  converts the seven-local-day window to a bounded UTC range, reads only the sessions inside it, and aggregates in
+  memory by the local date each session **ended** on. `IsWriteConflict` walks the whole exception chain, because
+  EF Core wraps a deadlock or exclusion violation in an `InvalidOperationException` about transient failures — the
+  PostgreSQL error sits two levels down, and a typed `catch (DbUpdateException)` never sees it.
+- Persistence: `SleepSessionConfiguration` adds the check constraints (`ck_sleep_sessions_interval`,
+  `ck_sleep_sessions_quality`, `ck_sleep_sessions_duration`), the partial unique index `ix_sleep_sessions_open`
+  (one open session per user), and `xmin` as the row version. The migration additionally enables `btree_gist` and
+  adds `ex_sleep_sessions_no_overlap`, an EXCLUDE constraint over `tstzrange(started_at_utc, ended_at_utc, '[)')`
+  restricted to completed rows — half-open, so adjacent sessions may touch but not cross.
+- Api: `SleepEndpoints` maps `/api/sleep/*` under `RequireAuthorization()`. `GET /active` answers 204 when nothing
+  is running, so "no session" is not an error.
 
 ### Host composition
 
@@ -98,7 +135,7 @@ Unhandled exceptions and non-success status codes are rendered as RFC 9457 Probl
 
 ```text
 src/mobile/src/
-  app/          Expo Router routes only: (auth) group, (app) stack with (tabs) [index, finance, nutrition, plan, ai], profile, quick-add modal, finance/* forms and lists
+  app/          Expo Router routes only: (auth) group, (app) stack with (tabs) [index, finance, nutrition, plan, ai], profile, quick-add modal, finance/* and nutrition/* forms and lists
   screens/      screen bodies rendered by routes; private sub-components colocated
   components/   design-system components (text, button, screen, sheet, form fields, finance widgets, tab bar, sidebar, ...)
   hooks/        reusable hooks (use-theme, use-api-health, ...)
@@ -106,7 +143,7 @@ src/mobile/src/
   constants/    design tokens (theme.ts)
 ```
 
-- **Server state**: TanStack Query. One `QueryClient` from `lib/query-client.ts`. Query keys are exported constants next to their hooks; every finance mutation invalidates the `['finance']` prefix because balances, budgets, and the dashboard all depend on each other.
+- **Server state**: TanStack Query. One `QueryClient` from `lib/query-client.ts`. Query keys are exported constants next to their hooks; every finance mutation invalidates the `['finance']` prefix because balances, budgets, and the dashboard all depend on each other. Nutrition queries live under `['nutrition']` and carry the local date they describe, so a mutation refreshes both the day an entry left and the day it landed on. Signing in or out clears the whole cache, so no account ever reads another's rows.
 - **Client/UI state**: Zustand, only when component state is insufficient. Not for server data.
 - **Forms**: React Hook Form + Zod.
 - **Config**: `lib/env.ts` validates `EXPO_PUBLIC_*` variables with Zod. No secrets in the app bundle.

@@ -12,6 +12,11 @@ surface instead of one raised card per action. Dark mode is a complete matching 
 
 ## Tokens (`constants/theme.ts`)
 
+Which palette is in use is decided in one place: `useTheme()` combines the stored choice in
+`lib/appearance-store.ts` (`light | dark | system`, default `light`) with the OS scheme, and every screen,
+sheet, toast, the navigation theme and the status bar read the result through it. Nothing reads
+`useColorScheme()` on its own. `onHero` is `#FFFFFF` in both palettes on purpose.
+
 | Group | Keys |
 |---|---|
 | Surfaces | `canvas`, `surface`, `surfaceSubtle`, `surfaceRaised`, `surfaceInteractive`, `border`, `borderStrong`, `navSurface` (opaque), `navBorder`, `scrim`, `skeleton` |
@@ -72,18 +77,28 @@ Category icons/colours: `categoryVisual(name, kind)`, `categoryColor(name, schem
 | `TextField`, `SelectRow` (+ `compact` filter chip), `SwitchRow`, `FieldGroup`, `FieldMessage` | `form-field.tsx` | validation renders only when present (no reserved rows); errors are alerts and field hints |
 | `FilterToggle` | `filter-toggle.tsx` | compact checkable chip for secondary filters (archived items) |
 | `AmountInput`, `sanitizeAmount` | `amount-input.tsx` | hero (40 px) or field layout, comma or point, `shakeKey` for invalid submits |
-| `SegmentedControl` | `segmented-control.tsx` | sliding tonal pill with optional icons; selection never looks like an error outline |
+| `SegmentedControl` | `segmented-control.tsx` | sliding tonal pill with optional icons; selection never looks like an error outline; `aria-checked` is set explicitly (react-native-web does not derive it), and `accessibilityLabel` per option carries the full name when the visible label is abbreviated |
 | `CategoryField`, `CategorySheet`, `orderCategories` | `category-field.tsx` | labelled field with the current choice, ≤ 6 shortcut chips (real recent usage first), "Hamısı" searchable sheet |
 | `DateField`, `CalendarSheet` | `date-field.tsx` | localised "6 sentyabr 2026", native pickers + accessible calendar on web |
+| `TimeField`, `sanitizeTime` | `time-field.tsx` | 24-hour local time; native pickers on iOS/Android, masked input elsewhere |
+| `DateNav` | `date-nav.tsx` | previous / next day with a calendar in the middle ("Bu gün", "Dünən", or the long date); future days are blocked where the screen asks for it |
 | `BalanceHero` | `balance-hero.tsx` | ~150-unit indigo hero: "Hesab balansı", currency chips, other currencies listed, never summed |
 | `MetricItem` | `metric-item.tsx` | label + animated value with income/expense arrows |
-| `QuickAction`, `QuickAddMenu`, `quickActionDefinitions` | `quick-action.tsx`, `quick-add-menu.tsx` | 52-unit pills for the dashboard row, rows for menus; Quick Add = sheet on phones, anchored popover on wide layouts |
+| `QuickAction`, `QuickAddMenu`, `quickActionDefinitions`, `globalQuickActionDefinitions` | `quick-action.tsx`, `quick-add-menu.tsx` | 52-unit pills for the dashboard row, rows for menus; Quick Add = sheet on phones, anchored popover on wide layouts. Finance offers its own three money actions; Home and the Quick Add modal offer the global set (Xərc, Gəlir, Yemək, Tapşırıq, Yuxu, Köçürmə), filtered to what the user can actually do. "Yuxu" opens the sleep screen; it never starts or ends a session |
 | `SectionHeader` | `section-header.tsx` | subheading + optional action link or caption |
 | `TransactionRow`, `TransactionList`, `describeTransaction`, `transactionMeta` | `transaction-row.tsx` | category title, note/account/day metadata (no "Market · Market"), reserved amount + overflow width; swipe on native, overflow menu on web |
 | `AccountItem` | `account-item.tsx` | icon tile, name, type metadata, balance |
 | `BudgetProgress`, `ProgressTrack`, `budgetHealth`, `paceLabel` | `budget-progress.tsx` | limit status (Büdcə daxilində / Limitə yaxın / Büdcə aşılıb) separate from the pace comparison; elapsed-month marker on the track |
 | `InsightCard`, `buildInsights`, `projectMonthEnd`, `compactAmount` | `insight-card.tsx` | "Gündəlik xərc": last 7 days with dates and values, limit / pace sentences, month-end estimate from the unrounded monthly total, "Tam ay" expander, unavailable + retry state |
 | `SpendingBars`, `CategoryBreakdown` | `spending-bars.tsx`, `category-breakdown.tsx` | code-native charts; every elapsed day is an accessible element with date and value |
+| `NutritionSummary` | `nutrition-summary.tsx` | compact day card: energy line with the remaining/exceeded difference, then protein / carbohydrate / fat side by side; with no target it shows the consumed amount and a "Hədəf təyin et" action instead of a percentage |
+| `MealGroup` | `meal-group.tsx` | one meal of the day: icon, name, energy total, add control; an empty group keeps a single compact "add" row |
+| `TaskRow` | `task-row.tsx` | one task: a 48 pt completion checkbox, a title that wraps to three lines, the day/time, a repeat marker, a labelled priority chip (glyph + word, never colour alone) and a separate 48 pt overflow control |
+| `AccountEffect` | `account-effect.tsx` | what confirming will do to one account before it is done: name, balance → balance after (or "Balans dəyişmir" for an existing obligation), one spoken label; used by the recurring record sheet, the debt form and the payment sheet |
+| `SleepStrip` | `sleep-strip.tsx` | seven local dates scaled to the tallest bar; a date with nothing recorded is a hollow slot that reads "Qeyd yoxdur", never a zero-height bar |
+| `NutritionEntryRow` | `nutrition-entry-row.tsx` | food name (+ n), time and quantities, macros, energy; a separate 48 pt overflow control for copy and delete |
+| `NutritionItemEditor`, `sanitizeDecimal` | `nutrition-item-editor.tsx` | one food: name, "Porsiya üzrə" / "100 q üzrə", quantity and the four nutrients per unit, with a live line showing what the item contributes |
+| `FoodPhotoScreen` | `screens/nutrition/photo-analysis.tsx` | choose → preview → analyze → review → confirm; reuses `NutritionItemEditor`, `SegmentedControl`, `DateField`/`TimeField` and the totals card, so a reviewed estimate is edited with exactly the manual form's controls |
 | `Skeleton`, `ListSkeleton`, `FormSkeleton`, `LoadingState`, `EmptyState`, `ErrorState`, `InlineError`, `StaleNotice` | `states.tsx` | skeletons mirror the final layout; errors distinguish offline (only when known), connection, server, validation; stale notice over cached data |
 | `ToastProvider`, `useToast`, `showToast` | `toast.tsx` | one toast at a time, anchored above the navigation region, duplicates extend instead of stacking |
 | `ConfirmProvider` + `confirmAsync` | `confirm-dialog.tsx`, `lib/confirm.ts` | accessible confirmation dialog for destructive actions |
@@ -91,12 +106,54 @@ Category icons/colours: `categoryVisual(name, kind)`, `categoryColor(name, schem
 | `BrandMark` | `brand-mark.tsx` | code-native Libra mark and wordmark |
 | `AnimatedNumber` | `animated-number.tsx` | 400 ms ticker; accessible name is always the final value |
 
+## Accessibility semantics
+
+**Selection state travels on `aria-*` props, never on `accessibilityState`.** react-native-web 0.21 removed
+`accessibilityState` from its supported props: only the individual `aria-*` attributes (and their deprecated
+singular `accessibility<State>` forms) reach the DOM, so `accessibilityState={{ checked }}` renders no state at
+all on the web. React Native merges `aria-checked` / `aria-selected` / `aria-disabled` back into
+`accessibilityState` (`Pressable.js`, `View.js`), so the aria prop is the single form that is correct on both
+platforms. `src/mobile/src/lib/a11y.ts` documents this and holds the keyboard helpers.
+
+Each control follows the WAI-ARIA pattern that matches what it does
+([APG](https://www.w3.org/WAI/ARIA/apg/patterns/)):
+
+| Control | Pattern | Web semantics | Keyboard |
+|---|---|---|---|
+| `SegmentedControl`, `CategoryField` chips, `BalanceHero` currency chips | Radio group | labelled `radiogroup`; items `radio` + `aria-checked`; roving `tabIndex` | Tab in / out once, arrows move focus **and** the selection, Space checks |
+| `SelectionSheet`, `CategorySheet` | Radio group in a dialog, with a pending selection | labelled `radiogroup`; rows `radio` + `aria-checked` on the **pending** row | arrows move focus and the checked row, Space / Enter commits to the field, Escape discards |
+| `CalendarSheet` | Date picker in a dialog, with a pending day | `radiogroup`; days `radio` + `aria-checked`; today `aria-current="date"` | ±1 day with left/right, ±1 week with up/down, Home/End ends of the week, Space / Enter commits |
+| `FilterToggle` | Checkbox | `checkbox` + `aria-checked` | Space and Enter toggle |
+| `TabBar`, `Sidebar` | Navigation | `<nav>` landmark of `link`s with `aria-current="page"` | each destination is its own tab stop |
+
+Rules that follow from the table:
+
+- A radio group is **one** tab stop: only the checked item has `tabIndex={0}`.
+- The checked radio always follows focus, as the pattern requires. In the dialog pickers what follows focus is a
+  **pending** selection: the owning form field changes only on commit (Space, Enter or a tap), Escape discards the
+  pending value and leaves the field alone. Each dialog mounts its body only while open, so the pending value —
+  and the calendar's displayed month — reset to the committed value on every open, without a state-syncing effect.
+- `CalendarSheet` is a radio group, not an ARIA grid: its DOM holds `radiogroup` + `radio` day cells with no
+  `row`, `gridcell` or table ancestors, and `grid`/`row`/`gridcell` are missing from React Native's
+  `accessibilityRole` union, so a grid would exist on the web only.
+- Space is wired explicitly. react-native-web's `PressResponder` accepts Space only for `<button>` and
+  `role="button"`, so `radio` and `checkbox` controls would otherwise answer to Enter alone.
+- Route navigation never uses `tab` semantics on the web: a `tab` without a `tabpanel` is a promise the app does
+  not keep. Native keeps `tablist` / `tab` for the bottom bar, which is the iOS and Android convention — a
+  deliberate platform mapping, not two contradictory states.
+- Disabled choices carry `aria-disabled`, are not focusable (`tabIndex={-1}`), and the arrow keys skip them.
+- A group contains only its own members: the "Hamısı" sheet trigger sits beside the category chips, not inside
+  their radio group.
+
 ## Formatting
 
 `lib/money.ts` is the single display formatter: `formatNumber` / `formatMoney` use the profile locale's separators
 (az/tr/de `1.234,56`, ru `1 234,56`, en `1,234.56`; pinned because ICU data for az-AZ is incomplete), always two
 decimals, ISO code after the number. `setDisplayLocale` is called from the signed-in layout when the profile loads.
-Input parsing (`parseAmount`, `sanitizeAmount`) accepts both separators and stays separate from display.
+Input parsing (`parseAmount`, `sanitizeAmount`, `parseDecimalInput`) accepts both separators and stays separate from
+display. Nutrition figures use the same locale separators through `lib/nutrition.ts`: energy as whole `kkal`
+(`formatKcal`), macros with one decimal and the `q` unit (`formatGrams`), quantities as entered
+("2 porsiya", "150 q"). Stored values keep their two decimals; only the display is rounded.
 
 ## Screen conventions
 

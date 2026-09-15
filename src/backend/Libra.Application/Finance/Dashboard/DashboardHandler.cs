@@ -1,4 +1,5 @@
 using Libra.Application.Common;
+using Libra.Application.Finance.Debts;
 using Libra.Application.Finance.Transactions;
 using Libra.Domain.Finance;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,7 @@ public sealed class DashboardHandler(
     AccountBalanceCalculator balances,
     BudgetUsageCalculator budgets,
     TransactionsHandler transactions,
+    DebtsHandler debts,
     TimeProvider clock)
 {
     private const int RecentTransactionCount = 10;
@@ -110,6 +112,29 @@ public sealed class DashboardHandler(
         var daysElapsed = LocalCalendar.DaysElapsed(month, nowUtc);
         var dailyAverage = daysElapsed == 0 ? 0 : decimal.Round(monthlyExpense / daysElapsed, 2);
 
+        // Principal movements are neither income nor expense; they are reported on their own and added to the
+        // month's net only for the total change in cash, so the two figures never blur into one another.
+        var principalRows = await db.DebtMovements
+            .Where(movement => movement.UserId == userId && movement.ReversedAtUtc == null && movement.OccurredAtUtc >= month.StartUtc && movement.OccurredAtUtc < month.EndUtc)
+            .Join(db.Debts, movement => movement.DebtId, debt => debt.Id, (movement, debt) => new { movement, debt })
+            .Where(pair => pair.debt.CurrencyCode == currency)
+            .GroupBy(pair => new { pair.debt.Direction, pair.movement.Kind })
+            .Select(group => new { group.Key.Direction, group.Key.Kind, Total = group.Sum(pair => pair.movement.Amount) })
+            .ToListAsync(cancellationToken);
+        var monthlyPrincipalNet = principalRows.Sum(row => DebtMovement.CashEffect(row.Direction, row.Kind, row.Total));
+        var debtSummary = (await debts.SummaryAsync(userId, cancellationToken)).Currencies.SingleOrDefault(summary => summary.CurrencyCode == currency);
+        var receivables = debtSummary?.ReceivableOutstanding ?? 0;
+        var payables = debtSummary?.PayableOutstanding ?? 0;
+        var position = new DebtPosition(
+            monthlyPrincipalNet,
+            monthlyIncome - monthlyExpense + monthlyPrincipalNet,
+            receivables,
+            payables,
+            debtSummary?.OverdueReceivable ?? 0,
+            debtSummary?.OverduePayable ?? 0,
+            debtSummary?.OverdueCount ?? 0,
+            totalBalance + receivables - payables);
+
         return Result.Success(new DashboardResponse(
             currency,
             month.Year,
@@ -129,6 +154,7 @@ public sealed class DashboardHandler(
             selected,
             selected.Where(item => item.Balance < 0).ToList(),
             otherCurrencies,
-            availableCurrencies));
+            availableCurrencies,
+            position));
     }
 }

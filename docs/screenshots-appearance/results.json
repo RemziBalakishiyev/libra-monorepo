@@ -1,0 +1,48 @@
+{
+  "capturedAt": "2026-09-14T22:29:36.772Z",
+  "passed": 13,
+  "total": 13,
+  "checks": {
+    "beforeFollowedTheOs": true,
+    "beforeHadNoSelector": true,
+    "freshInstallIsLightOnADarkPhone": true,
+    "darkAppliesImmediately": true,
+    "explicitDarkSurvivesReloadAndIgnoresALightPhone": true,
+    "explicitLightIgnoresADarkPhone": true,
+    "systemFollowsTheOs": true,
+    "home-light": true,
+    "finance-light": true,
+    "sheet-light": true,
+    "home-dark": true,
+    "finance-dark": true,
+    "sheet-dark": true
+  },
+  "measurements": {
+    "before": {
+      "osDark": {
+        "palette": "dark",
+        "hasSelector": false
+      }
+    },
+    "freshInstall": {
+      "palette": "light",
+      "hint": "Telefonun rejimindən asılı olmayaraq həmişə açıq."
+    },
+    "chooseDark": {
+      "palette": "dark",
+      "stored": "dark"
+    },
+    "darkOnLightPhone": {
+      "palette": "dark"
+    },
+    "lightOnDarkPhone": {
+      "palette": "light",
+      "stored": "light"
+    },
+    "system": {
+      "onDarkOs": "dark",
+      "hint": "Telefonun rejiminə uyğunlaşır və onunla birlikdə dəyişir. Hazırda: tünd.",
+      "afterOsTurnsLight": "light"
+    }
+  }
+}

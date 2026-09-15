@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerAndroid, type DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
@@ -10,6 +10,7 @@ import { Sheet } from '@/components/sheet';
 import { AppText } from '@/components/text';
 import { MinTouchTarget, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useRovingRadioGroup, webAria } from '@/lib/a11y';
 import { dateFromIso, daysInMonth, formatLongDate, isoDateOf, monthNames, todayIsoDate, weekdayShortNames } from '@/lib/dates';
 
 type DateFieldProps = {
@@ -100,18 +101,45 @@ type CalendarSheetProps = {
   maximumDate?: Date;
 };
 
-/** Accessible month-grid calendar (web fallback). Weeks start on Monday; today is outlined; days are 44 pt targets. */
+/**
+ * Accessible month calendar (web fallback). Weeks start on Monday and days are 44 pt targets.
+ *
+ * It renders as one labelled radio group of days rather than an ARIA grid: the days are a set of mutually
+ * exclusive choices, and React Native's `accessibilityRole` union has no `grid` / `row` / `gridcell`, so a grid
+ * would exist on the web only. Three states stay distinct — the chosen day carries `aria-checked`, today carries
+ * `aria-current="date"` and an outline, and focus is the roving tab stop the arrow keys move (±1 day
+ * horizontally, ±1 week vertically).
+ *
+ * Arrow keys move a *pending* day: the checked radio follows focus while the field behind the sheet is
+ * untouched. Space and Enter commit that day and close; Escape discards it and reopening restores the committed
+ * date and its month. Days after `maximumDate` are disabled, unfocusable and skipped.
+ */
 export function CalendarSheet({ visible, value, onClose, onChange, title, maximumDate }: CalendarSheetProps) {
+  return (
+    <Sheet visible={visible} onClose={onClose} title={title} scrollable={false} maxWidth={400}>
+      {/* Mounted only while open, so the pending day and the shown month both start from the committed date. */}
+      {visible ? <CalendarBody value={value} onClose={onClose} onChange={onChange} title={title} maximumDate={maximumDate} /> : null}
+    </Sheet>
+  );
+}
+
+function CalendarBody({ value, onClose, onChange, title, maximumDate }: Omit<CalendarSheetProps, 'visible'>) {
   const { colors } = useTheme();
-  const selected = dateFromIso(value);
-  const [cursor, setCursor] = useState({ year: selected.getFullYear(), month: selected.getMonth() + 1 });
+  const gridRef = useRef<View>(null);
+  const committed = dateFromIso(value);
+  /** The day the dialog is showing as chosen. It becomes the field's value only on commit. */
+  const [pending, setPending] = useState(value);
+  const [cursor, setCursor] = useState({ year: committed.getFullYear(), month: committed.getMonth() + 1 });
   const today = todayIsoDate();
   const total = daysInMonth(cursor.year, cursor.month);
   const firstWeekday = (new Date(cursor.year, cursor.month - 1, 1).getDay() + 6) % 7; // Monday = 0
-  const cells: (number | null)[] = [...Array.from({ length: firstWeekday }, () => null), ...Array.from({ length: total }, (_, index) => index + 1)];
-  while (cells.length % 7 !== 0) {
-    cells.push(null);
-  }
+  // Built in one pass (no mutation) so the memoized callbacks below can depend on it.
+  const trailing = (7 - ((firstWeekday + total) % 7)) % 7;
+  const cells: (number | null)[] = [
+    ...Array.from({ length: firstWeekday }, () => null),
+    ...Array.from({ length: total }, (_, index) => index + 1),
+    ...Array.from({ length: trailing }, () => null),
+  ];
   const weekdays = [...weekdayShortNames.slice(1), weekdayShortNames[0]];
 
   const move = (delta: number) => {
@@ -119,8 +147,39 @@ export function CalendarSheet({ visible, value, onClose, onChange, title, maximu
     setCursor({ year: next.getFullYear(), month: next.getMonth() + 1 });
   };
 
+  const isoOf = (day: number) => `${cursor.year}-${String(cursor.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const isBlocked = (iso: string) => (maximumDate ? dateFromIso(iso).getTime() > maximumDate.getTime() : false);
+  // Enabled day cells in DOM order; the keyboard walks this list, so blocked future days are skipped.
+  const selectableDays = cells.filter((day): day is number => day !== null && !isBlocked(isoOf(day)));
+
+  // The hook reads these through a ref, so they need no memoization.
+  const moveTo = (position: number) => {
+    const day = selectableDays[position];
+    if (day !== undefined) {
+      setPending(isoOf(day));
+    }
+  };
+  const commitAt = (position: number) => {
+    const day = selectableDays[position];
+    if (day !== undefined) {
+      onChange(isoOf(day));
+      onClose();
+    }
+  };
+  // Seven columns: ArrowUp / ArrowDown move a whole week, Home / End jump to the ends of the week.
+  useRovingRadioGroup(gridRef, { onSelect: moveTo, onActivate: commitAt, columns: 7 });
+
+  /** The single tab stop: the pending day when it is in view, otherwise today, otherwise the first open day. */
+  const focusIso = (() => {
+    if (selectableDays.some((day) => isoOf(day) === pending)) {
+      return pending;
+    }
+    const todayDay = selectableDays.find((day) => isoOf(day) === today);
+    return todayDay !== undefined ? isoOf(todayDay) : selectableDays.length > 0 ? isoOf(selectableDays[0]!) : null;
+  })();
+
   return (
-    <Sheet visible={visible} onClose={onClose} title={title} scrollable={false} maxWidth={400}>
+    <>
       <View style={styles.calendarHeader}>
         <Pressable accessibilityRole="button" accessibilityLabel="Əvvəlki ay" onPress={() => move(-1)} style={({ pressed }) => [styles.navButton, { backgroundColor: pressed ? colors.surfaceInteractive : colors.surfaceSubtle }]}>
           <Ionicons name="chevron-back" size={18} color={colors.textPrimary} />
@@ -139,22 +198,25 @@ export function CalendarSheet({ visible, value, onClose, onChange, title, maximu
           </AppText>
         ))}
       </View>
-      <View style={styles.grid}>
+      <View ref={gridRef} style={styles.grid} accessibilityRole="radiogroup" accessibilityLabel={title} testID="calendar-grid">
         {cells.map((day, index) => {
           if (day === null) {
             return <View key={`empty-${index}`} style={styles.cell} />;
           }
-          const iso = `${cursor.year}-${String(cursor.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const isSelected = iso === value;
+          const iso = isoOf(day);
+          const isSelected = iso === pending;
           const isToday = iso === today;
-          const disabled = maximumDate ? dateFromIso(iso).getTime() > maximumDate.getTime() : false;
+          const disabled = isBlocked(iso);
           return (
             <Pressable
               key={iso}
-              accessibilityRole="button"
-              accessibilityLabel={formatLongDate(iso)}
-              accessibilityState={{ selected: isSelected, disabled }}
+              accessibilityRole="radio"
+              accessibilityLabel={isToday ? `${formatLongDate(iso)}, bu gün` : formatLongDate(iso)}
+              aria-checked={isSelected}
+              aria-disabled={disabled}
+              {...webAria(isToday ? { 'aria-current': 'date' } : {})}
               disabled={disabled}
+              tabIndex={iso === focusIso ? 0 : -1}
               onPress={() => {
                 onChange(iso);
                 onClose();
@@ -171,7 +233,7 @@ export function CalendarSheet({ visible, value, onClose, onChange, title, maximu
           );
         })}
       </View>
-    </Sheet>
+    </>
   );
 }
 

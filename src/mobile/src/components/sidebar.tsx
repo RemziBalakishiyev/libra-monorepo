@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandMark } from '@/components/brand-mark';
 import { Button } from '@/components/button';
 import { PressableScale } from '@/components/pressable-scale';
-import type { QuickActionKind } from '@/components/quick-action';
+import { globalQuickActionDefinitions, type QuickActionKind } from '@/components/quick-action';
 import { QuickAddMenu } from '@/components/quick-add-menu';
 import { AppText } from '@/components/text';
 import { tabs } from '@/constants/tabs';
@@ -16,7 +16,8 @@ import { useLogout } from '@/hooks/use-auth';
 import { useAccounts } from '@/hooks/use-finance';
 import { useProfile } from '@/hooks/use-profile';
 import { useTheme } from '@/hooks/use-theme';
-import { quickActionHref } from '@/lib/quick-add';
+import { webAria } from '@/lib/a11y';
+import { quickActionHref, requiresFinanceSetup } from '@/lib/quick-add';
 
 const tabHrefs: Record<string, string> = { index: '/', finance: '/finance', nutrition: '/nutrition', plan: '/plan', ai: '/ai' };
 
@@ -30,7 +31,9 @@ export function Sidebar() {
   const logout = useLogout();
   const accounts = useAccounts();
   const [menuOpen, setMenuOpen] = useState(false);
-  const canQuickAdd = (accounts.data?.length ?? 0) > 0;
+  // A meal can always be recorded, so Quick Add is offered even before Finance is set up.
+  const hasAccounts = (accounts.data?.length ?? 0) > 0;
+  const quickActions = hasAccounts ? globalQuickActionDefinitions : globalQuickActionDefinitions.filter((action) => !requiresFinanceSetup(action.kind));
 
   const isActive = (name: string) => {
     const href = tabHrefs[name] ?? '/';
@@ -46,21 +49,22 @@ export function Sidebar() {
   };
 
   return (
-    <View style={[styles.sidebar, { backgroundColor: colors.surface, borderRightColor: colors.border, paddingTop: insets.top + Spacing.xxl, paddingBottom: insets.bottom + Spacing.xl }]} accessibilityRole="menu" accessibilityLabel="Naviqasiya">
+    <View style={[styles.sidebar, { backgroundColor: colors.surface, borderRightColor: colors.border, paddingTop: insets.top + Spacing.xxl, paddingBottom: insets.bottom + Spacing.xl }]}>
       <View style={styles.brand}>
         <BrandMark size={36} wordmark />
       </View>
 
-      {canQuickAdd ? <Button title="Tez əlavə et" icon="add" onPress={() => setMenuOpen(true)} style={styles.quickAdd} /> : null}
+      <Button title="Tez əlavə et" icon="add" onPress={() => setMenuOpen(true)} style={styles.quickAdd} />
 
-      <View style={styles.nav} accessibilityRole="tablist">
+      {/* Destinations, not tabbed panels: a navigation landmark of links, with the current page marked. */}
+      <View style={styles.nav} role={Platform.OS === 'web' ? 'navigation' : undefined} accessibilityLabel="Naviqasiya">
         {tabs.map((tab) => {
           const active = isActive(tab.name);
           return (
             <PressableScale
               key={tab.name}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
+              accessibilityRole="link"
+              {...webAria(active ? { 'aria-current': 'page' } : {})}
               accessibilityLabel={tab.title}
               onPress={() => router.navigate(tabHrefs[tab.name] as never)}
               scaleTo={0.985}
@@ -106,7 +110,7 @@ export function Sidebar() {
         <Button title="Çıxış" variant="ghost" size="sm" icon="log-out-outline" onPress={() => logout.mutate()} loading={logout.isPending} />
       </View>
 
-      <QuickAddMenu visible={menuOpen} onClose={() => setMenuOpen(false)} onSelect={select} origin="sidebar" />
+      <QuickAddMenu visible={menuOpen} onClose={() => setMenuOpen(false)} onSelect={select} origin="sidebar" actions={quickActions} />
     </View>
   );
 }

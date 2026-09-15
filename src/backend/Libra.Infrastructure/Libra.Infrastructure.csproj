@@ -5,10 +5,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The provider response parser is exercised directly against fixtures; it stays off the public surface. -->
+    <InternalsVisibleTo Include="Libra.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="SkiaSharp" />
+    <!-- The API image is Linux; the native Skia binaries have to travel with it. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Condition="'$(OS)' != 'Windows_NT' OR '$(ContinuousIntegrationBuild)' == 'true'" />
   </ItemGroup>
 
 </Project>

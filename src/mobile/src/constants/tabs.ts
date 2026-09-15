@@ -16,7 +16,7 @@ export interface TabDefinition {
 export const tabs: readonly TabDefinition[] = [
   { name: 'index', title: 'Ana səhifə', icon: 'home-outline', activeIcon: 'home', placeholder: false },
   { name: 'finance', title: 'Maliyyə', icon: 'wallet-outline', activeIcon: 'wallet', placeholder: false },
-  { name: 'nutrition', title: 'Qidalanma', icon: 'nutrition-outline', activeIcon: 'nutrition', placeholder: true },
-  { name: 'plan', title: 'Plan', icon: 'checkbox-outline', activeIcon: 'checkbox', placeholder: true },
+  { name: 'nutrition', title: 'Qidalanma', icon: 'nutrition-outline', activeIcon: 'nutrition', placeholder: false },
+  { name: 'plan', title: 'Plan', icon: 'checkbox-outline', activeIcon: 'checkbox', placeholder: false },
   { name: 'ai', title: 'AI', icon: 'sparkles-outline', activeIcon: 'sparkles', placeholder: true },
 ];

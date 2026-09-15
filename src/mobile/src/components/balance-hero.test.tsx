@@ -5,7 +5,7 @@ import { Shadows, palettes } from '@/constants/theme';
 import type { Theme } from '@/hooks/use-theme';
 
 const mockTheme: { current: Theme } = {
-  current: { scheme: 'light', colors: palettes.light, shadows: Shadows.light, reducedMotion: false, layout: 'compact', width: 390, height: 844, pagePadding: 20 },
+  current: { scheme: 'light', preference: 'light', colors: palettes.light, shadows: Shadows.light, reducedMotion: false, layout: 'compact', width: 390, height: 844, pagePadding: 20 },
 };
 jest.mock('@/hooks/use-theme', () => ({
   useTheme: () => mockTheme.current,

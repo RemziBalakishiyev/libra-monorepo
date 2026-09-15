@@ -1,0 +1,201 @@
+{
+  "capturedAt": "2026-09-09T21:50:36.737Z",
+  "passed": 49,
+  "total": 49,
+  "checks": {
+    "emptyStateOffersToStart": true,
+    "emptyWeekSaysThereIsNothingYet": true,
+    "sevenDatesAreShown": true,
+    "emptyDatesReadAsNoRecord": true,
+    "webReminderIsHonest": true,
+    "startCreatesOneOpenSessionOnTheServer": true,
+    "activeCardOffersWake": true,
+    "secondOpenSessionIsRefused": true,
+    "runningSessionSurvivesAReload": true,
+    "elapsedIsShownAfterReload": true,
+    "failedWakeIsReportedNotSwallowed": true,
+    "capturedWakeInstantIsKeptOnTheDevice": true,
+    "pendingStopIsScopedToUserAndSession": true,
+    "nothingIsRecordedUntilTheServerAgrees": true,
+    "theRecordedWakeIsTheMomentTheUserPressed": true,
+    "reconnectingDoesNotLengthenTheNight": true,
+    "noSessionIsLeftRunning": true,
+    "repeatedStopReturnsTheSameCompletedSession": true,
+    "qualityIsNamedInWordsNotOnlyANumber": true,
+    "ratingIsStoredWithoutMovingTheInterval": true,
+    "theRecordedNightIsInTheHistory": true,
+    "correctionMovesTheStoredStart": true,
+    "aStaleCorrectionIsRefused": true,
+    "manualEntryShowsItsLengthBeforeSaving": true,
+    "theRatingIsOptional": true,
+    "anInvalidPairIsReportedAtItsField": true,
+    "anInvalidSubmitWritesNothing": true,
+    "theLengthFollowsTheFieldsLive": true,
+    "manualEntryStoresTheLengthItShowed": true,
+    "aMidnightCrossingNightIsCountedOnTheWakeDate": true,
+    "theAverageNamesItsDenominator": true,
+    "emptyDatesStillReadAsNoRecord": true,
+    "aggregatesIgnorePagination": true,
+    "homeReportsTheLastNight": true,
+    "quickAddOffersSleepBeforeFinanceExists": true,
+    "quickAddNeitherStartsNorStopsASession": true,
+    "aForgottenNightIsNeverClippedOrClosedForTheUser": true,
+    "aForgottenNightCanBeCorrectedOrDiscarded": true,
+    "sleepFitsAt360": true,
+    "sleepFitsOnTablet": true,
+    "sleepFitsOnDesktop": true,
+    "sleepFitsInDark": true,
+    "sleepFitsWithLargerRelativeText": true,
+    "sleepFitsWithReducedMotion": true,
+    "wakeIsReachableWithoutScrolling": true,
+    "theTickingFigureIsNotALiveRegion": true,
+    "theTickingFigureStillHasASpokenName": true,
+    "submitReachableAtKeyboardHeight": true,
+    "noUnexpectedConsoleErrors": true
+  },
+  "measurements": {
+    "emptyState": {
+      "card": "Hələ yuxu qeyd olunmayıbYatmağa gedəndə başladın; oyananda bir toxunuşla bitirin.Yatmağa başla",
+      "average": "Orta: Hələ qeyd yoxdur",
+      "reminder": "Brauzerdə bildiriş xatırlatması yoxdur. Yuxu izləməsi tam işləyir."
+    },
+    "emptyDayLabels": [
+      "4 sen: Qeyd yoxdur",
+      "5 sen: Qeyd yoxdur",
+      "6 sen: Qeyd yoxdur",
+      "7 sen: Qeyd yoxdur",
+      "8 sen: Qeyd yoxdur",
+      "9 sen: Qeyd yoxdur",
+      "10 sen: Qeyd yoxdur"
+    ],
+    "started": {
+      "id": "01a08825-4320-7b2a-b2e0-20f87a2aee13",
+      "startedAtUtc": "2026-09-09T21:48:58.520562Z",
+      "isOpen": true
+    },
+    "activeCard": "Yuxu davam edir01:48-dan0 dMüddət başlanğıc vaxtından hesablanır; tətbiq bağlansa da davam edir.Oyandım",
+    "secondStartStatus": 409,
+    "restored": {
+      "hasActiveCard": true,
+      "elapsed": "0 d",
+      "startedAt": "01:48-dan"
+    },
+    "pending": {
+      "banner": "01:49 oyanışı hələ göndərilməyib.Yenidən göndər",
+      "stored": {
+        "userId": "01a08825-2894-7fcb-b685-cc182f3aef7c",
+        "sessionId": "01a08825-4320-7b2a-b2e0-20f87a2aee13",
+        "endedAtUtc": "2026-09-09T21:49:04.685Z"
+      },
+      "serverStillOpen": true
+    },
+    "recorded": {
+      "endedAtUtc": "2026-09-09T21:49:04.685Z",
+      "durationMinutes": 0,
+      "wakeDate": "2026-09-10",
+      "capturedWake": "2026-09-09T21:49:04.685Z",
+      "retriedAt": "2026-09-09T21:49:13.035Z"
+    },
+    "repeatedStop": {
+      "status": 200,
+      "endedAtUtc": "2026-09-09T21:49:04.685Z"
+    },
+    "qualityLabel": "Yaxşı",
+    "rated": {
+      "quality": 4,
+      "startedAtUtc": "2026-09-09T21:48:58.520562Z",
+      "endedAtUtc": "2026-09-09T21:49:04.685Z"
+    },
+    "history": [
+      "Bu gün, 0 dəqiqə, Yaxşı"
+    ],
+    "correctionTyped": {
+      "from": "01:48",
+      "to": "01:43"
+    },
+    "correctionPreview": "Müddət: 6 d",
+    "corrected": {
+      "startedAtUtc": "2026-09-09T21:43:00Z",
+      "durationMinutes": 6,
+      "updatedAtUtc": "2026-09-09T21:49:24.508852Z"
+    },
+    "staleEditStatus": 409,
+    "manualDefaults": {
+      "duration": "Müddət: 8 s",
+      "quality": "Qiymətləndirmədən də yazıla bilər."
+    },
+    "validation": {
+      "message": "Oyanma vaxtı yuxu başlanğıcından sonra olmalıdır.",
+      "sessionCount": 1
+    },
+    "manualPreview": "Müddət: 7 s 30 d",
+    "manual": {
+      "startedAtUtc": "2026-09-07T19:20:00Z",
+      "endedAtUtc": "2026-09-08T02:50:00Z",
+      "wakeDate": "2026-09-08",
+      "durationMinutes": 450
+    },
+    "week": {
+      "average": "Orta: 3 s 48 d · 2 gün üzrə",
+      "days": [
+        "4 sen: Qeyd yoxdur",
+        "5 sen: Qeyd yoxdur",
+        "6 sen: Qeyd yoxdur",
+        "7 sen: Qeyd yoxdur",
+        "8 sen: 7 saat 30 dəqiqə",
+        "9 sen: Qeyd yoxdur",
+        "10 sen: 6 dəqiqə"
+      ]
+    },
+    "summary": {
+      "recordedDays": 2,
+      "averageMinutes": 228,
+      "totalMinutes": 456,
+      "sessionCount": 2
+    },
+    "pagination": {
+      "pageSize": 1,
+      "totalCount": 2,
+      "summarySessions": 2
+    },
+    "homeCard": {
+      "label": "Son yuxu Bu gün, 6 dəqiqə",
+      "value": "6 d"
+    },
+    "quickAdd": [
+      "Yemək",
+      "Tapşırıq",
+      "Yuxu"
+    ],
+    "afterQuickAdd": {
+      "active": null,
+      "idle": true
+    },
+    "forgotten": {
+      "startedAtUtc": "2026-09-07T09:49:47.76Z",
+      "hoursOpen": 60,
+      "notice": "Bu yuxu hələ davam edir. Oyanma vaxtını yazıb bitirə, yalnız başlanğıcı düzəldib açıq saxlaya, və ya tamamilə ləğv edə bilərsiniz. Müddət heç vaxt öz-özünə qısaldılmır.",
+      "offersToClose": true,
+      "offersToDiscard": true,
+      "storedDurationMinutes": null,
+      "stillOpen": true
+    },
+    "firstFold": {
+      "elapsed": 125,
+      "wakeBottom": 259,
+      "tabBarTop": null,
+      "viewportHeight": 844
+    },
+    "elapsedAria": {
+      "live": null,
+      "label": "Keçən vaxt: 0 dəqiqə"
+    },
+    "footerVisible": {
+      "bottom": 508,
+      "viewport": 520
+    },
+    "consoleErrors": [],
+    "unexpectedConsoleErrors": []
+  },
+  "consoleErrors": []
+}

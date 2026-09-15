@@ -7,7 +7,7 @@ import { Button, IconButton } from '@/components/button';
 import { Entrance } from '@/components/entrance';
 import { MetricItem } from '@/components/metric-item';
 import { PressableScale } from '@/components/pressable-scale';
-import type { QuickActionKind } from '@/components/quick-action';
+import { globalQuickActionDefinitions, type QuickActionKind } from '@/components/quick-action';
 import { QuickAddMenu } from '@/components/quick-add-menu';
 import { Screen } from '@/components/screen';
 import { ScreenHeader } from '@/components/screen-header';
@@ -18,12 +18,19 @@ import { AppText, MoneyText, formatAmount } from '@/components/text';
 import type { IconName } from '@/constants/categories';
 import { MinTouchTarget, Radius, Spacing, type ThemeColor } from '@/constants/theme';
 import { useAccounts, useDashboard } from '@/hooks/use-finance';
+import { useNutritionDay } from '@/hooks/use-nutrition';
+import { useTaskDay } from '@/hooks/use-tasks';
 import { useProfile } from '@/hooks/use-profile';
 import { useTheme } from '@/hooks/use-theme';
 import type { Dashboard } from '@/lib/api/finance';
+import type { NutritionDay } from '@/lib/api/nutrition';
+import type { TaskDay } from '@/lib/api/tasks';
 import { withAlpha } from '@/lib/color';
 import { formatMonth, formatWeekdayDate } from '@/lib/dates';
-import { quickActionHref } from '@/lib/quick-add';
+import { formatKcal, targetProgress } from '@/lib/nutrition';
+import { completionSummary } from '@/lib/tasks';
+import { quickActionHref, requiresFinanceSetup } from '@/lib/quick-add';
+import { HomeSleepCard } from '@/screens/home/sleep-card';
 
 type ModuleHref = '/finance' | '/nutrition' | '/plan' | '/ai';
 
@@ -42,8 +49,8 @@ interface ModuleDefinition {
 /** The module entries. Order matches the tab bar. */
 const modules: readonly ModuleDefinition[] = [
   { key: 'finance', title: 'Maliyyə', caption: 'Balans, əməliyyatlar və büdcə', icon: 'wallet-outline', accent: 'moduleFinance', href: '/finance', placeholder: false },
-  { key: 'nutrition', title: 'Qidalanma', caption: 'Yeməklər, kalori və makrolar', icon: 'nutrition-outline', accent: 'moduleNutrition', href: '/nutrition', placeholder: true },
-  { key: 'plan', title: 'Plan', caption: 'Tapşırıqlar və yuxu', icon: 'checkbox-outline', accent: 'modulePlan', href: '/plan', placeholder: true },
+  { key: 'nutrition', title: 'Qidalanma', caption: 'Yeməklər, kalori və makrolar', icon: 'nutrition-outline', accent: 'moduleNutrition', href: '/nutrition', placeholder: false },
+  { key: 'plan', title: 'Plan', caption: 'Tapşırıqlar və yuxu', icon: 'checkbox-outline', accent: 'modulePlan', href: '/plan', placeholder: false },
   { key: 'ai', title: 'AI', caption: 'Məlumatlarınız üzrə köməkçi', icon: 'sparkles-outline', accent: 'moduleAi', href: '/ai', placeholder: true },
 ];
 
@@ -63,6 +70,9 @@ export function Home() {
   const profile = useProfile();
   const accounts = useAccounts();
   const dashboard = useDashboard({});
+  // Today in the profile time zone; the API decides which day that is.
+  const nutrition = useNutritionDay(undefined);
+  const plan = useTaskDay(undefined);
   const hasAccounts = (accounts.data?.length ?? 0) > 0;
   const [dateLabel, setDateLabel] = useState(() => formatWeekdayDate(new Date()));
   const [refreshing, setRefreshing] = useState(false);
@@ -76,8 +86,11 @@ export function Home() {
   const onRefresh = () => {
     setRefreshing(true);
     setDateLabel(formatWeekdayDate(new Date()));
-    void Promise.allSettled([accounts.refetch(), dashboard.refetch(), profile.refetch()]).finally(() => setRefreshing(false));
+    void Promise.allSettled([accounts.refetch(), dashboard.refetch(), nutrition.refetch(), plan.refetch(), profile.refetch()]).finally(() => setRefreshing(false));
   };
+
+  // Money actions need an account; a meal and a task do not, so Quick Add is available from the first day.
+  const quickActions = hasAccounts ? globalQuickActionDefinitions : globalQuickActionDefinitions.filter((action) => !requiresFinanceSetup(action.kind));
 
   const onQuickAdd = (kind: QuickActionKind) => {
     setMenuOpen(false);
@@ -109,7 +122,12 @@ export function Home() {
   const moduleList = (
     <View style={styles.section}>
       <SectionHeader title="Modullar" />
-      <ModuleList onOpen={(module) => router.navigate(module.href)} />
+      <ModuleList
+        onOpen={(module) => router.navigate(module.href)}
+        summaries={{ nutrition: nutritionSummary(nutrition.data, nutrition.isPending), plan: planSummary(plan.data, plan.isPending) }}
+      />
+      {/* Sleep sits under Plan in the tab bar, so its compact card sits with the modules rather than alone. */}
+      <HomeSleepCard />
     </View>
   );
 
@@ -121,7 +139,7 @@ export function Home() {
           title={greeting}
           trailing={
             <>
-              {hasAccounts && !wide ? <IconButton icon="add" accessibilityLabel="Tez əlavə et" accessibilityHint="Xərc, gəlir və ya köçürmə əlavə et" variant="primary" onPress={() => setMenuOpen(true)} testID="home-quick-add" /> : null}
+              {!wide ? <IconButton icon="add" accessibilityLabel="Tez əlavə et" accessibilityHint="Xərc, gəlir, yemək və ya köçürmə əlavə et" variant="primary" onPress={() => setMenuOpen(true)} testID="home-quick-add" /> : null}
               <IconButton icon="person-circle-outline" accessibilityLabel="Profil və seçimlər" accessibilityHint="Profil səhifəsini açır" variant="filled" size={24} onPress={() => router.push('/profile')} />
             </>
           }
@@ -144,7 +162,7 @@ export function Home() {
         </>
       )}
 
-      <QuickAddMenu visible={menuOpen} onClose={() => setMenuOpen(false)} onSelect={onQuickAdd} origin="top-right" />
+      <QuickAddMenu visible={menuOpen} onClose={() => setMenuOpen(false)} onSelect={onQuickAdd} origin="top-right" actions={quickActions} />
       <Sheet visible={transferGate} onClose={() => setTransferGate(false)} title="Köçürmə üçün iki hesab lazımdır" presentation="dialog" scrollable={false} maxWidth={420}>
         <View style={styles.gate}>
           <AppText color="textSecondary">Köçürmə hesablar arasında aparılır. İkinci hesabı yaradın, sonra köçürmə edə bilərsiniz.</AppText>
@@ -236,8 +254,28 @@ function SummaryCard({ dashboard }: { dashboard: Dashboard }) {
   );
 }
 
-/** Compact module rows on one surface: the live module with a chevron, the upcoming ones marked "Tezliklə". */
-function ModuleList({ onOpen }: { onOpen: (module: ModuleDefinition) => void }) {
+/** Today's nutrition in one line: consumed against the target when one is set, otherwise the consumed energy. */
+function nutritionSummary(day: NutritionDay | undefined, pending: boolean): string | null {
+  if (!day) {
+    return pending ? '…' : null;
+  }
+  const progress = targetProgress(day.totals.energyKcal, day.goal?.energyKcal);
+  if (progress) {
+    return `${formatKcal(day.totals.energyKcal, false)} / ${formatKcal(progress.target)}`;
+  }
+  return day.entryCount === 0 ? 'Bu gün qeyd yoxdur' : formatKcal(day.totals.energyKcal);
+}
+
+/** Today's plan in one line: how much of today is done, or an honest sentence when there is nothing on it. */
+function planSummary(day: TaskDay | undefined, pending: boolean): string | null {
+  if (!day) {
+    return pending ? '…' : null;
+  }
+  return completionSummary(day.counts);
+}
+
+/** Compact module rows on one surface: the live module with its figure, the upcoming ones marked "Tezliklə". */
+function ModuleList({ onOpen, summaries = {} }: { onOpen: (module: ModuleDefinition) => void; summaries?: Record<string, string | null> }) {
   const { colors, scheme } = useTheme();
   return (
     <View style={[styles.moduleList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -247,7 +285,7 @@ function ModuleList({ onOpen }: { onOpen: (module: ModuleDefinition) => void }) 
           <PressableScale
             key={module.key}
             accessibilityRole="button"
-            accessibilityLabel={module.placeholder ? `${module.title}, tezliklə` : module.title}
+            accessibilityLabel={module.placeholder ? `${module.title}, tezliklə` : summaries[module.key] ? `${module.title}, ${summaries[module.key]}` : module.title}
             accessibilityHint={module.caption}
             onPress={() => onOpen(module)}
             scaleTo={0.99}
@@ -272,7 +310,14 @@ function ModuleList({ onOpen }: { onOpen: (module: ModuleDefinition) => void }) 
                 </AppText>
               </View>
             ) : (
-              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+              <>
+                {summaries[module.key] ? (
+                  <AppText variant="meta" color="textSecondary" numberOfLines={1} style={styles.moduleSummary}>
+                    {summaries[module.key]}
+                  </AppText>
+                ) : null}
+                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+              </>
             )}
           </PressableScale>
         );
@@ -377,6 +422,10 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     gap: 1,
+  },
+  moduleSummary: {
+    flexShrink: 1,
+    fontVariant: ['tabular-nums'],
   },
   soonChip: {
     paddingHorizontal: Spacing.sm,

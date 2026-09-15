@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { Platform, Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,6 +8,7 @@ import { AppText } from '@/components/text';
 import { tabs } from '@/constants/tabs';
 import { Layout, Motion, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { webAria } from '@/lib/a11y';
 
 /** Minimal structural type of React Navigation's tab bar props (Expo Router bundles the navigator). */
 export interface TabBarProps {
@@ -20,6 +21,11 @@ export interface TabBarProps {
  * opaque canvas-coloured region that owns the bottom safe area, so content and focused controls can never sit
  * behind it; the floating pill is purely visual and grows with enlarged text instead of clipping labels. Tabs are peers, so nothing slides: the indicator pill
  * translates (240 ms) and the active icon scales 1 → 1.06. Quick Add lives in the screen headers, not here.
+ *
+ * Semantics differ by platform on purpose. This bar navigates between top-level destinations, so on the web it
+ * is a `navigation` landmark of links with `aria-current="page"` on the destination in view — `tab` there would
+ * promise a `tabpanel` relationship that does not exist. On iOS and Android the platform convention for a bottom
+ * bar is a tab bar, so the native roles stay `tablist` / `tab` with the selected state.
  */
 export function TabBar({ state, navigation }: TabBarProps) {
   const { colors, shadows, reducedMotion } = useTheme();
@@ -38,7 +44,11 @@ export function TabBar({ state, navigation }: TabBarProps) {
 
   return (
     <View style={[styles.region, { backgroundColor: colors.canvas, paddingBottom: Math.max(insets.bottom, Layout.tabBarGutter) }]} testID="tab-bar-region">
-      <View style={[styles.bar, { backgroundColor: colors.navSurface, borderColor: colors.navBorder, boxShadow: shadows.nav }]} accessibilityRole="tablist">
+      <View
+        style={[styles.bar, { backgroundColor: colors.navSurface, borderColor: colors.navBorder, boxShadow: shadows.nav }]}
+        role={Platform.OS === 'web' ? 'navigation' : undefined}
+        accessibilityRole={Platform.OS === 'web' ? undefined : 'tablist'}
+        accessibilityLabel="Əsas naviqasiya">
         <View onLayout={onLayout} style={styles.slots}>
           {slot > 0 ? (
             <Animated.View style={[styles.indicatorTrack, { width: slot }, indicatorStyle]}>
@@ -55,7 +65,14 @@ export function TabBar({ state, navigation }: TabBarProps) {
               }
             };
             return (
-              <Pressable key={route.key} accessibilityRole="tab" accessibilityState={{ selected: active }} accessibilityLabel={tab?.title ?? route.name} onPress={onPress} style={styles.tab}>
+              <Pressable
+                key={route.key}
+                accessibilityRole={Platform.OS === 'web' ? 'link' : 'tab'}
+                aria-selected={Platform.OS === 'web' ? undefined : active}
+                {...webAria(active ? { 'aria-current': 'page' } : {})}
+                accessibilityLabel={tab?.title ?? route.name}
+                onPress={onPress}
+                style={styles.tab}>
                 <TabIcon name={active ? (tab?.activeIcon ?? 'ellipse') : (tab?.icon ?? 'ellipse-outline')} active={active} color={active ? colors.primaryText : colors.textMuted} />
                 <AppText variant="caption" align="center" style={{ color: active ? colors.primaryText : colors.textMuted }} numberOfLines={2}>
                   {tab?.title ?? route.name}

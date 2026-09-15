@@ -22,6 +22,7 @@ export class ApiError extends Error {
 
 export interface RequestOptions<TResponse> {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  /** JSON payload, or a FormData for a file upload (sent as multipart, never stringified). */
   body?: unknown;
   /** Attach the bearer token and refresh-and-retry once on 401. */
   auth?: boolean;
@@ -92,7 +93,8 @@ async function doRefresh(): Promise<SessionTokens | null> {
 
 async function send<TResponse>(path: string, options: RequestOptions<TResponse>, accessToken?: string): Promise<Response> {
   const headers: Record<string, string> = { Accept: 'application/json' };
-  if (options.body !== undefined) {
+  const multipart = options.body instanceof FormData;
+  if (options.body !== undefined && !multipart) {
     headers['Content-Type'] = 'application/json';
   }
   if (accessToken) {
@@ -102,7 +104,8 @@ async function send<TResponse>(path: string, options: RequestOptions<TResponse>,
   return fetch(`${env.EXPO_PUBLIC_API_URL}${path}`, {
     method: options.method ?? 'GET',
     headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    // A multipart body carries its own boundary, so it is passed through untouched.
+    body: options.body === undefined ? undefined : multipart ? (options.body as FormData) : JSON.stringify(options.body),
     signal: options.signal,
   });
 }

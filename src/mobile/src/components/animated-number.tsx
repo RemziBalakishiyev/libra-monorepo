@@ -11,6 +11,8 @@ type AnimatedNumberProps = {
   color?: TextColor;
   highlightNegative?: boolean;
   showCode?: boolean;
+  /** Decimals shown; 0 for whole-unit figures such as kcal. */
+  fractionDigits?: number;
   accessibilityLabel?: string;
   /** Animates only when the value changes after mount (never on background refetches that keep the value). */
   animateOnMount?: boolean;
@@ -22,7 +24,7 @@ type AnimatedNumberProps = {
  * straight to the new value. Tabular numerals keep the width stable while ticking. The accessible name is
  * always the final value, so screen readers announce one change instead of every frame.
  */
-export function AnimatedNumber({ value, currencyCode, variant = 'hero', color, highlightNegative = true, showCode = true, accessibilityLabel, animateOnMount = false }: AnimatedNumberProps) {
+export function AnimatedNumber({ value, currencyCode, variant = 'hero', color, highlightNegative = true, showCode = true, fractionDigits = 2, accessibilityLabel, animateOnMount = false }: AnimatedNumberProps) {
   const { reducedMotion } = useTheme();
   const [displayed, setDisplayed] = useState(animateOnMount ? 0 : value);
   const displayedRef = useRef(animateOnMount ? 0 : value);
@@ -63,6 +65,7 @@ export function AnimatedNumber({ value, currencyCode, variant = 'hero', color, h
       color={color}
       highlightNegative={highlightNegative}
       showCode={showCode}
+      fractionDigits={fractionDigits}
       accessibilityLabel={accessibilityLabel ?? spokenMoney(value, currencyCode)}
       accessibilityLiveRegion="polite"
     />

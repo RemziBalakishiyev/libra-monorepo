@@ -2,7 +2,7 @@ import { StyleSheet, Text, type TextProps } from 'react-native';
 
 import { Type, type ThemeColor, type TypeName } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { formatMoney } from '@/lib/money';
+import { formatMoney, formatNumber } from '@/lib/money';
 
 export type TextColor = Extract<
   ThemeColor,
@@ -48,13 +48,15 @@ type MoneyTextProps = Omit<AppTextProps, 'children'> & {
   highlightNegative?: boolean;
   /** Renders the ISO code after the number. */
   showCode?: boolean;
+  /** Decimals shown. Money keeps two; whole-unit values such as kcal pass 0. */
+  fractionDigits?: number;
 };
 
 /**
  * Monetary value with tabular numerals so digits keep their width while a value animates. Semantic colouring
  * uses the `*Text` foregrounds so the number stays readable on white and on the soft surfaces.
  */
-export function MoneyText({ amount, currencyCode, flow, highlightNegative = false, showCode = true, color, style, accessibilityLabel, ...rest }: MoneyTextProps) {
+export function MoneyText({ amount, currencyCode, flow, highlightNegative = false, showCode = true, fractionDigits = 2, color, style, accessibilityLabel, ...rest }: MoneyTextProps) {
   let resolved: TextColor | undefined = color;
   if (flow === 'Income') {
     resolved = 'incomeText';
@@ -66,7 +68,7 @@ export function MoneyText({ amount, currencyCode, flow, highlightNegative = fals
     resolved = 'expenseText';
   }
   const sign = flow === 'Income' ? '+' : flow === 'Expense' ? '−' : '';
-  const text = `${sign}${formatAmount(flow && flow !== 'Transfer' ? Math.abs(amount) : amount, currencyCode, showCode)}`;
+  const text = `${sign}${formatAmount(flow && flow !== 'Transfer' ? Math.abs(amount) : amount, currencyCode, showCode, fractionDigits)}`;
   return (
     <AppText color={resolved} style={[styles.tabular, style]} accessibilityLabel={accessibilityLabel ?? spokenMoney(amount, currencyCode, flow)} {...rest}>
       {text}
@@ -74,9 +76,17 @@ export function MoneyText({ amount, currencyCode, flow, highlightNegative = fals
   );
 }
 
-/** "1.234,56 AZN" (with code) or "1.234,56" — one locale-aware formatter for every screen (lib/money). */
-export function formatAmount(amount: number, currencyCode: string, showCode = true): string {
-  return formatMoney(amount, currencyCode, { showCode });
+/**
+ * "1.234,56 AZN" (with code) or "1.234,56" — one locale-aware formatter for every screen (lib/money).
+ * `fractionDigits` covers non-money figures that share the ticker, such as whole-number kcal.
+ */
+export function formatAmount(amount: number, currencyCode: string, showCode = true, fractionDigits = 2): string {
+  const withCode = showCode && currencyCode !== '';
+  if (fractionDigits === 2) {
+    return formatMoney(amount, currencyCode, { showCode: withCode });
+  }
+  const number = formatNumber(amount, fractionDigits);
+  return withCode ? `${number} ${currencyCode}` : number;
 }
 
 /** Screen-reader friendly value: "Xərc 24,50 AZN". */

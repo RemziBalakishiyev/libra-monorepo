@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { forwardRef, type ReactNode } from 'react';
+import { Pressable, type PressableProps, type StyleProp, type View, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { Motion } from '@/constants/theme';
@@ -22,7 +22,10 @@ export type PressableScaleProps = Omit<PressableProps, 'style' | 'children'> & {
  * Press feedback on the UI thread: feedback starts on press-in, the action commits on press-out.
  * ~110 ms and 3% scale is the ceiling for something touched tens of times a day.
  */
-export function PressableScale({ children, style, containerStyle, scaleTo = Motion.pressScale, pressedStyle, disabled, dimWhenDisabled = true, ...rest }: PressableScaleProps) {
+export const PressableScale = forwardRef<View, PressableScaleProps>(function PressableScale(
+  { children, style, containerStyle, scaleTo = Motion.pressScale, pressedStyle, disabled, dimWhenDisabled = true, ...rest },
+  ref,
+) {
   const { reducedMotion } = useTheme();
   const pressed = useSharedValue(0);
 
@@ -36,6 +39,7 @@ export function PressableScale({ children, style, containerStyle, scaleTo = Moti
 
   return (
     <Pressable
+      ref={ref}
       disabled={disabled}
       hitSlop={4}
       pressRetentionOffset={16}
@@ -48,4 +52,4 @@ export function PressableScale({ children, style, containerStyle, scaleTo = Moti
       )}
     </Pressable>
   );
-}
+});

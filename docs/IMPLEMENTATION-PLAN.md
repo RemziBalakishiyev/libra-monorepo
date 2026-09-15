@@ -99,19 +99,186 @@ Outcome: the accepted direction kept; contrast, navigation geometry, hierarchy, 
 
 Gates run on 2026-09-07 (refinement): mobile `typecheck`, `lint`, `jest` (18 suites / 90 tests), `expo-doctor` 18/18, `expo export --platform web`, `git diff --check`, headless-Chrome walkthrough against the live API with screenshots and two recordings in `docs/screenshots-2.5b-refinement/`. Native gestures, pickers and haptics remain unverified on a device.
 
+## Phase 3A — Nutrition tracking
+
+- [x] Domain: `NutritionEntry` with 1–20 owned `NutritionEntryItem` snapshots (entered inputs + computed
+      contribution), `NutritionGoal` with an effective date; decimal precision and non-negative constraints
+- [x] Per-portion and per-100-g quantity modes; totals computed from unrounded inputs and rounded once; entered
+      kcal never derived from macros
+- [x] `/api/nutrition/day|entries|goals` with owner scoping, `clientRequestId` idempotency, Problem Details, and
+      day totals aggregated in SQL independently of list pagination
+- [x] Profile-time-zone day boundaries (`LocalCalendar.Day`); moving an entry updates both days
+- [x] Migration `AddNutrition` (3 tables, check constraints, unique indexes) applied to the development database
+- [x] Mobile: Qidalanma diary (date navigation, compact summary, four meal groups), add/edit form with live
+      calculation and progressive disclosure, goals screen with history, copy-into-another-day draft
+- [x] Home nutrition summary and a "Yemək" action in the global Quick Add; nutrition works without Finance setup
+- [x] Tests: 33 backend (domain, schema, entries, day, goals, authorization) and 25 mobile (calculations,
+      validation, diary, form, goals, cache invalidation)
+- [x] Photo-based AI analysis (Phase 3B)
+
+Gates run on 2026-09-07: `dotnet format --verify-no-changes`, `dotnet build`, `dotnet test` (108 unit +
+115 integration), mobile `lint`, `typecheck`, `jest`, `expo-doctor`, `expo export --platform web`,
+`git diff --check`, and a headless-Chrome walkthrough against the live API (40/40 checks, 0 console errors) with
+screenshots and two recordings in `docs/screenshots-3a/`. Native keyboard, dynamic type, gestures and haptics
+remain unverified on a device.
+
+## Phase 3B — Food-photo analysis
+
+- [x] `IAiFoodAnalyzer` with one real adapter (`OpenAiFoodAnalyzer`: Responses API, image input, strict
+      Structured Outputs, `store: false`); provider, model, credentials and limits in backend configuration only
+- [x] Versioned bounded result (`food-analysis.v1`): outcome, foods, portion description, estimated grams, the
+      four nutrients, per-item and overall confidence, note; refusals, truncation and out-of-range values are
+      named failures instead of repaired values, and an unknown nutrient stays null
+- [x] Owner-scoped `FoodAnalysisDraft` / `FoodAnalysisItem` / `FoodAnalysisImage`; analyze, get, image, confirm
+      and discard endpoints with Problem Details and distinct 400/413/429/503/504 statuses
+- [x] Confirmation creates one entry through the existing nutrition path in a single `xmin`-guarded transaction;
+      repeated, retried and concurrent confirmations return the first meal, even under a different retry key
+- [x] Normalization that never applies the estimated weight and the portion count as two multipliers; conservation
+      between the two representations; missing values block confirmation with field-level guidance
+- [x] Image validation on real bytes (type, size, decoded dimensions, pixel bound), orientation baked in, resize
+      and metadata-free JPEG re-encode (SkiaSharp); owner-checked storage; draft expiry, discard and cleanup that
+      never touch a nutrition entry
+- [x] Limits: upload size, output tokens, timeout, concurrency, per-user hourly ceiling, duplicate-submission and
+      obsolete-response guards; raw images, credentials and prompt content kept out of the logs
+- [x] Migration `AddFoodAnalysis` (3 tables, check constraints, unique filtered indexes) applied to the
+      development database
+- [x] Mobile "Şəkildən əlavə et" inside Qidalanma (manual "Yemək" and Finance's money actions untouched):
+      choose → preview → analyze → editable review → confirm, reusing the manual food editor and calculator
+- [x] States for unclear, non-food, unavailable, timeout, rate-limited, rejected image and lost connection; no
+      fabricated progress; one destination toast; diary and Home refresh only after a confirmed write
+- [x] Tests: 43 new backend unit (provider schema/refusal/ranges, normalization, image processing, analyzer
+      registration) and 32 new integration — 31 that run plus the opt-in live-provider check that skips with a
+      reason — covering the draft boundary, owner isolation, confirmation idempotency and concurrency, expiry and
+      cleanup, failure mapping, the rate limit and time-zone placement; and 15 new mobile tests for the
+      review/confirm flow, missing values, failure states and obsolete responses
+- [ ] Live provider call verified with real credentials (blocked: no API key available — see the phase report)
+
+Gates run on 2026-09-07: `dotnet format --verify-no-changes`, `dotnet build` (0 warnings), `dotnet test`
+(151 unit + 146 integration, 1 skipped live-provider check), mobile `lint`, `typecheck`, `jest` (27 suites /
+182 tests), `expo-doctor` 18/18, `expo export --platform web`, `git diff --check`, and a headless-Chrome
+walkthrough against the live API (51/51 checks) with screenshots and two inspected recordings in
+`docs/screenshots-3b/`. The walkthrough ran against the explicitly configured development fixture because no
+provider key was available; native camera capture, permission dialogs, keyboard, dynamic type and haptics remain
+unverified on a device.
+
 ## Phase 3 — Recurring transactions and debts
 
-- [ ] Recurring templates, idempotent monthly occurrences, short-month day rule
-- [ ] Debts (receivable/payable), partial payments, derived status, overdue
-- [ ] Dashboard separates cash, receivables, payables, projected position
-- [ ] Concurrency/idempotency/constraint tests
+- [x] Domain: `RecurringTransaction` (monthly plan, day clamped to the last valid day and back to the original
+      day next month, inclusive start/end on the resolved due date), `RecurringOccurrence` (`Recorded`/`Skipped`
+      rows with a snapshot; `Pending` computed on read, never stored), `Debt` and `DebtMovement` (principal only,
+      opening/payment, soft reversal)
+- [x] Recurring: month view that posts nothing; explicit "Gəliri qeyd et"/"Ödənişi qeyd et" with reviewed amount,
+      account and actual date → one ordinary transaction + occurrence in one save; DB-unique `(template, year,
+      month)` so concurrent/retried confirmations (any key) return the same transaction; skip, undo (transaction
+      deleted, month `Skipped`, never regenerated); generic transaction delete refuses a linked transaction;
+      edits/deactivation apply to unrecorded months only; templates with history deactivate, never delete
+- [x] Debts: receivable/payable with counterparty, principal, currency, opening/due dates, note; creation explicit
+      about cash (existing obligation vs money moving now through an account, atomic); partial/full payments with
+      account, actual date and readable history; remaining/status/overdue derived (profile time zone, settled
+      never overdue); overpayment under concurrency blocked by the debt's row version inside the payment
+      transaction; retry-safe undo restoring remaining and balance together; structural edits and deletion locked
+      once movements exist
+- [x] Financial consistency: movements extend `AccountBalanceCalculator` (no parallel balance); income, expense
+      and budgets never see principal; dashboard `debts` with `monthlyPrincipalNet` apart from `monthlyNet`,
+      `monthlyCashChange`, per-currency outstanding/overdue and a labelled `netPosition`; summary aggregated in
+      SQL independent of paging
+- [x] API: `/api/finance/recurring/*` and `/api/finance/debts/*` — owner-scoped, Problem Details, validation of
+      related ids, stale-edit 409, `clientRequestId` replay with 409 on conflicting reuse
+- [x] Mobile: "Təkrarlananlar" and "Borclar" soft buttons inside Finance (first fold and five tabs unchanged);
+      month list with pending/recorded/skipped states, totals, record sheet with `AccountEffect`, skip/undo, link
+      to the transaction; template form with deactivate/delete; debts list with the two direction views and a
+      per-currency remaining strip, due/overdue rows; debt form explicit about cash with the opening effect; debt
+      detail with history, payment sheet (account effect + remaining preview), undo; dashboard debt line
+- [x] Tests: 22 unit (clamping incl. leap years, boundaries, cash effects, remaining/status/overdue), 19
+      integration (acceptance numbers, 8 concurrent confirmations, retries with fresh keys, key reuse conflicts,
+      currency/archive/category validation, missed-month edits, stale edits, deactivation history, undo + generic
+      delete refusal, concurrent payments, overdue in profile time zone incl. a time-zone switch, totals beyond
+      one page, cross-user 404, future-month actual date), 23 mobile (lists, forms, confirm/payment/undo flows,
+      failed-submit preservation, refreshed totals, dark mode, roles)
+- [x] Evidence: `docs/screenshots-recurring-debts/` (21 screenshots, `results.json` 41/41, normal and
+      reduced-motion MP4s); device checklist in `docs/DEVICE-CHECKS.md`
 
-## Phase 4 — Tasks and sleep
+## Phase 4A — Plan / tasks
 
-- [ ] Task CRUD, today/upcoming/completed, complete/reopen history, minimal recurrence
-- [ ] Sleep start/stop, single open session (DB + app), timestamp-based duration, restore after restart
-- [ ] Local reminder notifications with contextual permission
-- [ ] Race/constraint/timezone tests
+- [x] Domain: `TaskItem` (one task on one local day, standalone or one occurrence of a schedule), `TaskSeries`
+      (the rule), `TaskCompletionEvent` (append-only history); calendar dates kept apart from UTC instants
+- [x] Profile-time-zone "today" and overdue from an injectable clock: a date-only task is late once its day ends,
+      a timed one once its local minute passes; completing an overdue task never moves its planned date
+- [x] Completion as an explicit desired state — no toggle endpoint; repeating it changes nothing and records no
+      second event, and reopening keeps the history it undid
+- [x] Minimal recurrence (none / daily / weekly-on-weekdays, start and optional end) with one row per scheduled
+      date, missed dates materialized, `(series_id, planned_date)` unique so concurrent generation cannot
+      duplicate, tombstones so a deleted occurrence cannot reappear, and series edit / stop that never rewrite
+      past or completed occurrences
+- [x] `/api/tasks` with owner scoping, three disjoint views, `clientRequestId` idempotency, Problem Details,
+      stale-edit 409 (echoed `updatedAtUtc` plus the `xmin` row version), and counts aggregated over the whole
+      matching set rather than one page
+- [x] Migration `AddTasks` (3 tables, check constraints, unique filtered indexes) applied to the development
+      database
+- [x] Mobile Plan screen: Bu gün / Qarşıdakı / Tamamlananlar, compact "n / N tamamlanıb" summary, a labelled
+      overdue section keeping original dates, wrapping task rows with a 48 pt completion control and labelled
+      priority, and create / edit / complete / reopen / delete flows
+- [x] Fast creation: title focused first, today's date and Normal priority by default, with time, note and
+      recurrence as disclosures; unrestricted task dates without touching Nutrition's restriction
+- [x] Home's Plan row shows today's real summary and "Tapşırıq" joins Quick Add; both work before Finance or
+      Nutrition is set up, and Finance's three money actions are unchanged
+- [x] Tests: 29 backend unit (title/priority bounds, overdue boundaries, completion idempotence, recurrence dates
+      and windows, stale detection) and 46 integration (CRUD, views, ordering, paging counts, retry-safe and
+      concurrent creation, repeated and concurrent completion, history, stale edits, daily/weekly independence,
+      concurrent generation, series edit/stop, deleted-occurrence regeneration, cross-user isolation, profile
+      time zone and timed-overdue boundaries); 35 new mobile tests for the Plan screen, the form and the helpers
+
+Gates run on 2026-09-08: `dotnet format --verify-no-changes`, `dotnet build` (0 warnings), `dotnet test`
+(180 unit + 192 integration, 1 skipped — Phase 3B's deliberately deferred live-provider check), mobile `lint`,
+`typecheck`, `jest` (30 suites / 217 tests), `expo-doctor` 18/18, `expo export --platform web`,
+`git diff --check`, and a headless-Chrome walkthrough against the live API (52/52 checks) with 31 screenshots and
+two inspected recordings in `docs/screenshots-4a/`. Native date/time pickers, keyboard, dynamic type, gestures
+and haptics remain unverified on a device.
+
+## Phase 4B — Sleep and reminders
+
+- [x] Domain: `SleepSession` as two UTC instants plus an optional 1–5 quality and note; every duration derived
+      from those instants, never from a timer, and every instant rounded to the precision PostgreSQL stores
+- [x] One open session per user at the application level **and** in the database (`ix_sleep_sessions_open`,
+      partial unique where `ended_at_utc is null`), so two concurrent starts leave one session and one 409
+- [x] Non-overlap of completed sessions through a `btree_gist` EXCLUDE constraint over the half-open
+      `tstzrange(started_at_utc, ended_at_utc, '[)')` — adjacent sessions may meet at an endpoint
+- [x] Idempotent start (`clientRequestId`), a stop that names its session and its instant, repeated stops
+      returning the same completed session without moving its end, and a documented 24-hour limit that applies
+      only to completed intervals — an open one is never clipped or auto-closed
+- [x] `/api/sleep/*` with owner scoping, Problem Details, stale-edit 409 (echoed `updatedAtUtc` plus the `xmin`
+      row version), and a seven-day summary attributing each session to its local wake date, averaging only over
+      the days that hold a record, aggregated over the whole data set rather than one page
+- [x] Migration `AddSleep` (table, check constraints, partial unique index, `btree_gist` exclusion) applied to
+      the development database
+- [x] Mobile sleep screen: no-session / running / recorded states, a seven-day strip where an empty date reads
+      "Qeyd yoxdur", history, correction and manual entry with live duration and field-level validation
+- [x] "Oyandım" captures the wake instant once, persists it scoped to the user and session, cancels that
+      session's reminder and retries with the same instant, so reconnecting later cannot lengthen the night —
+      reusing the existing request path rather than adding an offline queue
+- [x] Optional local reminder (`expo-notifications` date trigger) scheduled only after a confirmed start, stored
+      with its id and trigger time, reconciled on resume without duplicates or expired firings, cleared for the
+      signed-out user only, honest browser fallback, and a tap that opens the session without recording waking
+- [x] Home's compact sleep card and a global Quick Add "Yuxu" that opens the screen without starting or stopping
+      a session; both work before Finance or Nutrition is set up, and Finance's three money actions are unchanged
+- [x] Tests: 16 backend unit (interval, quality and note bounds, future tolerance, duration limit, idempotent
+      stop, elapsed time) and 44 integration (concurrent starts, idempotent retries, stop targeting, ownership,
+      stale edits, interval validation, overlap and adjacency, time-zone and DST boundaries, wake-date
+      attribution, pagination-independent aggregates); 55 new mobile tests across the screen, the form, the
+      helpers, the validation schema and the reminder lifecycle, all on controlled clocks
+
+Gates run on 2026-09-10: `dotnet format --verify-no-changes`, `dotnet build` (0 warnings), `dotnet test`
+(196 unit + 236 integration, 1 skipped — Phase 3B's deliberately deferred live-provider check), mobile `lint`,
+`typecheck`, `jest` (35 suites / 272 tests), `expo-doctor` 18/18, `expo export --platform web`,
+`git diff --check`, and a headless-Chrome walkthrough against the live API (49/49 checks) with 22 screenshots and
+two inspected recordings in `docs/screenshots-4b/`. Local notifications, native pickers, keyboard, dynamic type,
+gestures and haptics remain unverified on a device.
+
+Device preparation (2026-09-10): `scripts/start-api-lan.ps1` binds the development API to every interface,
+picks the phone-reachable address, keeps a stable `Jwt:SigningKey` in user-secrets and writes the ignored
+`src/mobile/.env.local`; the notification-tap handler is now scoped to the signed-in account, and the Android
+permission prompt is asked only after the channel exists. `docs/DEVICE-CHECKS.md` holds the native-configuration
+analysis and the iPhone/Android checklists that still need a person and a phone.
 
 ## Phase 5 — Manual nutrition and combined dashboard
 
@@ -121,9 +288,9 @@ Gates run on 2026-09-07 (refinement): mobile `typecheck`, `lint`, `jest` (18 sui
 
 ## Phase 6 — AI food-photo analysis
 
-- [ ] `IAiFoodAnalyzer` contract, versioned JSON schema, storage/retention policy, limits
-- [ ] Draft → review → confirm flow; malformed output never persisted as a meal
-- [ ] Mocked provider tests; opt-in live smoke test
+Delivered early as Phase 3B (see above): `IAiFoodAnalyzer`, the versioned schema, the storage and retention
+policy, the limits, the draft → review → confirm flow, the fixture-based provider tests and the opt-in live smoke
+test all ship there.
 
 ## Phase 7 — AI chat and insights
 

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState, type ReactNode } from 'react';
+import { forwardRef, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Switch, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
 
 import { PressableScale } from '@/components/pressable-scale';
@@ -42,8 +42,15 @@ export type TextFieldProps = TextInputProps & {
   containerStyle?: StyleProp<ViewStyle>;
 };
 
-/** Labelled input on a white surface with a primary focus ring and an inline validation slot. */
-export function TextField({ label, error, hint, icon, secureToggle = false, trailing, editable = true, style, containerStyle, secureTextEntry, onFocus, onBlur, ...inputProps }: TextFieldProps) {
+/**
+ * Labelled input on a white surface with a primary focus ring and an inline validation slot.
+ *
+ * The ref reaches the inner `TextInput`, so a form that reveals its first invalid field can also focus it.
+ */
+export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
+  { label, error, hint, icon, secureToggle = false, trailing, editable = true, style, containerStyle, secureTextEntry, onFocus, onBlur, ...inputProps },
+  ref,
+) {
   const { colors } = useTheme();
   const [focused, setFocused] = useState(false);
   const [revealed, setRevealed] = useState(false);
@@ -58,6 +65,7 @@ export function TextField({ label, error, hint, icon, secureToggle = false, trai
       <View style={[styles.inputRow, { backgroundColor: editable ? colors.surface : colors.surfaceSubtle, borderColor, borderWidth: focused ? 1.5 : 1 }]}>
         {icon ? <Ionicons name={icon} size={18} color={focused ? colors.primary : colors.textMuted} /> : null}
         <TextInput
+          ref={ref}
           accessibilityLabel={label}
           accessibilityHint={error}
           accessibilityState={{ disabled: !editable }}
@@ -86,7 +94,7 @@ export function TextField({ label, error, hint, icon, secureToggle = false, trai
       <FieldMessage error={error} hint={hint} />
     </View>
   );
-}
+});
 
 type SelectRowProps = {
   label: string;

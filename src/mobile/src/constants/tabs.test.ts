@@ -7,8 +7,10 @@ describe('tab shell', () => {
     expect(tabs.map((tab) => tab.title)).toEqual(['Ana səhifə', 'Maliyyə', 'Qidalanma', 'Plan', 'AI']);
   });
 
-  it('marks only nutrition, plan, and AI as placeholders', () => {
-    expect(tabs.filter((tab) => tab.placeholder).map((tab) => tab.name)).toEqual(['nutrition', 'plan', 'ai']);
+  it('marks only AI as a placeholder now that plan is live', () => {
+    expect(tabs.filter((tab) => tab.placeholder).map((tab) => tab.name)).toEqual(['ai']);
+    expect(tabs.find((tab) => tab.name === 'nutrition')?.placeholder).toBe(false);
+    expect(tabs.find((tab) => tab.name === 'plan')?.placeholder).toBe(false);
   });
 });
 

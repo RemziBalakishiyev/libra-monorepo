@@ -1,8 +1,11 @@
 using Libra.Application.Common;
+using Libra.Application.Nutrition.FoodAnalysis;
+using Libra.Infrastructure.Ai;
 using Libra.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Libra.Infrastructure;
 
@@ -10,10 +13,11 @@ public static class DependencyInjection
 {
     public const string ConnectionStringName = "Libra";
 
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(environment);
 
         var connectionString = configuration.GetConnectionString(ConnectionStringName);
         if (string.IsNullOrWhiteSpace(connectionString))
@@ -31,6 +35,25 @@ public static class DependencyInjection
         services
             .AddHealthChecks()
             .AddDbContextCheck<LibraDbContext>("postgresql", tags: ["ready"]);
+
+        // Photo analysis: the real provider adapter is always registered. Without credentials it reports
+        // NotConfigured, which surfaces as an honest 503 — it never invents a result.
+        services.AddSingleton<IFoodImageProcessor, FoodImageProcessor>();
+        services.AddSingleton<IImageStore, FileSystemImageStore>();
+
+        // The fixture analyzer needs two independent yeses: the Development host and an explicit opt-in. Anywhere
+        // else — including a production host that happens to carry the setting — the real adapter is what runs.
+        var useFixture = environment.IsDevelopment() && configuration.GetValue<bool>("Ai:FoodAnalysis:UseDevelopmentFixture");
+        if (useFixture)
+        {
+            services.AddSingleton<IAiFoodAnalyzer, DevelopmentFixtureFoodAnalyzer>();
+        }
+        else
+        {
+            services.AddHttpClient<IAiFoodAnalyzer, OpenAiFoodAnalyzer>();
+        }
+
+        services.AddHostedService<FoodAnalysisCleanupService>();
 
         return services;
     }

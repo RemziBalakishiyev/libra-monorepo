@@ -6,6 +6,15 @@ public enum AppErrorType
     Unauthorized,
     NotFound,
     Conflict,
+
+    /// <summary>The caller exceeded a per-user limit (429).</summary>
+    RateLimited,
+
+    /// <summary>A dependency the request needs is not configured or not answering (503).</summary>
+    Unavailable,
+
+    /// <summary>A dependency did not answer in time (504).</summary>
+    Timeout,
 }
 
 /// <summary>
@@ -32,6 +41,9 @@ public sealed class Result<TValue>
     public bool IsSuccess => Error is null;
 }
 
+/// <summary>Outcome of an idempotent create: the record plus whether this call created it.</summary>
+public sealed record CreateOutcome<TResponse>(TResponse Response, bool Created);
+
 public static class Result
 {
     public static Result<TValue> Success<TValue>(TValue value) => new(value, null);
@@ -53,4 +65,10 @@ public static class Result
 
     public static Result<TValue> NotFound<TValue>(string title, string? detail = null) =>
         Failure<TValue>(new AppError(AppErrorType.NotFound, title, detail));
+
+    public static Result<TValue> RateLimited<TValue>(string title, string? detail = null) =>
+        Failure<TValue>(new AppError(AppErrorType.RateLimited, title, detail));
+
+    public static Result<TValue> Unavailable<TValue>(string title, string? detail = null) =>
+        Failure<TValue>(new AppError(AppErrorType.Unavailable, title, detail));
 }

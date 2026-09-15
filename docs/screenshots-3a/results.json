@@ -1,0 +1,152 @@
+{
+  "capturedAt": "2026-09-07T13:32:25.353Z",
+  "app": "http://localhost:8081",
+  "api": "http://localhost:5134",
+  "user": "diary-1788787829381@example.com",
+  "dates": {
+    "today": "2026-09-07",
+    "yesterday": "2026-09-06"
+  },
+  "checks": {
+    "emptyDayExplained": true,
+    "unsetTargetOffersAction": true,
+    "goalEffectiveDateExplained": true,
+    "targetShownAfterSaving": true,
+    "mealTypeDefaultsToTimeOfDay": true,
+    "missingValueExplained": true,
+    "liveCalculationSingle": true,
+    "per100gCalculation": true,
+    "liveCalculationTwoItems": true,
+    "successToastAfterServerConfirmed": true,
+    "dayTotalAfterCreate": true,
+    "remainingAfterCreate": true,
+    "homeShowsTodayNutrition": true,
+    "quickAddOffersMeal": true,
+    "quickAddHidesFinanceWithoutAccounts": true,
+    "editPrefilledFromSnapshot": true,
+    "editRecalculates": true,
+    "dayTotalAfterEdit": true,
+    "mealTypePresetFromGroup": true,
+    "copyWritesNothingBeforeSaving": true,
+    "copyOpensDraft": true,
+    "copyIsIndependent": true,
+    "copySourceUnchanged": true,
+    "historicalDayShowsCopy": true,
+    "exceededTargetKeepsRealValue": true,
+    "deleteAsksForConfirmation": true,
+    "dayTotalAfterDelete": true,
+    "deleteToast": true,
+    "mealContentInFirstViewport": true,
+    "errorStateShown": true,
+    "errorRecovers": true,
+    "modalContainsFocus": true,
+    "noHorizontalOverflow360": true,
+    "noHorizontalOverflow430": true,
+    "noHorizontalOverflow768": true,
+    "noHorizontalOverflow1280": true,
+    "noHorizontalOverflow1440": true,
+    "noHorizontalOverflowWithLargeText": true,
+    "reducedMotionShowsFinalValue": true,
+    "saveFooterReserved": true
+  },
+  "passed": 40,
+  "total": 40,
+  "measurements": {
+    "afterGoals": {
+      "remaining": "2.200",
+      "target": "2.200"
+    },
+    "defaultMeal": "Axşam yeməyi",
+    "validationMessages": [
+      "Dəyər daxil edin (0 da yazıla bilər).",
+      "Dəyər daxil edin (0 da yazıla bilər).",
+      "Dəyər daxil edin (0 da yazıla bilər).",
+      "Dəyər daxil edin (0 da yazıla bilər)."
+    ],
+    "singleItemTotal": "250 kkal",
+    "twoItemTotal": {
+      "energy": "445 kkal",
+      "macros": "Zülal 22,1 q · Karbohidrat 45,3 q · Yağ 19,5 q",
+      "item1": "Bu yemək: 195 kkal · Z 4,1 q · K 42,3 q · Y 0,5 q"
+    },
+    "toastOccurrences": 1,
+    "afterCreate": {
+      "total": "445",
+      "remaining": "1.755"
+    },
+    "homeSummary": "Qidalanma, 445 / 2.200 kkal",
+    "quickAddActions": [
+      "Bağla",
+      "Bağla",
+      "Yemək"
+    ],
+    "editPrefill": {
+      "name": "Omlet",
+      "energy": "250",
+      "quantity1": "150",
+      "total": "445 kkal"
+    },
+    "editedTotal": "510 kkal",
+    "afterEdit": {
+      "total": "510",
+      "toast": true
+    },
+    "presetMeal": "Axşam yeməyi",
+    "copyCalendarOpen": true,
+    "copy": {
+      "sourceEnergy": 510,
+      "copyEnergy": 510,
+      "copyId": "01a07c10-d078-7b72-94ec-87737422e0b9",
+      "sharedItemIds": 0
+    },
+    "historyDay": {
+      "total": "510",
+      "label": "Dünən, 6 sentyabr 2026"
+    },
+    "exceeded": {
+      "over": "210",
+      "total": "2.410"
+    },
+    "afterDelete": {
+      "total": "510",
+      "toast": true
+    },
+    "firstFold": {
+      "header": 32,
+      "dateNav": 88,
+      "summary": 160,
+      "breakfastGroup": 357,
+      "firstEntry": 412,
+      "lunchGroup": 505,
+      "tabBarTop": 766,
+      "viewportHeight": 844
+    },
+    "modalTabCycle": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "overflow360": true,
+    "overflow430": true,
+    "overflow768": true,
+    "overflow1280": true,
+    "overflow1440": true,
+    "darkSummary": {
+      "valueColor": "rgb(247, 249, 252)",
+      "cardBackground": "rgb(20, 26, 36)"
+    },
+    "largeTextOverflow": true,
+    "reducedMotionSettled": "510",
+    "footerVisible": {
+      "bottom": 508,
+      "viewport": 520,
+      "visible": true
+    }
+  },
+  "consoleErrors": []
+}

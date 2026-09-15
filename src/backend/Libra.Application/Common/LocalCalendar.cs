@@ -1,5 +1,8 @@
 namespace Libra.Application.Common;
 
+/// <summary>A local calendar day expressed as a half-open UTC range.</summary>
+public sealed record LocalDay(DateOnly Date, string TimeZoneId, DateTime StartUtc, DateTime EndUtc);
+
 /// <summary>A local calendar month expressed as a half-open UTC range.</summary>
 public sealed record LocalMonth(int Year, int Month, string TimeZoneId, DateTime StartUtc, DateTime EndUtc)
 {
@@ -35,6 +38,19 @@ public static class LocalCalendar
     {
         var local = ToLocalDate(timeZoneId, instantUtc);
         return Month(timeZoneId, local.Year, local.Month);
+    }
+
+    /// <summary>The half-open UTC range [start, end) that covers one local calendar day.</summary>
+    public static LocalDay Day(string timeZoneId, DateOnly date)
+    {
+        var zone = Resolve(timeZoneId);
+        var localStart = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+        var localEnd = date.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+        return new LocalDay(
+            date,
+            timeZoneId,
+            TimeZoneInfo.ConvertTimeToUtc(localStart, zone),
+            TimeZoneInfo.ConvertTimeToUtc(localEnd, zone));
     }
 
     public static DateOnly ToLocalDate(string timeZoneId, DateTime instantUtc)

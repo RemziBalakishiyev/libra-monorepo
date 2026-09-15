@@ -13,6 +13,7 @@ import { AppText } from '@/components/text';
 import { ToastProvider } from '@/components/toast';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useAppearanceStore } from '@/lib/appearance-store';
 import { queryClient } from '@/lib/query-client';
 import { routeGuards } from '@/lib/route-guards';
 import { useSessionStore } from '@/lib/session-store';
@@ -20,18 +21,29 @@ import { useSessionStore } from '@/lib/session-store';
 SplashScreen.preventAutoHideAsync();
 
 /**
- * Root layout: restores the persisted session behind a short brand moment, then exposes exactly one route
- * group. Expo Router's Protected screens redirect automatically when the session status flips.
+ * Root layout: restores the persisted session and the appearance choice behind the native splash and a short
+ * brand moment, then exposes exactly one route group. Expo Router's Protected screens redirect automatically
+ * when the session status flips.
  */
 export default function RootLayout() {
   const theme = useTheme();
   const status = useSessionStore((state) => state.status);
   const restore = useSessionStore((state) => state.restore);
+  const appearanceStatus = useAppearanceStore((state) => state.status);
+  const restoreAppearance = useAppearanceStore((state) => state.restore);
 
   useEffect(() => {
     void restore();
-    void SplashScreen.hideAsync();
-  }, [restore]);
+    void restoreAppearance();
+  }, [restore, restoreAppearance]);
+
+  // The native splash stays up until the stored appearance is known, so the first frame the user sees is
+  // already in their palette rather than the OS one flashing for a moment before the choice loads.
+  useEffect(() => {
+    if (appearanceStatus === 'ready') {
+      void SplashScreen.hideAsync();
+    }
+  }, [appearanceStatus]);
 
   const navigationTheme = {
     ...(theme.scheme === 'dark' ? DarkTheme : DefaultTheme),
@@ -54,7 +66,7 @@ export default function RootLayout() {
         <ThemeProvider value={navigationTheme}>
           <ToastProvider>
             <ConfirmProvider>
-              {status === 'loading' ? (
+              {status === 'loading' || appearanceStatus === 'loading' ? (
                 <SessionRestore />
               ) : (
                 <Stack screenOptions={{ headerShown: false, animation: theme.reducedMotion ? 'fade' : 'default' }}>

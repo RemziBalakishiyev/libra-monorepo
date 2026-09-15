@@ -96,7 +96,7 @@ Idempotent and serialized per user: missing default categories are created witho
 | POST | `/api/finance/transactions` | `{ accountId, categoryId, type, amount, occurredAtUtc, note?, clientRequestId? }` | 201 (200 on replay) | 400 amount/scale/date, 404 foreign account or category, 409 archived account/category or kind mismatch |
 | GET | `/api/finance/transactions/{id}` | | 200 | 404 |
 | PUT | `/api/finance/transactions/{id}` | same as POST without `clientRequestId` | 200 | 400, 404, 409 |
-| DELETE | `/api/finance/transactions/{id}` | | 204 | 404 |
+| DELETE | `/api/finance/transactions/{id}` | | 204 | 404, 409 when a recurring occurrence links the transaction (undo the month from Təkrarlananlar instead) |
 
 ### Transfers
 
@@ -126,16 +126,300 @@ Idempotent and serialized per user: missing default categories are created witho
 
 Formulas are documented in [DOMAIN.md](DOMAIN.md). Balances are as of the request time; monthly figures use the local month in the profile time zone; other currencies are never added into `totalBalance`.
 
+`Dashboard.debts` (Phase 3) keeps principal apart from income and expense:
+`{ monthlyPrincipalNet, monthlyCashChange, receivablesOutstanding, payablesOutstanding, overdueReceivables,
+overduePayables, overdueCount, netPosition }` — all in the dashboard currency. `monthlyNet` stays income − expense;
+`monthlyCashChange = monthlyNet + monthlyPrincipalNet`; `netPosition = totalBalance + receivablesOutstanding −
+payablesOutstanding` and is labelled as such wherever it is shown.
+
+### Recurring (Phase 3)
+
+A template is a monthly plan; a month is only ever recorded by the user's explicit confirmation. `GET
+/api/finance/recurring` computes `Pending` rows on read and stores nothing, so reads can never post money.
+
+```text
+RecurringTemplate   { id, title, type, amount, currencyCode, categoryId, categoryName, accountId, accountName,
+                      dayOfMonth, startDate, endDate, isActive, note, clientRequestId, createdAtUtc, updatedAtUtc }
+RecurringOccurrence { templateId, occurrenceId, year, month, dueDate, status: Pending|Recorded|Skipped,
+                      title, type, amount, currencyCode, categoryId, categoryName, accountId, accountName,
+                      transactionId, recordedAtUtc, templateIsActive, updatedAtUtc }
+RecurringMonth      { year, month, timeZone, occurrences: [RecurringOccurrence],
+                      pendingTotals: [{ currencyCode, income, expense }], recordedTotals: [...] }
+```
+
+| Method | Path | Body / query | Success | Errors |
+|---|---|---|---|---|
+| GET | `/api/finance/recurring` | `year?`, `month?` (default: current local month) | 200 RecurringMonth | 400 |
+| GET | `/api/finance/recurring/templates` | – | 200 `[RecurringTemplate]` | 401 |
+| POST | `/api/finance/recurring/templates` | `{ title, type, amount, categoryId, accountId, dayOfMonth 1–31, startDate, endDate?, note?, clientRequestId? }` | 201 (200 on replay) | 400, 404 foreign account/category, 409 archived account/category, kind mismatch, or key reused with different input |
+| GET | `/api/finance/recurring/templates/{id}` | – | 200 | 404 |
+| PUT | `/api/finance/recurring/templates/{id}` | same as POST plus `isActive`, `expectedUpdatedAtUtc?` | 200 | 400, 404, 409 stale edit or archived/mismatched references |
+| DELETE | `/api/finance/recurring/templates/{id}` | – | 204 | 404, 409 when any month is recorded or skipped (deactivate instead) |
+| POST | `/api/finance/recurring/templates/{id}/occurrences/{year}/{month}/record` | `{ accountId?, amount?, occurredOn?, note?, clientRequestId? }` — absent fields fall back to the plan; `occurredOn` defaults to the due date once passed, otherwise today | 201 `{ occurrence, transaction }` (200 when the month is already recorded, whatever the key) | 400 amount/date, 404 template or foreign account, 409 template inactive, month not scheduled, account archived or in another currency, key reused for another month |
+| POST | `/api/finance/recurring/templates/{id}/occurrences/{year}/{month}/skip` | – | 200 occurrence | 404, 409 already recorded |
+| POST | `/api/finance/recurring/templates/{id}/occurrences/{year}/{month}/undo` | – | 200 occurrence (`Skipped`, transaction deleted; repeat is a no-op) | 404 |
+
+The currency of a template is copied from its account at creation and on edit; recording accepts only an
+account in that currency. Editing applies to every unrecorded month, missed past months included, and never to
+a recorded one. `updatedAtUtc` echoed as `expectedUpdatedAtUtc` guards against stale edits (409); racing writes
+are additionally guarded by `xmin`.
+
+### Debts (Phase 3)
+
+```text
+Debt          { id, direction: Receivable|Payable, counterpartyName, principal, paidAmount, remainingAmount,
+                currencyCode, openedOn, dueOn, status: Open|PartiallyPaid|Settled, isOverdue,
+                movedCashAtOpening, hasMovements, note, clientRequestId, createdAtUtc, updatedAtUtc }
+DebtMovement  { id, kind: Opening|Payment, accountId, accountName, amount, cashEffect, occurredAtUtc, note,
+                isReversed, reversedAtUtc, createdAtUtc }
+DebtDetail    { debt: Debt, history: [DebtMovement] }
+DebtSummary   { timeZone, today, currencies: [{ currencyCode, receivableOutstanding, payableOutstanding,
+                overdueReceivable, overduePayable, openReceivables, openPayables, overdueCount }] }
+```
+
+| Method | Path | Body / query | Success | Errors |
+|---|---|---|---|---|
+| GET | `/api/finance/debts` | `direction?`, `includeSettled?`, `currencyCode?`, `pageNumber?`, `pageSize?` | 200 paged Debt | 400 |
+| GET | `/api/finance/debts/summary` | – | 200 DebtSummary — aggregated in SQL over every debt, independent of paging | 401 |
+| POST | `/api/finance/debts` | `{ direction, counterpartyName, principal, currencyCode, openedOn, dueOn?, note?, accountId?, clientRequestId? }` — `accountId` present means the principal moves through that account now; absent means an existing obligation, no balance changes | 201 DebtDetail (200 on replay) | 400 principal/dates, 404 foreign account, 409 archived account, currency mismatch, or key reused with different principal/direction/currency |
+| GET | `/api/finance/debts/{id}` | – | 200 DebtDetail | 404 |
+| PUT | `/api/finance/debts/{id}` | `{ counterpartyName, principal, openedOn, dueOn?, note?, expectedUpdatedAtUtc? }` | 200 DebtDetail | 400, 404, 409 stale edit, or principal/openedOn changed while movements exist |
+| DELETE | `/api/finance/debts/{id}` | – | 204 | 404, 409 when movements exist |
+| POST | `/api/finance/debts/{id}/payments` | `{ accountId, amount, paidOn, note?, clientRequestId? }` | 201 DebtDetail (200 on replay with the same key and input) | 400 zero, negative or over-remaining amount, 404 foreign account, 409 settled, archived account, currency mismatch, key reused with different input, or a concurrent payment changed the balance (re-read and retry) |
+| POST | `/api/finance/debts/{id}/payments/{paymentId}/undo` | – | 200 DebtDetail (repeat is a no-op) | 404 |
+
+A payment and the debt's version bump are one database transaction, so two payments racing for the same
+remaining balance cannot both succeed. Undo reverses the movement (it stays in `history` marked `isReversed`)
+and restores the remaining balance and the account balance together. Overdue is decided on the server in the
+profile time zone; clients display it and never recompute it.
+
+## Nutrition (Phase 3A)
+
+All nutrition endpoints require a bearer token. Days are local calendar days in the profile time zone.
+
+### Shapes
+
+```text
+NutritionItem   { id, name, quantityMode, quantity, energyKcalPerUnit, proteinGramsPerUnit, carbGramsPerUnit, fatGramsPerUnit,
+                  energyKcal, proteinGrams, carbGrams, fatGrams, position }
+NutritionEntry  { id, mealType, consumedAtUtc, note, clientRequestId, energyKcal, proteinGrams, carbGrams, fatGrams,
+                  items: [NutritionItem], createdAtUtc, updatedAtUtc }
+NutritionGoal   { id, effectiveFrom, energyKcal, proteinGrams, carbGrams, fatGrams, createdAtUtc, updatedAtUtc }
+NutritionDay    { date, timeZone, startUtc, endUtc, totals: { energyKcal, proteinGrams, carbGrams, fatGrams }, entryCount,
+                  goal: NutritionGoal | null,
+                  meals: [{ mealType, totals, entries: [NutritionEntry] }] }
+NutritionGoals  { date, timeZone, current: NutritionGoal | null, history: [NutritionGoal] }
+```
+
+`mealType` is `Breakfast | Lunch | Dinner | Snack`. `quantityMode` is `PerPortion` (quantity counts portions) or
+`Per100Grams` (quantity is the consumed weight in grams). The `*PerUnit` values are what the user entered for one
+portion or for 100 g; the unsuffixed values are what the item contributed and are computed by the server. Energy
+is never derived from the macros. A target may be `null`, which means it is not tracked.
+
+### Endpoints
+
+| Method | Path | Body / query | Success | Errors |
+|---|---|---|---|---|
+| GET | `/api/nutrition/day` | `date?` (default: today in the profile time zone) | 200 NutritionDay | 400, 401 |
+| GET | `/api/nutrition/entries` | `date?`, `from?`, `to?`, `mealType?`, `pageNumber?`, `pageSize?` | 200 paged NutritionEntry | 400, 401 |
+| POST | `/api/nutrition/entries` | `{ mealType, consumedAtUtc, note?, items[1..20], clientRequestId? }` | 201 entry (200 on an idempotent replay) | 400, 401 |
+| GET | `/api/nutrition/entries/{id}` | – | 200 entry | 401, 404 |
+| PUT | `/api/nutrition/entries/{id}` | `{ mealType, consumedAtUtc, note?, items[1..20] }` | 200 entry | 400, 401, 404 |
+| DELETE | `/api/nutrition/entries/{id}` | – | 204 | 401, 404 |
+| GET | `/api/nutrition/goals` | `date?` | 200 NutritionGoals | 400, 401 |
+| PUT | `/api/nutrition/goals` | `{ effectiveFrom?, energyKcal?, proteinGrams?, carbGrams?, fatGrams? }` | 200 goal, or 204 when every target was cleared | 400, 401 |
+| DELETE | `/api/nutrition/goals/{id}` | – | 204 | 401, 404 |
+
+Item ids inside a `PUT` body are ignored: the entry rebuilds its own snapshot rows, so an edit can neither adopt
+another user's item nor change the row another entry stored. Day totals are summed over every stored entry of
+the day, independently of list pagination. Copying a meal is an ordinary `POST` built from the source's inputs.
+
+## Nutrition photo analysis (Phase 3B)
+
+All endpoints require a bearer token and are scoped to the caller. Uploading a photo produces a **draft**, which
+contributes nothing to any total; only `POST /{id}/confirm` writes a meal, through the ordinary nutrition create
+path. A draft belonging to another user is answered exactly like one that does not exist (404).
+
+### Shapes
+
+```text
+FoodAnalysisItem  { id, name, portionDescription, estimatedGrams, basis,
+                    energyKcal, proteinGrams, carbGrams, fatGrams, confidence, position,
+                    suggestedQuantityMode, suggestedQuantity,
+                    suggestedEnergyKcalPerUnit, suggestedProteinGramsPerUnit,
+                    suggestedCarbGramsPerUnit, suggestedFatGramsPerUnit, isComplete }
+FoodAnalysisDraft { id, status, outcome, schemaVersion, model, notes, confidence,
+                    imageId, hasImage, createdAtUtc, expiresAtUtc, isExpired,
+                    confirmedEntryId, items: [FoodAnalysisItem] }
+```
+
+`status` is `PendingConfirmation | Confirmed | Discarded`. `outcome` is `Success | InsufficientInformation |
+NoFoodDetected`. `basis` says what the model's own numbers describe: `PicturedPortion` (the portion in the photo)
+or `Per100Grams`. `confidence` is the model's self-assessment in 0–1, not a measured accuracy. Any nutrient the
+model could not judge is `null` and stays `null` — it is never a zero.
+
+The `suggested*` fields are the same food expressed as meal-entry input, and are the only sanctioned way to turn
+an estimate into an item: a `PicturedPortion` estimate becomes `PerPortion` with quantity 1 (the estimated weight
+stays metadata), and a `Per100Grams` estimate becomes `Per100Grams` with the estimated weight as the quantity. The
+weight and the portion count are therefore never applied as two multipliers to the same food. `isComplete` is
+false while a required value is still missing, so the client asks for it instead of inventing one.
+
+### Endpoints
+
+| Method | Path | Body / query | Success | Errors |
+|---|---|---|---|---|
+| POST | `/api/nutrition/food-analysis` | `multipart/form-data` with `photo`; `clientRequestId?` in the query | 201 draft (200 on an idempotent replay) | 400, 401, 413, 429, 503, 504 |
+| GET | `/api/nutrition/food-analysis/{id}` | – | 200 draft | 401, 404 |
+| GET | `/api/nutrition/food-analysis/images/{imageId}` | – | 200 `image/jpeg` | 401, 404 |
+| POST | `/api/nutrition/food-analysis/{id}/confirm` | `{ mealType, consumedAtUtc, note?, items[1..20], clientRequestId? }` | 201 NutritionEntry (200 on a replay) | 400, 401, 404, 409 |
+| DELETE | `/api/nutrition/food-analysis/{id}` | – | 204 | 401, 404, 409 |
+
+Failure statuses are distinct on purpose: 400 for a picture the server could not use or the provider refused,
+413 for an upload over the configured size, 429 for the per-user hourly ceiling, 503 when analysis is not
+configured or the provider is unavailable, and 504 for a timeout. None of them stores anything.
+
+The confirm body carries the user's own diary date, meal type and time; nothing in the photo, its metadata or the
+model's answer can override them. **The draft is the idempotency key.** A second confirmation — retried,
+concurrent, or sent with a different `clientRequestId` — returns the meal the first one created, because the entry
+insert and the draft transition are saved in one transaction guarded by `xmin`. Confirming a discarded or expired
+draft is a 409 and creates nothing.
+
+Pending drafts expire after `Ai:FoodAnalysis:DraftLifetimeMinutes`; a background sweep then removes them together
+with their pictures, and stored bytes are deleted at `ImageRetentionMinutes` regardless. Confirmed drafts keep
+their original estimates, and no sweep ever touches a nutrition entry.
+
+## Tasks (Phase 4A)
+
+All endpoints require a bearer token and are scoped to the caller; another user's id is answered exactly like one
+that does not exist (404). Planned dates and times are local calendar labels; every timestamp is a UTC instant.
+
+### Shapes
+
+```text
+Task        { id, title, note, plannedDate, plannedTime, priority, state, isCompleted, completedAtUtc,
+              isOverdue, seriesId, seriesKind, clientRequestId, createdAtUtc, updatedAtUtc }
+TaskCounts  { scheduled, completed, overdue }
+TaskDay     { date, timeZone, counts: TaskCounts, tasks: [Task], overdue: [Task] }
+TaskSeries  { id, title, note, plannedTime, priority, kind, weekdays, startDate, endDate, isStopped,
+              createdAtUtc, updatedAtUtc }
+TaskDetail  { task: Task, series: TaskSeries | null, history: [{ kind, occurredAtUtc }] }
+```
+
+`priority` is `Low | Normal | High`. `state` is `Pending | Completed | Removed` — a `Removed` row is the tombstone
+of a deleted series occurrence and never appears in any read. `kind` is `None | Daily | Weekly`, and `weekdays`
+are ISO numbers (1 = Monday … 7 = Sunday). `isOverdue` is decided by the server in the profile time zone: a task
+without a time is late once its planned day has ended, one with a time once that minute has passed.
+
+### Endpoints
+
+| Method | Path | Body / query | Success | Errors |
+|---|---|---|---|---|
+| GET | `/api/tasks/today` | `date?` (default: today in the profile time zone) | 200 TaskDay | 400, 401 |
+| GET | `/api/tasks` | `view?` (`Today\|Upcoming\|Completed`), `from?`, `to?`, `priority?`, `pageNumber?`, `pageSize?` | 200 paged Task | 400, 401 |
+| POST | `/api/tasks` | `{ title, note?, plannedDate, plannedTime?, priority, recurrence?, clientRequestId? }` | 201 task (200 on an idempotent replay) | 400, 401 |
+| GET | `/api/tasks/{id}` | – | 200 TaskDetail | 401, 404 |
+| PUT | `/api/tasks/{id}` | `{ title, note?, plannedDate, plannedTime?, priority, expectedUpdatedAtUtc? }` | 200 task | 400, 401, 404, 409 |
+| POST | `/api/tasks/{id}/completion` | `{ completed }` | 200 task | 401, 404, 409 |
+| DELETE | `/api/tasks/{id}` | – | 204 | 401, 404 |
+| GET | `/api/tasks/series/{id}` | – | 200 TaskSeries | 401, 404 |
+| PUT | `/api/tasks/series/{id}` | `{ title, note?, plannedTime?, priority, recurrence, expectedUpdatedAtUtc? }` | 200 series | 400, 401, 404, 409 |
+| POST | `/api/tasks/series/{id}/stop` | – | 200 series | 401, 404 |
+
+**Completion is a state, not a toggle.** `POST /{id}/completion` carries the value the caller wants, so a retried
+request is harmless: repeating `completed: true` leaves the task completed, changes no timestamp and records no
+second history event. There is deliberately no toggle endpoint.
+
+**Views are disjoint slices**, so a task appears in exactly one of them: `Today` is everything pending up to and
+including today, `Upcoming` is pending after today, `Completed` is what is done. `TaskDay.tasks` is different — it
+is everything planned for that one day, done or not, which is what the diary-style screen shows. Counts and
+percentages are aggregated over the whole matching set in the database, never over the returned page, and a list
+range may span at most 366 days.
+
+**Stale edits.** `PUT` bodies may echo the `updatedAtUtc` the client last read. A stored row that has moved on
+answers 409 instead of silently overwriting the newer state; omitting the field keeps the old behaviour. Racing
+writes are additionally guarded by the row's `xmin` version, which reports the same 409.
+
+**Recurrence.** A create with `recurrence` produces a `TaskSeries` plus one `TaskItem` per scheduled date, and
+returns the first occurrence. Occurrences are materialized from the series start through 30 days ahead — missed
+past dates included, so nothing silently vanishes from the counts — and `(series_id, planned_date)` is unique, so
+concurrent or repeated generation cannot duplicate a date. `PUT /series/{id}` changes the rule and rebuilds only
+the pending occurrences from today onwards; `POST /series/{id}/stop` ends it today and drops pending future dates
+while keeping every completed one. Deleting one occurrence tombstones that date so regeneration cannot undo it.
+
+**Time zones and daylight saving.** Because planned dates and times are calendar labels rather than instants, a
+profile that moves to another zone keeps every task on the day and minute it was planned for; only which day
+counts as "today", and therefore what is overdue, follows the new zone. A daylight-saving jump has no effect on a
+task's identity for the same reason: an 09:00 task is 09:00 local before and after the transition, and a
+day-only task is still due by the end of its own local day, whether that day is 23, 24 or 25 hours long.
+
+## Sleep (Phase 4B)
+
+All endpoints require a bearer token and are scoped to the caller; another user's id is answered exactly like one
+that does not exist (404). Every timestamp is a UTC instant; `wakeDate` and the summary's dates are local
+calendar labels in the profile time zone.
+
+### Shapes
+
+```text
+SleepSession  { id, startedAtUtc, endedAtUtc, isOpen, durationMinutes, wakeDate, quality, note,
+                clientRequestId, createdAtUtc, updatedAtUtc }
+SleepDay      { date, totalMinutes, sessionCount }
+SleepSummary  { timeZone, from, to, days: [SleepDay], averageMinutes, recordedDays, totalMinutes,
+                sessionCount, active: SleepSession | null, latest: SleepSession | null }
+```
+
+`durationMinutes`, `endedAtUtc` and `wakeDate` are `null` while a session is open. `SleepDay.totalMinutes` is
+`null` for a date with **nothing recorded**, which a client must not render as zero minutes of sleep.
+`quality` is an integer 1–5 or `null`; `note` is at most 500 characters or `null`.
+
+### Endpoints
+
+| Method | Path | Body / query | Success | Errors |
+|---|---|---|---|---|
+| GET | `/api/sleep/active` | – | 200 session, **204** when none is running | 401 |
+| GET | `/api/sleep/summary` | `date?` (default: today in the profile time zone) | 200 SleepSummary | 400, 401 |
+| POST | `/api/sleep/start` | `{ startedAtUtc?, clientRequestId? }` | 201 session (200 on an idempotent replay) | 400, 401, 409 |
+| POST | `/api/sleep/sessions/{id}/stop` | `{ endedAtUtc }` | 200 session | 400, 401, 404, 409 |
+| GET | `/api/sleep/sessions` | `from?`, `to?`, `pageNumber?`, `pageSize?` | 200 paged SleepSession | 400, 401 |
+| POST | `/api/sleep/sessions` | `{ startedAtUtc, endedAtUtc, quality?, note?, clientRequestId? }` | 201 session (200 on an idempotent replay) | 400, 401, 409 |
+| GET | `/api/sleep/sessions/{id}` | – | 200 session | 401, 404 |
+| PUT | `/api/sleep/sessions/{id}` | `{ startedAtUtc, endedAtUtc, quality?, note?, expectedUpdatedAtUtc? }` | 200 session | 400, 401, 404, 409 |
+| DELETE | `/api/sleep/sessions/{id}` | – | 204 | 401, 404 |
+
+**Starting.** `startedAtUtc` defaults to the server clock. A second start while one session is open answers 409
+(`sleep_open_session_exists`); a repeated call carrying the same `clientRequestId` returns the session that
+already exists, so a retry after an answer that never arrived cannot open two.
+
+**Stopping is idempotent per session.** The stop names both the session and the instant the user pressed, so a
+retry minutes later records when they woke rather than when the network came back. Stopping an already completed
+session returns it unchanged — the recorded end never moves — and never falls through to a newer session. A stop
+instant that is not after the start, is in the future, or would make the session longer than 24 hours is a 400.
+
+**Recording and correcting.** `POST /sessions` writes a completed session directly; `PUT` corrects one.
+A `PUT` with `endedAtUtc: null` leaves the session open, which is how a forgotten night is fixed without
+inventing a wake-up. Quality and note are optional everywhere: nothing about rating a night is required to
+record that it happened.
+
+**Limits and overlap.** A completed session is at most **24 hours** and may not start more than 5 minutes ahead
+of the server clock. Completed sessions of one user may not overlap (409 `sleep_overlap`), enforced by a
+`btree_gist` EXCLUDE constraint over the half-open range `[start, end)` — so **two sessions may meet at an
+endpoint**: 23:00–07:00 and 07:00–07:30 both stand. An open session is treated as reaching the present moment,
+so nothing can be recorded inside a night that is still running. An open session itself has **no** upper bound
+and is never clipped or auto-closed; it is resolved by a correction or an explicit delete.
+
+**Stale edits.** `PUT` bodies may echo the `updatedAtUtc` the client last read; a row that has moved on answers
+409 rather than overwriting the newer state. Racing writes are additionally guarded by `xmin`, which reports the
+same 409.
+
+**The summary.** `GET /summary` returns the last seven local dates ending on `date`, each session attributed to
+the local date it **ended** on, so a night across midnight is counted once, on the wake-up day. `averageMinutes`
+is the mean over `recordedDays` — the dates that hold a record — never over seven, and is `null` when the window
+holds nothing. Totals, counts and averages cover every matching session, independently of any paging used to
+list them. `active` is the running session if there is one; `latest` is the most recently completed one.
+
 ## Planned endpoint groups
 
 ```text
-/api/finance/recurring/*            Phase 3
-/api/debts/*                        Phase 3
-/api/tasks/*                        Phase 4
-/api/sleep/sessions/*               Phase 4
-/api/nutrition/meals/*              Phase 5
-/api/nutrition/goals/*              Phase 5
 /api/analytics/dashboard/*          Phase 5
-/api/nutrition/food-analysis/*      Phase 6
 /api/assistant/conversations/*      Phase 7
 ```

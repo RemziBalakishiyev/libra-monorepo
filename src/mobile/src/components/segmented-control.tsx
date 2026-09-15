@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -7,6 +7,7 @@ import { AppText } from '@/components/text';
 import type { IconName } from '@/constants/categories';
 import { MinTouchTarget, Motion, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useRovingRadioGroup, webAria } from '@/lib/a11y';
 
 export interface SegmentOption<TValue extends string> {
   value: TValue;
@@ -15,6 +16,8 @@ export interface SegmentOption<TValue extends string> {
   tint?: 'primary' | 'expense' | 'income' | 'transfer';
   /** Optional leading icon so the selection reads as a category, not a state. */
   icon?: IconName;
+  /** Spoken name when the visible label is abbreviated to fit. */
+  accessibilityLabel?: string;
 }
 
 type SegmentedControlProps<TValue extends string> = {
@@ -24,15 +27,18 @@ type SegmentedControlProps<TValue extends string> = {
   accessibilityLabel: string;
   disabled?: boolean;
   size?: 'sm' | 'md';
+  /** Distinguishes several groups on one screen (tests and the accessibility run query it). */
+  testID?: string;
 };
 
 /**
  * Equal-width segments with a sliding pill. The pill is a filled tonal surface (never an outlined red frame,
  * which would read as a validation error); the selected label uses the matching `*Text` foreground.
  */
-export function SegmentedControl<TValue extends string>({ options, value, onChange, accessibilityLabel, disabled = false, size = 'md' }: SegmentedControlProps<TValue>) {
+export function SegmentedControl<TValue extends string>({ options, value, onChange, accessibilityLabel, disabled = false, size = 'md', testID = 'segmented-control' }: SegmentedControlProps<TValue>) {
   const { colors, reducedMotion, shadows } = useTheme();
   const [width, setWidth] = useState(0);
+  const groupRef = useRef<View>(null);
   const index = Math.max(0, options.findIndex((option) => option.value === value));
   const segmentWidth = width > 0 ? (width - PADDING * 2) / options.length : 0;
   const x = useSharedValue(0);
@@ -48,8 +54,28 @@ export function SegmentedControl<TValue extends string>({ options, value, onChan
   const pillStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }] }));
   const onLayout = (event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width);
 
+  // Arrow keys move focus and the selection together, and Space checks the focused segment.
+  // The group is enabled or disabled as a whole, so DOM order matches the option order.
+  const selectByIndex = useCallback(
+    (position: number) => {
+      const option = options[position];
+      if (option) {
+        onChange(option.value);
+      }
+    },
+    [options, onChange],
+  );
+  useRovingRadioGroup(groupRef, { onSelect: selectByIndex, enabled: !disabled });
+
   return (
-    <View onLayout={onLayout} accessibilityRole="radiogroup" accessibilityLabel={accessibilityLabel} style={[styles.track, { backgroundColor: colors.surfaceSubtle, minHeight: size === 'sm' ? 40 : MinTouchTarget }]}>
+    <View
+      ref={groupRef}
+      onLayout={onLayout}
+      accessibilityRole="radiogroup"
+      accessibilityLabel={accessibilityLabel}
+      testID={testID}
+      {...webAria({ 'aria-orientation': 'horizontal' })}
+      style={[styles.track, { backgroundColor: colors.surfaceSubtle, minHeight: size === 'sm' ? 40 : MinTouchTarget }]}>
       {segmentWidth > 0 ? <Animated.View style={[styles.pill, { width: segmentWidth, backgroundColor: fill, boxShadow: active?.tint ? undefined : shadows.card, opacity: disabled ? 0.5 : 1 }, pillStyle]} /> : null}
       {options.map((option) => {
         const selected = option.value === value;
@@ -58,9 +84,14 @@ export function SegmentedControl<TValue extends string>({ options, value, onChan
           <Pressable
             key={option.value}
             accessibilityRole="radio"
-            accessibilityState={{ selected, checked: selected, disabled }}
-            accessibilityLabel={option.label}
+            // `aria-checked` carries the state on both platforms: react-native-web ignores accessibilityState,
+            // and React Native merges the aria prop back into it (see lib/a11y.ts).
+            aria-checked={selected}
+            aria-disabled={disabled}
+            accessibilityLabel={option.accessibilityLabel ?? option.label}
             disabled={disabled}
+            // Roving tab stop: the group is entered once, then arrow keys move within it.
+            tabIndex={selected ? 0 : -1}
             onPress={() => onChange(option.value)}
             style={styles.segment}>
             {option.icon ? <Ionicons name={option.icon} size={size === 'sm' ? 14 : 16} color={color} /> : null}

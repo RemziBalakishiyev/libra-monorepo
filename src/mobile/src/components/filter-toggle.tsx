@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet } from 'react-native';
+import { useCallback, useRef } from 'react';
+import { StyleSheet, type View } from 'react-native';
 
 import { PressableScale } from '@/components/pressable-scale';
 import { AppText } from '@/components/text';
 import type { IconName } from '@/constants/categories';
 import { MinTouchTarget, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useSpaceActivate } from '@/lib/a11y';
 
 type FilterToggleProps = {
   label: string;
@@ -20,13 +22,19 @@ type FilterToggleProps = {
 /** Compact secondary filter (e.g. "Arxivdəkilər"): a checkable chip instead of a full-width switch row. */
 export function FilterToggle({ label, value, onChange, icon = 'archive-outline', count, accessibilityHint }: FilterToggleProps) {
   const { colors } = useTheme();
+  const ref = useRef<View>(null);
+  const toggle = useCallback(() => onChange(!value), [onChange, value]);
+  // react-native-web activates non-button roles with Enter only; a checkbox also answers to Space.
+  useSpaceActivate(ref, toggle);
+
   return (
     <PressableScale
+      ref={ref}
       accessibilityRole="checkbox"
-      accessibilityState={{ checked: value }}
+      aria-checked={value}
       accessibilityLabel={count !== undefined ? `${label}, ${count}` : label}
       accessibilityHint={accessibilityHint}
-      onPress={() => onChange(!value)}
+      onPress={toggle}
       scaleTo={0.97}
       containerStyle={styles.slot}
       pressedStyle={{ backgroundColor: colors.surfaceInteractive }}

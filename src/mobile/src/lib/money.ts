@@ -16,6 +16,24 @@ export function parseAmount(input: string): number | null {
   return Number.isFinite(value) ? Math.round(value * 100) / 100 : null;
 }
 
+/**
+ * Parses a positive decimal the user typed, with either separator: "12,5", "0.75", "150".
+ * `maxFractionDigits` is the precision the field accepts; returns null when the text is not such a number.
+ * Used for nutrition quantities (three decimals) and nutrient values (two).
+ */
+export function parseDecimalInput(input: string, maxFractionDigits = 2): number | null {
+  const trimmed = input.trim();
+  if (!new RegExp('^\\d{1,9}([.,]\\d{1,' + maxFractionDigits + '})?$').test(trimmed)) {
+    return null;
+  }
+  const value = Number(trimmed.replace(',', '.'));
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+  const factor = 10 ** maxFractionDigits;
+  return Math.round(value * factor) / factor;
+}
+
 export interface NumberSeparators {
   decimal: string;
   group: string;

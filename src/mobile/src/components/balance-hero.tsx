@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { ReactNode } from 'react';
+import { useCallback, useRef, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AnimatedNumber } from '@/components/animated-number';
@@ -7,6 +7,7 @@ import { Entrance } from '@/components/entrance';
 import { AppText, formatAmount } from '@/components/text';
 import { MinTouchTarget, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useRovingRadioGroup } from '@/lib/a11y';
 
 type BalanceHeroProps = {
   totalBalance: number;
@@ -28,6 +29,17 @@ type BalanceHeroProps = {
  */
 export function BalanceHero({ totalBalance, currencyCode, availableCurrencies, onCurrencyChange, otherCurrencies, negativeAccounts, caption, trailing }: BalanceHeroProps) {
   const { colors, shadows } = useTheme();
+  const currencyGroupRef = useRef<View>(null);
+  const selectCurrency = useCallback(
+    (position: number) => {
+      const code = availableCurrencies[position];
+      if (code) {
+        onCurrencyChange?.(code);
+      }
+    },
+    [availableCurrencies, onCurrencyChange],
+  );
+  useRovingRadioGroup(currencyGroupRef, { onSelect: selectCurrency, enabled: Boolean(onCurrencyChange) });
 
   return (
     <View
@@ -48,15 +60,16 @@ export function BalanceHero({ totalBalance, currencyCode, availableCurrencies, o
           ) : null}
         </View>
         {availableCurrencies.length > 1 && onCurrencyChange ? (
-          <View style={styles.chips} accessibilityRole="radiogroup" accessibilityLabel="Valyuta">
+          <View ref={currencyGroupRef} style={styles.chips} accessibilityRole="radiogroup" accessibilityLabel="Valyuta" testID="currency-chips">
             {availableCurrencies.map((code) => {
               const selected = code === currencyCode;
               return (
                 <Pressable
                   key={code}
                   accessibilityRole="radio"
-                  accessibilityState={{ selected, checked: selected }}
+                  aria-checked={selected}
                   accessibilityLabel={code}
+                  tabIndex={selected ? 0 : -1}
                   onPress={() => onCurrencyChange(code)}
                   hitSlop={8}
                   style={({ pressed }) => [styles.chip, { backgroundColor: selected ? 'rgba(255,255,255,0.94)' : pressed ? 'rgba(255,255,255,0.24)' : 'rgba(255,255,255,0.14)' }]}>

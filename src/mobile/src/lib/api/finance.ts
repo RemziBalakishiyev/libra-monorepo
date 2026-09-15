@@ -124,6 +124,24 @@ export const dashboardSchema = z.object({
   negativeAccounts: z.array(z.object({ accountId: z.string(), name: z.string(), balance: z.number() })),
   otherCurrencies: z.array(z.object({ currencyCode: z.string(), totalBalance: z.number(), accountCount: z.number() })),
   availableCurrencies: z.array(z.string()),
+  /**
+   * What income and expense leave out, in the dashboard currency. `monthlyPrincipalNet` is the month's cash from
+   * lending, borrowing and repaying, kept apart from `monthlyNet`; the two add up to `monthlyCashChange`.
+   * Receivables are not cash; `netPosition` is cash + receivables − payables. Optional so an older API still
+   * parses.
+   */
+  debts: z
+    .object({
+      monthlyPrincipalNet: z.number(),
+      monthlyCashChange: z.number(),
+      receivablesOutstanding: z.number(),
+      payablesOutstanding: z.number(),
+      overdueReceivables: z.number(),
+      overduePayables: z.number(),
+      overdueCount: z.number(),
+      netPosition: z.number(),
+    })
+    .optional(),
 });
 
 export const setupResponseSchema = z.object({

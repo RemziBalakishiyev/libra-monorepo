@@ -1,0 +1,176 @@
+{
+  "capturedAt": "2026-09-15T14:16:21.818Z",
+  "passed": 41,
+  "total": 41,
+  "checks": {
+    "existingDebtsLeaveCashAt1000": true,
+    "receivableIsNotCash": true,
+    "pendingRecurringPostsNothing": true,
+    "financeLinksVisible": true,
+    "financeShowsNetPositionLabelled": true,
+    "receivableStripShows300": true,
+    "receivableRowOverdue": true,
+    "payableStripShows500": true,
+    "detailRemaining300": true,
+    "detailOverdueChip": true,
+    "paymentEffectPreviewsAccount": true,
+    "paymentRemainingPreview": true,
+    "receiveMovesCashTo1100": true,
+    "receiveLeavesReceivable200": true,
+    "receiveIsNotIncome": true,
+    "detailShowsHistoryRow": true,
+    "paymentRetryReplaysSameResult": true,
+    "sameKeyDifferentInputRejected": true,
+    "overpaymentRejected": true,
+    "undoRestoresCash1000AndReceivable300": true,
+    "undoIsRetrySafe": true,
+    "undoKeepsHistoryReadable": true,
+    "repayMovesCashTo900AndPayable400": true,
+    "repayIsNotSpending": true,
+    "newDebtShowsOpeningEffect": true,
+    "recurringPendingRows": true,
+    "recurringPendingTotalsShown": true,
+    "openingRecurringPostsNothing": true,
+    "recordSheetShowsEffect": true,
+    "recordSheetPrefillsDueDate": true,
+    "confirmOnceCreatesOne450Expense": true,
+    "retryWithDifferentKeyAddsNothing": true,
+    "recordedRowLinksTransaction": true,
+    "linkedTransactionDeleteRefused": true,
+    "templateFormLoaded": true,
+    "financeSeparatesPrincipalFromNet": true,
+    "directionIsRadioGroup": true,
+    "rowsAreLabelledButtons": true,
+    "addButtonReachesTarget": true,
+    "otherUserSeesNothing": true,
+    "noConsoleErrors": true
+  },
+  "measurements": {
+    "afterSeed": {
+      "totalBalance": 1000,
+      "monthlyIncome": 0,
+      "monthlyExpense": 0,
+      "debts": {
+        "monthlyPrincipalNet": 0,
+        "monthlyCashChange": 0,
+        "receivablesOutstanding": 300,
+        "payablesOutstanding": 500,
+        "overdueReceivables": 300,
+        "overduePayables": 0,
+        "overdueCount": 1,
+        "netPosition": 800
+      }
+    },
+    "netPositionLabel": "Alacaq 300,00 AZN, borc 500,00 AZN, xalis mövqe 800,00 AZN",
+    "receivableStrip": "300,00 AZN",
+    "paymentEffect": "Hesaba təsiri: Nağd, 1.000,00 AZN → 1.100,00 AZN",
+    "paymentRemainingAfter": "Qalıq: 300,00 AZN → 200,00 AZN",
+    "afterReceive": {
+      "totalBalance": 1100,
+      "monthlyIncome": 0,
+      "monthlyExpense": 0,
+      "debts": {
+        "monthlyPrincipalNet": 100,
+        "monthlyCashChange": 100,
+        "receivablesOutstanding": 200,
+        "payablesOutstanding": 500,
+        "overdueReceivables": 200,
+        "overduePayables": 0,
+        "overdueCount": 1,
+        "netPosition": 800
+      },
+      "remaining": 200,
+      "status": "PartiallyPaid",
+      "history": 1
+    },
+    "retry": {
+      "first": 201,
+      "replay": 200,
+      "differentInput": 409,
+      "remaining": 150,
+      "payments": 2
+    },
+    "afterUndo": {
+      "totalBalance": 1000,
+      "remaining": 300,
+      "status": "Open",
+      "undoAgainStatus": 200,
+      "history": [
+        {
+          "kind": "Payment",
+          "amount": 50,
+          "isReversed": true
+        },
+        {
+          "kind": "Payment",
+          "amount": 100,
+          "isReversed": true
+        }
+      ]
+    },
+    "afterRepay": {
+      "totalBalance": 900,
+      "payable": 400,
+      "monthlyExpense": 0,
+      "debts": {
+        "monthlyPrincipalNet": -100,
+        "monthlyCashChange": -100,
+        "receivablesOutstanding": 300,
+        "payablesOutstanding": 400,
+        "overdueReceivables": 300,
+        "overduePayables": 0,
+        "overdueCount": 1,
+        "netPosition": 800
+      }
+    },
+    "openingEffect": "Hesaba təsiri: Nağd, 900,00 AZN → 750,00 AZN",
+    "pendingTotals": "Gözləyir+1.200,00−450,00AZN",
+    "recordEffect": "Hesaba təsiri: Nağd, 900,00 AZN → 450,00 AZN",
+    "afterRecord": {
+      "totalBalance": 450,
+      "monthlyExpense": 450,
+      "occurrenceStatus": "Recorded",
+      "transactionId": "01a0a56c-77a5-7273-a23c-ade67aa1e978",
+      "retryStatus": 200,
+      "retryTransactionId": "01a0a56c-77a5-7273-a23c-ade67aa1e978",
+      "transactionCount": 1
+    },
+    "recordedTotals": "Qeyd olunub−450,00AZN",
+    "principalLabel": "Borc hərəkətləri: −100,00 AZN; nağd dəyişimi: −550,00 AZN",
+    "darkCanvas": "rgb(12, 16, 23)",
+    "darkConfirmTextColor": "rgb(255, 255, 255)",
+    "a11y": {
+      "radios": [
+        {
+          "label": "Mənə borcludurlar",
+          "checked": "true"
+        },
+        {
+          "label": "Mən borcluyam",
+          "checked": "false"
+        }
+      ],
+      "checkbox": {
+        "label": "Bağlananlar da",
+        "checked": "false"
+      },
+      "add": 48,
+      "rows": [
+        {
+          "role": "button",
+          "label": "Əli, qalıq 300,00 AZN, Açıq, Gecikib · 5 gün",
+          "height": 56
+        }
+      ]
+    },
+    "consoleErrors": [],
+    "seed": {
+      "accountId": "01a0a56b-dff6-743c-8c6b-918d7d480a68",
+      "rentTemplateId": "01a0a56b-e038-7fb4-803a-06d0f48602fe",
+      "receivableId": "01a0a56b-e05f-78d0-a928-794c29b7ad73",
+      "payableId": "01a0a56b-e073-781c-8211-fa1d761a887c",
+      "user": null
+    }
+  },
+  "consoleErrors": []
+}

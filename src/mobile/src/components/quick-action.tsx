@@ -7,7 +7,7 @@ import type { IconName } from '@/constants/categories';
 import { MinTouchTarget, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-export type QuickActionKind = 'expense' | 'income' | 'transfer';
+export type QuickActionKind = 'expense' | 'income' | 'transfer' | 'meal' | 'task' | 'sleep';
 
 export interface QuickActionDefinition {
   kind: QuickActionKind;
@@ -16,9 +16,21 @@ export interface QuickActionDefinition {
   icon: IconName;
 }
 
+/** Finance's own Quick Add: the three money actions, unchanged. */
 export const quickActionDefinitions: readonly QuickActionDefinition[] = [
   { kind: 'expense', title: 'Xərc', hint: 'Yeni xərc qeyd et', icon: 'arrow-up-outline' },
   { kind: 'income', title: 'Gəlir', hint: 'Yeni gəlir qeyd et', icon: 'arrow-down-outline' },
+  { kind: 'transfer', title: 'Köçürmə', hint: 'Hesablar arasında köçür', icon: 'swap-horizontal-outline' },
+];
+
+/** The global Quick Add on Home, which reaches across modules. */
+export const globalQuickActionDefinitions: readonly QuickActionDefinition[] = [
+  { kind: 'expense', title: 'Xərc', hint: 'Yeni xərc qeyd et', icon: 'arrow-up-outline' },
+  { kind: 'income', title: 'Gəlir', hint: 'Yeni gəlir qeyd et', icon: 'arrow-down-outline' },
+  { kind: 'meal', title: 'Yemək', hint: 'Yeni qidalanma qeydi', icon: 'nutrition-outline' },
+  { kind: 'task', title: 'Tapşırıq', hint: 'Yeni tapşırıq planlaşdır', icon: 'checkbox-outline' },
+  // Opens the sleep screen and stops there: Quick Add never starts or ends a session on the user's behalf.
+  { kind: 'sleep', title: 'Yuxu', hint: 'Yuxu ekranını açır', icon: 'moon-outline' },
   { kind: 'transfer', title: 'Köçürmə', hint: 'Hesablar arasında köçür', icon: 'swap-horizontal-outline' },
 ];
 
@@ -37,6 +49,15 @@ export function useQuickActionTint(kind: QuickActionKind): { strong: string; sof
   }
   if (kind === 'income') {
     return { strong: colors.income, soft: colors.incomeSoft, text: colors.incomeText };
+  }
+  if (kind === 'meal') {
+    return { strong: colors.moduleNutrition, soft: colors.surfaceSubtle, text: colors.textPrimary };
+  }
+  if (kind === 'task') {
+    return { strong: colors.modulePlan, soft: colors.surfaceSubtle, text: colors.textPrimary };
+  }
+  if (kind === 'sleep') {
+    return { strong: colors.moduleSleep, soft: colors.surfaceSubtle, text: colors.textPrimary };
   }
   return { strong: colors.transfer, soft: colors.transferSoft, text: colors.transferText };
 }

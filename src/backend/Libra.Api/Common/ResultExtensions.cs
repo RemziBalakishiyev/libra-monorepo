@@ -1,5 +1,4 @@
 using Libra.Application.Common;
-using Libra.Application.Finance;
 
 namespace Libra.Api.Common;
 
@@ -15,6 +14,9 @@ internal static class ResultExtensions
             AppErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
             AppErrorType.NotFound => StatusCodes.Status404NotFound,
             AppErrorType.Conflict => StatusCodes.Status409Conflict,
+            AppErrorType.RateLimited => StatusCodes.Status429TooManyRequests,
+            AppErrorType.Unavailable => StatusCodes.Status503ServiceUnavailable,
+            AppErrorType.Timeout => StatusCodes.Status504GatewayTimeout,
             _ => StatusCodes.Status500InternalServerError,
         };
 

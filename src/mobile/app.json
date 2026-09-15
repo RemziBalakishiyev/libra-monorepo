@@ -35,6 +35,13 @@
         }
       ],
       "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Libra yalnız sizin seçdiyiniz yemək şəklini qidalanma dəyərlərinin qiymətləndirilməsi üçün istifadə edir.",
+          "cameraPermission": "Libra yeməyin şəklini çəkib qidalanma dəyərlərini qiymətləndirmək üçün kameradan istifadə edir."
+        }
+      ],
       "@react-native-community/datetimepicker"
     ],
     "experiments": {

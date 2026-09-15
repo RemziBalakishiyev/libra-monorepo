@@ -133,6 +133,261 @@ The Phase 2.5A Design Lab (route, picker, three prototype directions, fixture an
 ### D-044 · 2026-09-07 · Refinement: text foregrounds, in-flow tab bar, complete month series, one display formatter
 Accent colours stay for fills and icons; meaningful text uses separate foregrounds (`incomeText #087A58`, `expenseText #B83F4A`, `warningText #8A5A0A`, `transferText`, `primaryText`) that clear 4.5:1 on white, canvas and soft surfaces; `textMuted` was darkened to `#5F6A7D`. The phone tab bar is laid out in the normal flow (an opaque region that owns the bottom safe area) instead of an overlay, so no content or focused control can sit behind it; Quick Add moved into the Home and Finance headers (sheet on phones, anchored popover on wide layouts) and the floating button was removed. The daily spending series reads every page of the month (`fetchAllPages`), buckets days in the profile time zone and errors instead of truncating; monthly totals always come from the dashboard aggregate. `lib/money.ts` is the one display formatter (profile locale separators, pinned for az/tr/ru/de/en because ICU data is incomplete); parsing stays separate. Budget impact while editing removes the original contribution first and is frozen to a pre-submit baseline during a save. The hero uses its own `onHero` foreground (white in both palettes), separate from `onPrimary`. The month-end estimate is computed from the unrounded monthly total. Success toasts show once, on the destination screen, above the navigation region.
 
+### D-045 · 2026-09-07 · Nutrition stores entered inputs and computed contributions as per-item snapshots
+A meal (`NutritionEntry`) owns 1–20 `NutritionEntryItem` rows. Each row keeps both what the user entered — name,
+`QuantityMode` (`PerPortion` or `Per100Grams`), quantity, and the four nutrients for that unit — and what it
+contributed, computed from the unrounded inputs and rounded once (`numeric(12,2)`; quantities `numeric(12,3)`).
+Editing an entry replaces its rows with fresh ones and ignores any item ids in the request, so an edit cannot
+adopt another user's item and a copy can never change its source. Copying is an ordinary create built from the
+source's inputs. An entered kcal value is never recomputed from the macros. Day totals are summed in SQL over
+every item of the day, so they never depend on list pagination. Alternative considered and rejected: recomputing
+totals from a shared food catalogue, which would rewrite history whenever a catalogue entry changed.
+
+### D-046 · 2026-09-07 · Nutrition goals are dated records; nothing is ever recommended
+`NutritionGoal` is unique per user and `EffectiveFrom` date, and a day resolves to the newest goal effective on or
+before it. Changing today's targets therefore leaves earlier days measured against the targets they used. Every
+target (kcal, protein, carbohydrate, fat) is individually optional: an unset target means "not tracked", the UI
+shows the consumed amount plus an action to configure one, and no percentage is derived from an absent target.
+Clearing all four targets deletes that record (`204`) instead of storing zeros. The app never fills in a
+personalised or medical recommendation.
+
+### D-047 · 2026-09-07 · Quick Add is global on Home and finance-scoped inside Finance
+`quickActionDefinitions` (Xərc, Gəlir, Köçürmə) stays Finance's own set. Home, the desktop sidebar and the
+`/quick-add` modal use `globalQuickActionDefinitions`, which adds Yemək, and filter out the actions the user
+cannot perform yet — money actions need a financial account, a meal needs nothing — so Quick Add is available
+from the first day instead of being hidden until Finance is set up.
+
+### D-048 · 2026-09-07 · Selection state uses `aria-*` props, and each control follows its own ARIA pattern
+react-native-web 0.21 does not support `accessibilityState`, so every control now carries `aria-checked` /
+`aria-selected` / `aria-disabled` directly; React Native merges those back into `accessibilityState`, so one prop
+serves both platforms. Controls follow the WAI-ARIA pattern for what they actually do: radio groups for mutually
+exclusive choices (segments, chips, sheet lists, calendar days), a checkbox for filters, and `<nav>` landmarks of
+links with `aria-current="page"` for route navigation — the bottom bar is not a `tablist` on the web, because no
+`tabpanel` exists, while native keeps the platform-conventional `tab` role. Each group is one tab stop with roving
+`tabIndex`. Space activation is added in `lib/a11y.ts` because react-native-web accepts it only for buttons.
+Alternative considered and rejected: `listbox`/`option` for the sheets, which React Native's `accessibilityRole`
+union does not include and would have split native and web semantics.
+
+**Selection follows focus everywhere, but a dialog commits separately.** Inline groups (segments, chips, currency)
+commit as the arrows move. The dialog pickers — `SelectionSheet`, `CategorySheet` and `CalendarSheet` — keep a
+*pending* selection instead: arrows move focus **and** the checked radio inside the dialog, while the owning form
+field only changes on commit (Space, Enter or a tap). Escape discards the pending value, leaves the field
+untouched and restores focus to the trigger. The reset is a remount rather than a state-syncing effect: each
+dialog renders its body only while open, so the pending value — and the calendar's displayed month — start from
+the committed value every time it opens, which also satisfies the React Compiler's no-`setState`-in-effect rule.
+
+**The calendar stays a radio group, not an ARIA grid.** Its rendered markup was inspected before any change: the
+container is `div role="radiogroup" aria-label="Tarix"` holding 30 `role="radio"` day cells, with no `row`, no
+`gridcell`, no `table`/`tr`/`td` ancestors and therefore no implicit grid roles to verify. Days are a set of
+mutually exclusive choices, and `grid` / `row` / `gridcell` are absent from React Native's `accessibilityRole`
+union, so a grid would have existed on the web only. The three states stay independent: `aria-checked` for the
+chosen day, `aria-current="date"` for today, and the roving `tabIndex` for focus.
+
+### D-049 · 2026-09-07 · Photo analysis is OpenAI Responses behind one adapter, and a draft is never a meal
+`IAiFoodAnalyzer` has exactly one production implementation, `OpenAiFoodAnalyzer`, calling the OpenAI Responses
+API (`POST /v1/responses`) with an `input_image` part and strict Structured Outputs
+(`text.format = { type: "json_schema", strict: true }`). Model, base URL, key and every limit come from
+`Ai:OpenAi` / `Ai:FoodAnalysis`; the key is backend-only and never reaches the mobile bundle. The default model is
+**`gpt-5.6-luna`**, verified against the current model reference as supporting image input *and* structured
+outputs, and chosen as the cheapest that does: **$0.20 / 1M input tokens, $1.20 / 1M output tokens**
+(cached input $0.02). One analysis sends a single ≤1024 px JPEG and caps the answer at 1200 output tokens, so a
+call costs a fraction of a cent; the per-user ceiling of 20 analyses/hour bounds the rest. Alternatives rejected:
+a larger multimodal model (same schema support at several times the price for a task that is an estimate anyway)
+and Chat Completions (no first-class `text.format`, and the Responses API is where structured outputs are
+current). `store: false` is sent on every call; docs/AI-SAFETY.md documents Libra's retention separately from the
+provider's.
+
+**The adapter is always registered, even with no credentials.** Without a key it answers `NotConfigured`, which
+the API reports as a 503 with an honest message. Deterministic estimates exist in exactly two places: the test
+host's `FakeFoodAnalyzer`, and `DevelopmentFixtureFoodAnalyzer`, which needs *both* a Development host and an
+explicit `Ai:FoodAnalysis:UseDevelopmentFixture=true` and stamps `development-fixture` on every draft it produces
+(`FoodAnalysisRegistrationTests` covers each combination). A missing key can never silently produce a fake result.
+
+**A draft is a separate aggregate.** `FoodAnalysisDraft` + `FoodAnalysisItem` + `FoodAnalysisImage` hold the
+estimate; nothing about them touches a total. The confirm endpoint takes items the user reviewed, builds a
+`NutritionEntry` through the ordinary domain path, and saves the entry insert and the draft transition in one
+transaction guarded by PostgreSQL's `xmin`. The **draft** is therefore the idempotency key, not the client request
+id: a repeated, retried or concurrent confirmation returns the first meal even under a new id. Rejected
+alternative: reusing the nutrition `clientRequestId` alone, which a client could vary on retry and get two meals.
+
+**Estimates normalize once.** `FoodAnalysisNormalization` maps a `PicturedPortion` estimate to `PerPortion` with
+quantity 1 (its estimated weight stays metadata) and a `Per100Grams` estimate to `Per100Grams` with the weight as
+the quantity. The weight and the portion count are never both applied to the same food, and a nutrient the model
+did not judge stays `null` through normalization, the API and the form, where the existing "Dəyər daxil edin"
+validation asks for it.
+
+**Images.** SkiaSharp (MIT) decodes the actual bytes — so a renamed file or a wrong content type is caught by what
+the file is — bakes the EXIF orientation into the pixels, bounds the longest edge at 1024 px and re-encodes JPEG
+from raw pixels, which leaves every metadata block behind. ImageSharp was rejected: version 4 requires a paid
+licence. Bytes live behind `IImageStore` (file system today, one owner-checked read path) and are deleted when the
+draft is confirmed or discarded, and in any case at the retention deadline.
+
+### D-050 · 2026-09-08 · A task is one day, and one occurrence of a schedule is a task
+A repeating task is not a special kind of row. `TaskItem` carries `SeriesId`, and every scheduled local date gets
+its own row with its own title, time, priority and completion state; `TaskSeries` holds only the rule. That is
+what makes "completing today" mean nothing about tomorrow without any extra machinery, and it lets one occurrence
+be edited or deleted without a per-occurrence override table. Alternative rejected: deriving occurrences on the
+fly and storing only exceptions — it makes a completion state per date, ordering, paging and the n / N count all
+special cases of the same query.
+
+**Generation is materialization with the database as the referee.** A read that reports counts first brings every
+active series up to date: each scheduled date from the series start through `today + 30` becomes a row, missed
+past dates included, so a skipped day surfaces as overdue instead of quietly leaving the numbers. A unique index
+on `(series_id, planned_date)` is the authority, so two requests generating at the same moment produce one row —
+the loser detaches its inserts and re-reads. A date that already has a row is never touched, which is what keeps
+a completed occurrence completed, an edited one edited, and a **deleted one deleted**: deleting an occurrence of
+a series leaves a `Removed` tombstone that occupies the date, so regeneration cannot resurrect it. A standalone
+task, having nothing to regenerate it, is deleted outright.
+
+**Completion is a state, not a toggle.** `POST /{id}/completion` takes `{ completed }`. Setting the state a task
+is already in is a no-op that records no second history event, so a retry after a lost response is safe and there
+is no request whose meaning depends on what the server currently holds. `TaskCompletionEvent` rows are append-only:
+reopening clears the completed state and adds a `Reopened` event beside the `Completed` one it undid.
+
+**Stale edits are refused, not merged.** A `PUT` may echo the `updatedAtUtc` it read; a stored row that has moved
+on answers 409. That reuses a field the response already carried rather than inventing an ETag, and it composes
+with the `xmin` row version, which catches two writes racing inside the database and reports the same conflict.
+
+**Priority is ranked, not sorted.** It is stored as its name for readability, so ordering by the column would put
+"Normal" before "Low" before "High"; the query ranks it explicitly (High 2, Normal 1, Low 0). Found by the
+ordering test, which is why that test asserts the whole sequence rather than a single row.
+
+**Calendar labels, not instants.** `PlannedDate` is a `date` and `PlannedTime` a `time`; only created, updated and
+completed moments are UTC. A profile that changes time zone therefore keeps every task on the day and minute it
+was planned for — only which day is "today", and so what is overdue, follows the new zone — and a daylight-saving
+jump cannot shift a task into another day.
+
+### D-051 · 2026-09-10 · A sleep session is two stored instants, and the wake-up belongs to the user's press
+
+**Context.** Sleep is the first feature whose value spans a device being asleep, offline or restarted, and whose
+core number — how long you slept — is the sort of thing an app is tempted to count with a timer.
+
+**Decision.** A session is `(StartedAtUtc, EndedAtUtc)`. Every duration, including the one ticking on screen, is
+computed from those instants against the current clock; nothing accumulates. The UI timer is a rendering, never a
+source. Both ends are rounded on write to the microsecond PostgreSQL stores, so an in-memory session and one read
+back are the same moment — without that, a retried stop compared unequal to the end already on disk.
+
+**One open session, enforced three times.** The aggregate refuses it, the handler checks for it, and
+`ix_sleep_sessions_open` — a partial unique index on `user_id where ended_at_utc is null` — decides it under
+concurrency. Two simultaneous starts leave one session and one 409. Non-overlap of completed sessions is a
+`btree_gist` EXCLUDE constraint over `tstzrange(start, end, '[)')`: half-open on purpose, so a night ending at
+07:00 and a nap starting at 07:00 both stand, while anything that genuinely crosses is refused by the database
+rather than by a check-then-write race.
+
+**Diagnosing that took a detour worth recording.** EF Core classifies an exclusion violation and a deadlock as
+transient, so without `EnableRetryOnFailure` it rethrows the `DbUpdateException` wrapped in an
+`InvalidOperationException` suggesting retries be enabled — and the PostgreSQL error sits two levels down. The
+typed `catch (DbUpdateException)` never matched and concurrent overlaps surfaced as 500s. The handler now walks
+the whole inner-exception chain for SqlStates `23P01`, `23505`, `40P01` and `40001`.
+
+**The wake-up is the moment of the press.** "Oyandım" captures one instant, writes it to device storage scoped to
+the user and that exact session, cancels the session's reminder, and only then calls the API. If the call fails,
+that instant stays on the device and the screen says so with the time it holds; the retry sends the same instant.
+Reconnecting an hour later therefore cannot lengthen the recorded night. This is one record, not a queue: a user
+has one running session, and the existing request path does the sending — no general offline layer was added.
+
+**A forgotten night is never tidied up.** An open session has no upper bound: it is not clipped at 24 hours, not
+closed automatically, and not silently shortened. The 24-hour limit applies only to a completed interval. The
+correction screen for an open session offers exactly three honest moves — write a real wake-up time, fix the start
+and leave it running, or discard it — and says so in words.
+
+**Attribution is computed, not stored.** A completed session belongs to the local date it *ended* on in the
+profile time zone, so a night across midnight is counted once, on the day the user woke. Changing the profile
+zone re-groups history rather than rewriting it, and durations are untouched by DST because they are distances
+between instants. The weekly average is over the days that hold a record and is always shown with that
+denominator; a date with nothing recorded reads "Qeyd yoxdur", never a zero-height bar.
+
+**Reminders are a local convenience, and are treated as one.** One `expo-notifications` date trigger per running
+session, scheduled only after the server confirms the session exists, with its id and trigger time stored under
+the user and session. Resuming reconciles the record with the operating system: kept if still scheduled,
+re-scheduled once if the system lost it, dropped if its moment has passed — a reminder about a moment that is
+over is not a reminder. Logout cancels this user's own alarm and nothing else, and never touches the server
+session. A denied permission leaves tracking fully usable and the switch reports itself off. Tapping a
+notification opens the session; it never records waking, because a tap says the user looked at their phone, not
+when they woke up. The browser has no equivalent, so on web the row says so instead of pretending — and the
+library is behind `lib/notifications.ts` / `notifications.web.ts` so the web bundle never loads it at all.
+Cross-device cancellation is not possible: an alarm lives on the device that scheduled it.
+
+**Rejected.** Background polling, inactivity-based sleep detection, remote push, and health-platform integration:
+each would trade a large amount of trust and complexity for a guess, when a session the user starts and ends is
+exact.
+
+**Native configuration is left as autolinking leaves it.** Checked against the installed SDK 57 package and
+`npx expo config --type introspect`: the Android permissions, the boot receiver and the forwarder activity merge
+in from the library's own manifest at Gradle build time, and `@expo/prebuild-config` applies the
+`expo-notifications` config plugin automatically for autolinked packages — which is why `aps-environment` is
+already in the introspected entitlements although `app.json` names no notifications plugin. Nothing is added on
+top: `icon`/`color` are cosmetic, `defaultChannel` and `enableBackgroundRemoteNotifications` are remote-only, and
+`SCHEDULE_EXACT_ALARM` buys exact Android timing we deliberately never promise — the library already falls back
+from `setExactAndAllowWhileIdle` to `setAndAllowWhileIdle` when it is absent, and the permission is restricted on
+Google Play. The consequences and the device checks live in `docs/DEVICE-CHECKS.md`.
+
+### D-052 · 2026-09-15 · Appearance is an explicit device choice, light by default
+
+**Context.** On a physical iPhone in dark mode the app was dark with no way to make it light. The cause was not
+a forced theme: `userInterfaceStyle` is `automatic` on both platforms (checked with `npx expo config --type
+introspect`: iOS `UIUserInterfaceStyle: Automatic`; Android `expo_system_ui_user_interface_style = automatic`
+written by the autolinked `expo-system-ui` plugin, with `uiMode` in `configChanges`). The app simply followed
+the OS — `useTheme()` read `useColorScheme()` directly in 70 places — and offered no selector.
+
+**Decision.** One stored preference, `light | dark | system`, in `lib/appearance-store.ts`, persisted through
+the existing `secureStorage` under `libra.appearance`. `useTheme()` is the only place it is combined with the OS
+scheme, so a change repaints everything at once without remounting anything. The root layout keeps the native
+splash up until the choice is read, so the first frame is already in the user's palette.
+
+**Light by default.** A fresh install is light regardless of the phone (D-044 made the design light-first);
+`system` is a choice, not the starting point. A stored value that is not one of the three falls back to the
+default rather than to the OS.
+
+**The native override, and its trap.** The choice is pushed to the platform with `Appearance.setColorScheme` so
+the keyboard, system pickers and alerts match. In React Native 0.86 the way to *clear* that override is the
+string `'unspecified'`; writing the current OS value instead would freeze the app on today's OS theme and stop
+`system` from following the phone. The store therefore never writes an OS reading as a preference. On web,
+where react-native-web has no `setColorScheme`, the document's `color-scheme` is set the same way and cleared
+for `system`, so scrollbars and native form controls follow the choice too.
+
+**Nothing native changed.** Both appearances were already supported in the resolved configuration; Expo Go
+proves the JavaScript behaviour, not our build's `Info.plist` or manifest.
+
+### D-053 · 2026-09-15 · A recurring month is recorded only by hand, and a debt movement is not a transaction
+
+**Context.** Phase 3 adds monthly recurring plans and receivables/payables. Both are easy to get subtly wrong:
+a scheduler that "helpfully" posts rent would move money nobody confirmed, and a receivable that shows up as
+income would inflate the month and the budgets.
+
+**Recurring.** A template is a plan. The month view computes `Pending` rows on read and stores nothing, so
+listing, refreshing, restarting the API or computing due dates can never post money. The only write is the
+user's explicit "Gəliri qeyd et" / "Ödənişi qeyd et" after reviewing amount, account and actual date; it creates
+one ordinary `FinancialTransaction` and the `Recorded` row in one database transaction. A unique
+`(template_id, year, month)` index — not the client request id — is what makes concurrent and retried
+confirmations converge on that one transaction, so a retry with a different key is equally harmless. The row
+keeps a snapshot; editing or deactivating the template touches only unrecorded months (missed past months
+included) and never marks a month paid. Undo deletes the transaction and leaves the month `Skipped`, so it is
+never regenerated; the generic transaction delete refuses a linked transaction and points at Təkrarlananlar.
+The default actual date is the due date once it has passed and today while it is still ahead, because a
+confirmation says the money moved and future-dated activity stays out of balances.
+Day 29–31 clamps to the last valid day and returns to the original day the month after.
+
+**Debts.** A `DebtMovement` (opening or payment) is the smallest coherent extension of the Finance model: it
+changes cash through the existing `AccountBalanceCalculator` (one more grouped query) and the obligation, and
+nothing else — income, expense, category totals and budgets never see principal because it is not a
+`FinancialTransaction`. Remaining, status and overdue are derived, never stored. Overpayment under concurrency
+is prevented in the database transaction itself: recording a payment also bumps the debt's row (`xmin`), so the
+second of two racing payments gets a 409 rather than a second success — a preceding read alone would not do.
+Undo is a soft reversal that keeps the history readable and restores remaining and cash together. Creation is
+explicit about cash: an existing obligation changes no balance; money lent or borrowed now needs an account and
+moves the principal in the same request.
+
+**Consequences.** No parallel balance and no scheduler. The dashboard gains `debts` with `monthlyPrincipalNet`
+kept apart from `monthlyNet`, a labelled `netPosition = cash + receivables − payables`, and per-currency
+outstanding/overdue figures aggregated in SQL. Mobile adds "Təkrarlananlar" and "Borclar" as small soft
+buttons inside Finance, keeping the first fold and the five tabs unchanged, and every money-moving sheet shows
+the effect on the chosen account before confirmation (`AccountEffect`).
+
+**Known gaps.** No interest, amortisation, invoices or currency conversion; a receivable is only ever repaid in
+its own currency. Expo's typed-routes watcher mis-normalises Windows paths for files added while Metro runs,
+so `npm run typecheck` needs the declarations regenerated (or Metro restarted) after adding files.
+
 ## Open (non-blocking)
 
 ### D-011 · Mobile API contract workflow

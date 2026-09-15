@@ -38,6 +38,22 @@ public sealed class LocalCalendarTests
     }
 
     [Fact]
+    public void Day_range_covers_one_local_day_and_is_half_open()
+    {
+        var day = LocalCalendar.Day(Baku, new DateOnly(2026, 9, 7));
+
+        Assert.Equal(new DateTime(2026, 9, 6, 20, 0, 0, DateTimeKind.Utc), day.StartUtc);
+        Assert.Equal(new DateTime(2026, 9, 7, 20, 0, 0, DateTimeKind.Utc), day.EndUtc);
+
+        // 23:30 local on the 7th belongs to the 7th; 00:15 local on the 8th does not.
+        var lateEvening = new DateTime(2026, 9, 7, 19, 30, 0, DateTimeKind.Utc);
+        var afterMidnight = new DateTime(2026, 9, 7, 20, 15, 0, DateTimeKind.Utc);
+        Assert.True(lateEvening >= day.StartUtc && lateEvening < day.EndUtc);
+        Assert.False(afterMidnight < day.EndUtc);
+        Assert.Equal(new DateOnly(2026, 9, 8), LocalCalendar.ToLocalDate(Baku, afterMidnight));
+    }
+
+    [Fact]
     public void Unknown_time_zone_throws()
     {
         Assert.ThrowsAny<TimeZoneNotFoundException>(() => LocalCalendar.Month("Mars/Olympus", 2026, 1));

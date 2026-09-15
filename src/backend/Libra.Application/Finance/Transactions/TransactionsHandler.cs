@@ -129,6 +129,13 @@ public sealed class TransactionsHandler(ILibraDbContext db, TimeProvider clock)
             return Result.NotFound<bool>(FinanceErrors.TransactionNotFound);
         }
 
+        // A transaction that records a recurring month is owned by that month. Deleting it here would leave the
+        // month claiming to be recorded with nothing behind it; the recurring screen's undo removes both together.
+        if (await db.RecurringOccurrences.AnyAsync(occurrence => occurrence.UserId == userId && occurrence.TransactionId == transaction.Id, cancellationToken))
+        {
+            return Result.Conflict<bool>(FinanceErrors.TransactionLinkedToRecurring, "Undo the month from Təkrarlananlar; that removes the transaction with it.");
+        }
+
         db.FinancialTransactions.Remove(transaction);
         await db.SaveChangesAsync(cancellationToken);
         return Result.Success(true);

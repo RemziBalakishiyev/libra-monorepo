@@ -17,7 +17,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { SectionHeader } from '@/components/section-header';
 import { Sheet } from '@/components/sheet';
 import { EmptyState, ErrorState, Skeleton, StaleNotice } from '@/components/states';
-import { AppText, formatAmount } from '@/components/text';
+import { AppText, MoneyText, formatAmount } from '@/components/text';
 import { useToast } from '@/components/toast';
 import { TransactionList, describeTransaction, type TransactionRowItem } from '@/components/transaction-row';
 import { Radius, Spacing } from '@/constants/theme';
@@ -206,6 +206,8 @@ export function FinanceOverview() {
         <Button title="Köçürmələr" variant="soft" size="sm" icon="swap-horizontal-outline" onPress={() => router.push('/finance/transfers')} />
         <Button title="Büdcələr" variant="soft" size="sm" icon="pie-chart-outline" onPress={() => router.push('/finance/budgets')} />
         <Button title="Kateqoriyalar" variant="soft" size="sm" icon="pricetags-outline" onPress={() => router.push('/finance/categories')} />
+        <Button title="Təkrarlananlar" variant="soft" size="sm" icon="repeat-outline" onPress={() => router.push('/finance/recurring')} testID="finance-link-recurring" />
+        <Button title="Borclar" variant="soft" size="sm" icon="people-outline" onPress={() => router.push('/finance/debts')} testID="finance-link-debts" />
       </Entrance>
     </>
   ) : null;
@@ -263,6 +265,28 @@ function SummaryCard({ data }: { data: Dashboard }) {
         </AppText>
         <AppText variant="meta">{formatAmount(data.dailyAverageExpense, data.currencyCode)}</AppText>
       </View>
+      {data.debts && data.debts.monthlyPrincipalNet !== 0 ? (
+        <View style={[styles.averageRow, { borderTopColor: colors.border }]} accessible accessibilityLabel={`Borc hərəkətləri: ${formatAmount(data.debts.monthlyPrincipalNet, data.currencyCode)}; nağd dəyişimi: ${formatAmount(data.debts.monthlyCashChange, data.currencyCode)}`} testID="dashboard-principal">
+          <AppText variant="caption" color="textSecondary" style={styles.flex}>
+            Borc hərəkətləri (gəlir/xərc deyil) · nağd dəyişimi {formatAmount(data.debts.monthlyCashChange, data.currencyCode)}
+          </AppText>
+          <MoneyText variant="meta" amount={data.debts.monthlyPrincipalNet} currencyCode={data.currencyCode} highlightNegative showCode={false} />
+        </View>
+      ) : null}
+      {data.debts && (data.debts.receivablesOutstanding > 0 || data.debts.payablesOutstanding > 0) ? (
+        <View style={[styles.debtRows, { borderTopColor: colors.border }]} accessible accessibilityLabel={`Alacaq ${formatAmount(data.debts.receivablesOutstanding, data.currencyCode)}, borc ${formatAmount(data.debts.payablesOutstanding, data.currencyCode)}, xalis mövqe ${formatAmount(data.debts.netPosition, data.currencyCode)}`} testID="dashboard-net-position">
+          <AppText variant="caption" color="textSecondary">
+            Alacaq {formatAmount(data.debts.receivablesOutstanding, data.currencyCode, false)} · Borc {formatAmount(data.debts.payablesOutstanding, data.currencyCode, false)}
+            {data.debts.overdueCount > 0 ? ` · ${data.debts.overdueCount} gecikib` : ''}
+          </AppText>
+          <View style={styles.debtNetRow}>
+            <AppText variant="caption" color="textMuted" style={styles.flex}>
+              Xalis mövqe (nağd + alacaq − borc)
+            </AppText>
+            <MoneyText variant="meta" amount={data.debts.netPosition} currencyCode={data.currencyCode} highlightNegative showCode={false} />
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -379,6 +403,16 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingTop: Spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  debtRows: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.sm,
+    gap: 2,
+  },
+  debtNetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
   },
   actions: {
     flexDirection: 'row',
