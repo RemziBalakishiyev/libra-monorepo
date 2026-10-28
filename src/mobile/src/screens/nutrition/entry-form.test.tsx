@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { PixelRatio } from 'react-native';
 
 import { ToastProvider } from '@/components/toast';
 import { useSessionStore } from '@/lib/session-store';
@@ -89,19 +90,72 @@ describe('NutritionEntryFormScreen', () => {
     mockApi();
     const view = await renderForm({ date: '2026-09-07' });
 
+    // A single food has one live total; its own contribution line would only repeat it.
+    expect(view.queryByTestId('item-total-0')).toBeNull();
+    expect(view.getByTestId('item-basis-0')).toHaveTextContent('Dəyərlər 1 porsiya üçündür');
+
     await fillItem(view);
-    expect(view.getByTestId('item-total-0')).toHaveTextContent('Bu yemək: 250 kkal · Z 18,0 q · K 3,0 q · Y 19,0 q');
-    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('250 kkal');
+    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('250');
+    expect(view.getByTestId('entry-total-macros')).toHaveTextContent(/Zülal 18,0 q/);
 
     await fireEvent.changeText(view.getByTestId('item-quantity-0'), '2,5');
-    expect(view.getByTestId('item-total-0')).toHaveTextContent(/625 kkal/);
-    expect(view.getByTestId('entry-total-macros')).toHaveTextContent('Zülal 45,0 q · Karbohidrat 7,5 q · Yağ 47,5 q');
+    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('625');
+    expect(view.getByTestId('entry-total-macros')).toHaveTextContent(/Karbohidrat 7,5 q/);
+    expect(view.getByTestId('entry-total-macros')).toHaveTextContent(/Yağ 47,5 q/);
 
     // Switching to per-100 g reads the same numbers as "per 100 g" and the weight in grams.
     await fireEvent.press(view.getByRole('radio', { name: '100 q üzrə' }));
+    expect(view.getByTestId('item-basis-0')).toHaveTextContent('Dəyərlər 100 q üçündür');
     await fireEvent.changeText(view.getByTestId('item-quantity-0'), '150');
-    expect(view.getByTestId('item-total-0')).toHaveTextContent(/375 kkal/);
+    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('375');
     expect(view.getByLabelText(/^Çəki \(q\)/)).toBeTruthy();
+  });
+
+  it('shows a dash until an item is complete, and never a zero-calorie meal that was not entered', async () => {
+    mockApi();
+    const view = await renderForm({ date: '2026-09-07' });
+
+    // Nothing typed: no total is claimed.
+    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('—');
+    expect(view.getByTestId('entry-total-macros')).toHaveTextContent(/Zülal —/);
+    expect(view.getByTestId('entry-total-incomplete')).toHaveTextContent('Dəyərlər tam deyil — bütün xanaları doldurun.');
+
+    // Half-typed: still incomplete, still no figure.
+    await fireEvent.changeText(view.getByTestId('item-name-0'), 'Omlet');
+    await fireEvent.changeText(view.getByTestId('item-energy-0'), '250');
+    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('—');
+
+    // An explicitly typed zero is a value: the total is real and reads zero.
+    await fireEvent.changeText(view.getByTestId('item-energy-0'), '0');
+    await fireEvent.changeText(view.getByTestId('item-protein-0'), '0');
+    await fireEvent.changeText(view.getByTestId('item-carbs-0'), '0');
+    await fireEvent.changeText(view.getByTestId('item-fat-0'), '0');
+    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('0');
+    expect(view.queryByTestId('entry-total-incomplete')).toBeNull();
+  });
+
+  it('keeps every macro field and a full total at enlarged text', async () => {
+    // At 1.5× the three macro inputs stop sharing a row; nothing may be dropped or abbreviated for space.
+    const fontScale = jest.spyOn(PixelRatio, 'getFontScale').mockReturnValue(1.5);
+    try {
+      mockApi();
+      const view = await renderForm({ date: '2026-09-07' });
+
+      expect(view.getByLabelText(/^Zülal \(q\)/)).toBeTruthy();
+      // "Karbohidrat" is the label most at risk of being cut; it stays whole.
+      expect(view.getByLabelText(/^Karbohidrat \(q\)/)).toBeTruthy();
+      expect(view.getByLabelText(/^Yağ \(q\)/)).toBeTruthy();
+      // The meal segments drop their icons rather than their names when the text grows.
+      for (const meal of ['Səhər yeməyi', 'Nahar', 'Axşam yeməyi', 'Ara yemək']) {
+        expect(view.getByRole('radio', { name: meal })).toBeTruthy();
+      }
+
+      await fillItem(view, { energy: '1234,5', protein: '123,4' });
+      expect(view.getByTestId('entry-total-energy')).toHaveTextContent('1.235');
+      expect(view.getByTestId('entry-total-macros')).toHaveTextContent(/Karbohidrat 3,0 q/);
+    } finally {
+      fontScale.mockRestore();
+    }
   });
 
   it('reports a missing value next to the field and does not submit', async () => {
@@ -187,11 +241,29 @@ describe('NutritionEntryFormScreen', () => {
     await fireEvent.changeText(view.getByTestId('item-protein-1'), '2,7');
     await fireEvent.changeText(view.getByTestId('item-carbs-1'), '28,2');
     await fireEvent.changeText(view.getByTestId('item-fat-1'), '0,3');
-    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('380 kkal');
+    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('380');
+    // With several foods each keeps its own contribution line beside the meal total.
+    expect(view.getByTestId('item-total-0')).toHaveTextContent('Bu yemək: 250 kkal · Z 18,0 q · K 3,0 q · Y 19,0 q');
+    expect(view.getByTestId('item-total-1')).toHaveTextContent(/130 kkal/);
 
     await fireEvent.press(view.getByTestId('item-remove-1'));
     expect(view.queryByTestId('item-editor-1')).toBeNull();
-    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('250 kkal');
+    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('250');
+  });
+
+  it('leaves a half-filled extra food out of the total and says so', async () => {
+    mockApi();
+    const view = await renderForm();
+
+    await fillItem(view);
+    await fireEvent.press(view.getByTestId('add-item'));
+    await fireEvent.changeText(view.getByTestId('item-name-1'), 'Düyü');
+    await fireEvent.changeText(view.getByTestId('item-energy-1'), '130');
+
+    // The complete food still counts; the unfinished one is excluded and named, not silently zeroed.
+    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('250');
+    expect(view.getByTestId('entry-total-incomplete')).toHaveTextContent('1 yeməyin dəyərləri tam deyil; cəmə daxil edilməyib.');
+    expect(view.getByTestId('item-total-1')).toHaveTextContent('Bu yemək: — (dəyərlər tam deyil)');
   });
 
   it('prefills an edit from the stored snapshot and saves the edited quantity', async () => {
@@ -204,10 +276,10 @@ describe('NutritionEntryFormScreen', () => {
     expect(view.getByTestId('item-name-1')).toHaveProp('value', 'Düyü');
     expect(view.getByTestId('item-quantity-1')).toHaveProp('value', '150');
     expect(view.getByTestId('item-energy-1')).toHaveProp('value', '130');
-    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('445 kkal');
+    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('445');
 
     await fireEvent.changeText(view.getByTestId('item-quantity-1'), '200');
-    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('510 kkal');
+    expect(view.getByTestId('entry-total-energy')).toHaveTextContent('510');
 
     await fireEvent.press(view.getByTestId('nutrition-submit'));
 

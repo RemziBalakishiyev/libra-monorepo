@@ -1,5 +1,7 @@
 using Libra.Application.Common;
+using Libra.Domain.Assistant;
 using Libra.Domain.Finance;
+using Libra.Domain.Focus;
 using Libra.Domain.Identity;
 using Libra.Domain.Nutrition;
 using Libra.Domain.Sleep;
@@ -57,6 +59,12 @@ public sealed class LibraDbContext(DbContextOptions<LibraDbContext> options) : D
     public DbSet<TaskCompletionEvent> TaskCompletionEvents => Set<TaskCompletionEvent>();
 
     public DbSet<SleepSession> SleepSessions => Set<SleepSession>();
+
+    public DbSet<FocusSession> FocusSessions => Set<FocusSession>();
+
+    public DbSet<AssistantConversation> AssistantConversations => Set<AssistantConversation>();
+
+    public DbSet<AssistantMessage> AssistantMessages => Set<AssistantMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

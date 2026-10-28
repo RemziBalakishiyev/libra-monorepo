@@ -43,6 +43,22 @@ export function describeDuration(totalMinutes: number): string {
   return minutes === 0 ? `${hours} saat` : `${hours} saat ${minutes} dəqiqə`;
 }
 
+/**
+ * The recorded length of a completed night for a compact card. A genuine positive duration under a minute is
+ * said plainly instead of being rounded up to "1 d" or down to "0 d"; nothing here ever renders a missing
+ * record as zero — callers pass a session only when one exists.
+ */
+export function recordedDurationLabel(session: SleepSession): { text: string; spoken: string } {
+  if (session.endedAtUtc) {
+    const milliseconds = Date.parse(session.endedAtUtc) - Date.parse(session.startedAtUtc);
+    if (milliseconds > 0 && milliseconds < 60_000) {
+      return { text: '1 dəq-dən az', spoken: 'bir dəqiqədən az' };
+    }
+  }
+  const minutes = session.durationMinutes ?? (session.endedAtUtc ? minutesBetween(session.startedAtUtc, session.endedAtUtc) : 0);
+  return { text: formatDuration(minutes), spoken: describeDuration(minutes) };
+}
+
 /** Local clock time of an instant, "23:45". */
 export function timeOf(utcIso: string): string {
   const date = new Date(utcIso);

@@ -388,6 +388,309 @@ the effect on the chosen account before confirmation (`AccountEffect`).
 its own currency. Expo's typed-routes watcher mis-normalises Windows paths for files added while Metro runs,
 so `npm run typecheck` needs the declarations regenerated (or Metro restarted) after adding files.
 
+### D-054 · 2026-09-18 · Home is a daily overview in a green system, and it never invents a figure
+
+**Context.** Home was a finance card plus a directory of modules in the indigo palette. The redesign gives the
+signed-in start a recognisable identity and a real overview without adding a dashboard's weight.
+
+**Palette.** The semantic token system is unchanged in shape; the values move to a warm green system (canvas
+`#F5F3EE`, surface `#FFFEFA`, primary `#1E5345`, hero `#102F28`, sage `#E4EADF`, pistachio `#D8EB86` with dark
+`onAccent`; dark canvas `#0E1713`, surface `#18251F`, primary `#C9DD95` with dark `onPrimary`). `accent` /
+`onAccent` and `heroGlow` are the only new keys. Income, expense, transfer, warning and error keep distinct hues;
+every measured text pair clears 4.5:1 (docs/DESIGN-SYSTEM.md). `onHero` stays white and separate from
+`onPrimary`. The light/dark/system preference, its persistence, the native appearance override and the splash
+hydration are untouched. The native splash colour in `app.json` is still the template blue: changing it is a
+native configuration change, not a presentation one, and is left for a deliberate build.
+
+**Home.** Header, hero, four cards, today's tasks. Every figure is a stored record read through the existing
+hooks: the hero's one line comes from the task day summary and says "Bu gün üçün hələ qeyd yoxdur." when there is
+nothing; "Qeyd yoxdur" and a genuine zero are different states; a sub-minute night is "1 dəq-dən az"; the
+balance and the month's net flow are both shown and both labelled. The illustration is the supplied
+`libra-balance.png`, kept as the source and displayed from a trimmed 420 px derivative in a reserved slot, so
+the hero never jumps. The hero's glow is three stacked low-alpha discs rather than a gradient, because
+`experimental_backgroundImage` does not render on the web build and the evidence has to show what the user
+sees. Quick Add moved from the header plus into the hero on phones and is absent where the sidebar has it.
+
+**Layout rule.** Two columns at normal phone widths; one column below 360 units, above 115 % text, or when the
+formatted balance reaches 12 characters — a wider card, never smaller money.
+
+**Motion.** Entrances 320 ms / 10 px with the existing `Entrance`; a 3 px, 7 s drift on the illustration that
+runs only while Home is focused and the app is active; progress bars through the existing `ProgressTrack`. All
+decorative movement stops under Reduce Motion. No web-only animation library.
+
+### D-055 · 2026-09-18 · One date-only calendar with explicit confirmation, and money in the interface language
+
+**Context.** On a physical iPhone the Finance header sat under the status bar, scrolled content showed through
+the status bar area, the date sheet showed only its top rows, and the dashboard read "5,000.00" while the entry
+field read "0,00".
+
+**Safe areas.** `Screen` applied the top inset as padding *inside* the scroll content, so content scrolled under
+the status bar and nothing opaque owned that strip. The opaque root view now carries the top inset once; the
+tab bar region still owns the bottom. No double padding anywhere.
+
+**The date sheet — verified cause.** The iOS branch rendered the inline `UIDatePicker` in the bottom sheet
+without dismissing the keyboard. A React Native `Modal` does not resign the first responder, and the transaction
+form focuses the amount on open, so the sheet was laid out at the window's bottom edge *behind the still-open
+keyboard*: the month header and first weeks were visible, the remaining rows and "Hazırdır" were under the
+keyboard. The layout itself was sound (the sheet's 86 % cap was never reached), and no animation was involved —
+`SlideInDown` ends at the same laid-out position. This is established from the code path (no `Keyboard.dismiss`
+before `setOpen`, `keyboardShouldPersistTaps="handled"` keeping the input focused, the sheet's
+`justifyContent: 'flex-end'` inside a keyboard-agnostic `Modal`), not from a device run: no device was
+available to this session, and the browser cannot show a soft keyboard. It stays on the device checklist.
+
+**Decision.** One custom date-only calendar (`CalendarSheet`) on iOS, Android and web, wired through `DateField`,
+which dismisses the keyboard first. Choosing a day, a shortcut or an arrow key changes only a pending date;
+"Təsdiqlə" commits once and closes; every other exit discards; reopening restores the committed day and its
+month; month navigation never writes. The sheet is sized from the window and the top inset (not a percentage),
+only the grid scrolls on short screens or with enlarged text, and six-week months fit at 360 × 640. Today is
+resolved in the profile time zone (`todayInProfileZone`), never through a UTC conversion. Each caller keeps its
+own `minimumDate` / `maximumDate`; nothing global blocks future dates. The time picker is unchanged. Existing
+interaction tests were updated for the explicit confirmation; the native `@react-native-community/datetimepicker`
+dependency stays for `TimeField`.
+
+**Money.** Every display path already went through `lib/money.ts`; the mismatch came from the stored "Dil"
+preference switching separators while the interface stayed Azerbaijani. Display now follows the interface
+language (`UI_LOCALE`) on every platform, the amount placeholder is built from the same separators, and parsing
+stays separate. The preference remains stored for a future localised interface.
+
+**Dashboard.** The cash-flow block keeps balance and monthly flow apart with a labelled net-flow line; the budget
+empty state is a tonal row; recent rows are grouped by day and carry an overflow control on every platform; a
+loaded month with no expense gets an explanation and an add action instead of empty bars and a 0,00 forecast; the
+six management destinations sit in one list. Totals still come from the dashboard aggregate; the submission
+baseline and the unrounded month-end estimate are untouched.
+
+### D-056 · 2026-09-28 · Nutrition states what was recorded: a clamped ring, optional macro goals, and blank that stays blank
+
+**Context.** The diary's header carried three competing actions above a redundant date row; the day summary was
+a plain card; four oversized empty cards filled an empty day; and the food editor repeated the same numbers in
+an item line and a total card while an untouched form already displayed a complete-looking 0 kkal meal.
+
+**The day summary.** One softly tinted surface (`nutritionTint`) with the consumed energy, the configured
+target and the labelled remaining or exceeded amount. The ring is logged energy ÷ the **actual** target; the
+drawn arc is clamped to 0–100 % so exceeding cannot wrap it, while the centre keeps the real percentage and the
+line beside it keeps the exact "… artıq". Reaching a target is not a completion state and nothing congratulates
+it. With no target configured there is no ring and no percentage — only the consumed figure and a compact
+"Hədəf təyin et"; no default target is invented. Each macro goal is independently optional, and an untracked
+macro still reports its recorded grams with no progress.
+
+**Empty, zero, loading and error stay four different things.** A loaded day with no entries shows its real zero
+plus one short sentence ("Sıfır — hələ heç nə qeyd olunmayıb.") and one line above the four groups; loading is
+a skeleton; a failed request shows the error and *no* figures at all. Empty groups keep a single compact row
+instead of an empty card, so the day is still four places to add into.
+
+**No photographs.** `nutritionEntrySchema` exposes no durable image, so entry rows use the meal-type icon. A
+photo-analysis draft's temporary URL is not a thumbnail the diary may keep showing, no image storage was added
+for this redesign, and no food picture is generated and presented as the user's meal.
+
+**One illustration, in one state.** The supplied `nutrition-empty-bowl.png` is kept as the source and displayed
+from an 83 KB, 264 px square derivative in an 88-unit reserved slot — the same treatment Home gives
+`libra-balance.png` (D-054). It is decorative: outside the accessibility tree entirely, which the diary test
+pins by querying for it twice, once normally and once with hidden elements included. It renders only on a day
+that loaded with no entries, so it can never be mistaken for a loading or error state, and it appears once —
+not per empty meal group, and never beside a real meal. Its entrance is the shared `Entrance` scale-and-fade on
+mount, which Reduce Motion reduces to a fade; nothing floats.
+
+**The food editor.** Name → basis → quantity → kalori → macros, with the nutritional basis stated once per item
+("Dəyərlər 1 porsiya üçündür" / "Dəyərlər 100 q üçündür") instead of repeating a suffix on four labels. One
+live total: with a single food the per-item contribution line is hidden because it would only repeat it. A
+blank nutrient field stays blank — `itemNutrients` returns null unless all four are filled, the total reads "—"
+and says how many foods are incomplete — while an explicitly typed 0 remains a value and counts. The
+calculation, the per-portion / per-100 g rules, the snapshots and the analysis → draft → confirmation flow are
+untouched.
+
+**The ring is drawn with views** (`ProgressRing`, `halfAngles`) because the app has no SVG dependency; the first
+implementation left the arc empty at 100 % and filled the wrong half below 50 %, which the geometry unit test
+now pins down. `WeekStrip` replaces the diary's `DateNav`: the window slides around the selection, never past
+today, with the shared `CalendarSheet` behind a calendar button, and no cell invents a "day has entries" marker
+because the day endpoint is fetched one day at a time.
+
+**Enlarged text.** The reflows key off `PixelRatio.getFontScale()` (the entry row stacks its energy figure, the
+macro fields stack, the meal segments drop their icons, the summary stacks its ring). Browser screenshots scale
+CSS only and therefore do not exercise them; Jest does, with the font scale mocked, and Dynamic Type stays on
+the device checklist. Two shared fields (`TextField`, `TimeField`) gained `minWidth: 0` so the web `<input>`'s
+intrinsic ~180 px width stops overrunning a narrow column — the only change outside Nutrition, and it is
+invisible apart from the touch area it corrects.
+
+
+### D-057 · 2026-09-30 · Plan leads with what is left, and one signal keeps one meaning
+
+**The blue — verified cause.** `modulePlan` was `#3978E8`, byte-for-byte the `transfer` token: an accent left
+over from before the green rebuild (D-054), and the only one in the app that belonged to no palette. It was
+read by the Plan screens, the Quick Add "Tapşırıq" pill and the placeholder default, and by nothing else.
+Rather than recolouring each screen — which would have added a fourth accent — the token itself became the
+primary green (`#1E5345` / `#C9DD95`), so every consumer aligned at once. The filled checkbox had to move from
+`onHero` (always white) to `onPrimary`, or the tick would have vanished on the dark palette's pistachio.
+
+**The summary.** It led with a percentage that restated the fraction beside it. It now leads with the number of
+open tasks — "1 tapşırıq qalıb" over "0 / 1 tamamlanıb" — and draws the share once, as a thin track, only when
+there is something for it to be a share of. `dayProgress` turns the API's aggregate into one of four named
+states, so an empty day offers planning instead of "0 / 0" or a fabricated 100 %, a day with nothing scheduled
+but work owed leads with the overdue count, and "Bu günün hamısı tamamlandı" stays scoped to today with the
+overdue line still shown. Every figure is the server's aggregate over the whole day, never the rows on screen.
+
+**Row metadata.** A row now says only what its heading has not. `rowMeta` takes a `RowContext`: under today's
+list a clock or "Gün ərzində" — `TaskItem` has an optional time, not a duration, and an untimed task is not
+midnight — in the overdue section the day it was actually planned for, and in the completed list the planned
+day, because that list is now grouped by the day each task was *finished* (`completedAtUtc`, which is also the
+field the API pages by, so the grouping survives paging).
+
+**Two kinds of late.** The server marks a timed task overdue once its own time has passed today, while the
+overdue *section* holds earlier days — two different rules, both correct. The row now shows the first as a
+warning-coloured time and reserves the amber checkbox for the section, so a person is not told "late" twice in
+two different senses.
+
+**Priority.** Drawn only when it is not the default: "Yüksək" gets a rule beside the title and a tonal chip,
+"Aşağı" a quiet word, Normal nothing at all. All three words stay in the accessible name, so nothing about
+priority depends on seeing a colour.
+
+**Unchanged on purpose.** Completion still sends the state the control moved to, with the in-flight guard and
+no optimistic write — so there is nothing to roll back and a failure leaves the row exactly as it was — and
+the Today view keeps completed rows in place, so nothing vanishes under the finger. Ordering, the disjoint
+views, the counts, the timezone rules, idempotency and the stale-edit 409 are the query layer's, and none of
+them were touched. The form kept its single save path and gained only "Bu gün" / "Sabah" shortcuts above the
+existing date field; task dates stay unrestricted, and Nutrition keeps its own no-future rule.
+
+**No reference images arrived with the brief**, so the three referenced designs informed nothing directly; the
+work follows the written requirements and Libra's own system.
+
+
+### D-058 · 2026-09-30 · Fokus is timestamps, an outbox and one explicit phase at a time
+
+**Where it lives.** Inside Plan, as a compact entry card and a dedicated `/plan/focus` screen. Not a sixth
+tab, and not a timer dashboard stacked above the task list.
+
+**Time is derived, never counted.** The state is a list of active intervals plus the instant the open one
+started; elapsed time is computed from them on demand. The one-second interval exists only to redraw, and only
+while something runs. This is the whole reason a phase that expired while the app was closed is settled at its
+**own deadline** rather than at the moment it was reopened, and why a process restart resumes a run where it
+really is instead of at its configured duration. `settle()` is idempotent, so a notification tap, a foreground
+event and a display tick racing for the same expiry produce exactly one completion.
+
+**Pause is not ending.** A pause closes the open interval; the gap belongs to no total. Ending early keeps the
+time spent and records `Stopped`, which never advances the four-run cycle. Only a run that reached its
+configured duration is a completed Pomodoro, and the server refuses a `Completed` claim with less active time
+than that. Breaks are never uploaded at all, so nothing can count one as focus.
+
+**Nothing runs unattended.** Every phase is started by the user. Reopening after hours settles the single
+phase that expired and offers the next one; it cannot manufacture the sessions that "would have" happened.
+
+**Idempotency is the database's.** The device generates a `clientSessionId` before a run starts, and the
+unique index on `(user_id, client_session_id)` is what makes the offline outbox safe: a retry, or two racing
+retries, return the row that already exists. Terminal records are written to that outbox *before* any upload,
+so a closed app, a dead connection or an expired token costs nothing but a delay.
+
+**Accounts.** The timer, the settings and the outbox are namespaced by user id. One installation runs one
+timer for one account; signing in as somebody else never inherits a running phase, and a pending record is
+never uploaded under another token. Sign-out pauses the local phase and cancels its alarm rather than
+discarding the time. Live handoff between devices is explicitly **not** implemented and is not claimed.
+
+**Notifications** are a convenience, not the mechanism. One local alarm per running phase, its own Android
+channel and stored identifier, cancelled or replaced on every transition — and it never touches the sleep
+reminder, whose identifiers are separate. Nothing is saved from a notification callback, no background task
+runs, and a stale tap opens nothing: a tap is honoured only when it names the phase this account is running.
+
+**Clock changes are not defended against**, and saying otherwise would be a lie — an app cannot tell a
+corrected clock from a manipulated one. What is guaranteed is that nothing derived is impossible: remaining
+time is clamped at zero and active time at the configured duration, so a clock moved backwards cannot show
+negative time, and one moved forwards past the deadline settles the phase exactly as real waiting would.
+
+**Task independence.** A focus run never completes its linked task; that is an explicit second action through
+the ordinary completion mutation. A task belonging to another account, or a deleted one, leaves the run stored
+*unlinked* with its title snapshot rather than refused — the record of time spent outlives the task.
+
+**Three defects the tests and the evidence run found**, all fixed: `start()` while a phase was running created
+a fresh phase and discarded the one under way; the settings fields could never be edited, because
+`parseDecimalInput(text, 0)` builds the invalid quantifier `\d{1,0}` and rejects everything; and the Plan
+entry card nested a button inside a button, which the web build reported as invalid.
+
+**The illustration.** The supplied `focus-hourglass.png` is kept as the source and shipped as two derivatives
+that keep its portrait proportions: 276 × 432 for the scene's 144-unit hourglass, and the earlier 169 × 264
+for the compact 88-unit size. Decorative and outside the accessibility tree in both; the countdown and the
+ring are always drawn in code.
+
+**D-058a · 2026-10-01 · The scene, and six states that stop contradicting each other.** The first pass was
+too plain and, worse, ambiguous: a session stopped after two seconds showed "24:59" as its headline beside
+"Bitdi" and "Vaxtından əvvəl bitirildi" — the remaining time, a finished status and an early stop, three
+readings of one moment. `describeFocus` now decides the entire presentation from one state, so a finished
+session's figure is what it achieved and never what was left. Stopping is "Sessiya dayandırıldı", leads with
+the time actually focused, keeps the configured length only as context, lights no cycle marker, never
+celebrates, and offers "Yenidən fokuslan". Completing leads with the duration, advances one marker, pulses
+the ring once and offers the break.
+
+The composition became one forest scene rather than a pale circle beside a small illustration: 32 px radius,
+a 144-unit hourglass, a 64 px tabular countdown, a thin ring with a luminous endpoint, four markers. Motion is
+an entrance (560 ms, controls 70 ms behind and pressable throughout), three drifting light layers, a floating
+hourglass with a shadow that follows, and a single pulse on natural completion. All of it is decoration: it
+stops under Reduce Motion, off-screen and backgrounded, and no animation callback touches the timer.
+
+Three things the rendered result showed that the code did not: the light layers banded into a bullseye at
+three steps and needed eight faint ones; the hourglass shadow read as a hard bar and needed the same
+treatment; and a spelled-out result ("3 saniyə") set at the countdown's 64 px overflowed the ring, which is
+why the presentation now reports a `figureKind` and the scene sizes clocks and durations differently.
+
+**No reference images arrived with the brief**, so the three referenced designs informed nothing directly.
+
+**A pre-existing time bomb surfaced** while verifying this: the transaction-form suite pinned its budget and
+dashboard fixtures to September, so it began failing the moment the clock reached October. The fixtures now
+follow the clock. No production code was involved.
+
+### D-059 · 2026-10-03 · The assistant answers from a snapshot it did not write, and the snapshot is the answer's record
+
+The first usable version of Libra AI is deliberately **read-only** and deliberately **ungenerous to the
+model**. Three choices carry the rest.
+
+**A snapshot, not tools.** Each question builds `AssistantContextSnapshot` from the caller's own records using
+the aggregates the module screens already use — `DashboardHandler`, `NutritionDayHandler`, `TasksHandler`,
+`SleepHandler`, `FocusHandler` — and the provider receives that snapshot, the question and at most six earlier
+question/summary pairs. No tools, no database handle, no SQL, no credentials. The alternative, a tool catalog
+the model calls, is Phase 7B work and needs the confirmation-token machinery; without it, "the assistant
+cannot change anything" would have been a rule the model was asked to follow rather than a property of what it
+can reach. Nothing unrelated travels with the request either: no email, no identifiers, no meal photos, and no
+free-text notes beyond a clipped fact `text` where the figure needs one.
+
+**Stable fact ids, and an answer that cites nothing else.** Every figure carries an id
+(`finance.expense.month`, `sleep.average.week`, `tasks.overdue`, …), a unit, the period it covers, a caveat and
+the route it came from. Observations may cite only ids present in the snapshot, and `IsGrounded` checks every
+one: a single unknown id invalidates the **whole** answer, which is returned as 503 and not stored. Partial
+credit was the tempting option and it is the wrong one — an answer with one invented figure among four correct
+ones is more dangerous than no answer. The client then renders every displayed figure from the snapshot, so
+the model cannot supply a replacement total even inside an accepted answer.
+
+**Availability is a first-class state.** `NoRecords` is not zero, `Partial` is not complete, and `Unavailable`
+is one module that could not be read rather than a failed question. Nutrition says it describes what was
+logged; currencies stay separate and are never summed into one number; transfers are not expenses; an open
+sleep session is not a completed night; today's tasks and overdue tasks stay apart; focused time excludes
+breaks and pauses. Each of those travels as a caveat on the fact itself, so the qualification cannot be lost
+between the calculation and the sentence.
+
+**The snapshot is retained with the answer.** An older turn keeps the figures it was actually based on, so
+yesterday's answer never appears to cite today's numbers. For the same reason a change of modules or period
+starts a *new* conversation instead of re-scoping an old one: carrying a turn across a narrower scope would
+let an excluded module re-enter the response context through the history.
+
+**Honest unavailability.** With no key the status endpoint says so, `/ask` is 503, and the app shows "AI
+köməkçi hələ aktiv deyil" with the composer disabled. The one thing never done is substituting canned advice
+for an answer. A deterministic fixture exists in tests and in Development behind a flag; every answer it
+produces is labelled "Nümunə cavab (fixture)" in the interface and in the evidence. **API-key setup and
+live-provider verification stay deferred — no paid call has been made from this work.**
+
+**Honest loading.** The composer shows one thing while a request is in flight: that a request is in flight.
+No percentage, no reasoning transcript, no token-by-token effect for a response that arrives whole. The orb is
+decoration and carries no state, which is why it keeps drifting the same way whether or not anything is
+pending, and stops entirely under Reduce Motion, off-screen and backgrounded.
+
+**Two defects the tests found**, both fixed: a prompt card sent the question with the *previous* module scope,
+because the state set beside the press had not been applied yet — the scope now travels with the request; and
+the in-flight indicator lived inside the "conversation exists" branch, so the very first question showed no
+loading at all.
+
+**A second pre-existing time bomb surfaced**, in the same family as D-058a's: the calendar-sheet harness test
+asked for the radio named "3 oktyabr 2026", which carries a ", bu gün" suffix on exactly that one date of the
+year. It now matches day names by prefix. No production code was involved.
+
+**No reference images arrived with the brief.**
+
+
 ## Open (non-blocking)
 
 ### D-011 · Mobile API contract workflow

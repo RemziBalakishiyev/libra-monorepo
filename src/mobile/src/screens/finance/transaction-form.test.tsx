@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 
+import { currentYearMonth } from '@/lib/dates';
 import { useSessionStore } from '@/lib/session-store';
 import { TransactionFormScreen } from '@/screens/finance/transaction-form';
 import { createTestQueryClient } from '@/test/create-test-query-client';
@@ -11,10 +12,17 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: mockBack, canGoBack: () => true }),
 }));
 
+/**
+ * The budget preview is only drawn for the dashboard's own month, and the form opens on today. Both fixtures
+ * therefore follow the clock: pinning them to one month made the suite pass only until that month was over.
+ */
+const thisMonth = currentYearMonth();
+const currentDashboard = { ...dashboard, year: thisMonth.year, month: thisMonth.month };
+
 const marketBudget = {
   id: 'bud-market',
-  year: 2026,
-  month: 9,
+  year: thisMonth.year,
+  month: thisMonth.month,
   currencyCode: 'AZN',
   categoryId: 'cat-market',
   categoryName: 'Market',
@@ -75,7 +83,7 @@ describe('TransactionFormScreen', () => {
   const baseRoutes = {
     '/api/finance/accounts': () => jsonResponse([cashAccount]),
     '/api/finance/categories': () => jsonResponse(categories),
-    '/api/finance/dashboard': () => jsonResponse(dashboard),
+    '/api/finance/dashboard': () => jsonResponse(currentDashboard),
     '/api/finance/budgets': () => jsonResponse([marketBudget]),
   };
 

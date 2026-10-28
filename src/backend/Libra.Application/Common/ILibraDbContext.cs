@@ -1,4 +1,6 @@
+using Libra.Domain.Assistant;
 using Libra.Domain.Finance;
+using Libra.Domain.Focus;
 using Libra.Domain.Identity;
 using Libra.Domain.Nutrition;
 using Libra.Domain.Sleep;
@@ -57,6 +59,12 @@ public interface ILibraDbContext
     DbSet<TaskCompletionEvent> TaskCompletionEvents { get; }
 
     DbSet<SleepSession> SleepSessions { get; }
+
+    DbSet<FocusSession> FocusSessions { get; }
+
+    DbSet<AssistantConversation> AssistantConversations { get; }
+
+    DbSet<AssistantMessage> AssistantMessages { get; }
 
     /// <summary>Transactions and raw SQL (advisory locks). Use sparingly; most handlers need only SaveChanges.</summary>
     DatabaseFacade Database { get; }

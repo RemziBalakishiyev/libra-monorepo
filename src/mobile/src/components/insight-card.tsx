@@ -66,7 +66,8 @@ export function buildInsights(input: InsightInput): Insight[] {
     insights.push({ kind: 'share', icon: 'pie-chart-outline', text: `${input.topCategory.categoryName} bu ayın xərclərinin ${Math.round(input.topCategory.percent)}%-ni təşkil edir.` });
   }
 
-  if (daysElapsed > 0 && remainingDays > 0) {
+  // No expense yet means there is no average to project; a "0,00" forecast would only look like insight.
+  if (daysElapsed > 0 && remainingDays > 0 && input.monthlyExpense > 0) {
     insights.push({ kind: 'estimate', icon: 'calendar-outline', text: `Bu orta davam etsə, ay sonu xərc təxminən ${formatAmount(projectMonthEnd(input.monthlyExpense, daysElapsed, daysInMonth), currencyCode)} olar.` });
   }
 
@@ -101,6 +102,8 @@ type InsightCardProps = {
   /** Daily series state: complete, still loading, or failed (totals above stay valid). */
   seriesStatus: 'ready' | 'loading' | 'unavailable';
   onRetrySeries?: () => void;
+  /** Offered by the empty state when the month holds no expense yet. */
+  onAddExpense?: () => void;
   animateOnMount?: boolean;
 };
 
@@ -108,11 +111,13 @@ type InsightCardProps = {
  * "Gündəlik xərc": the last seven days with real dates and values, one or two deterministic sentences, and a
  * "Tam ay" expander for the whole-month strip. Period and currency are always stated.
  */
-export function InsightCard({ input, seriesStatus, onRetrySeries, animateOnMount = false }: InsightCardProps) {
+export function InsightCard({ input, seriesStatus, onRetrySeries, onAddExpense, animateOnMount = false }: InsightCardProps) {
   const { colors, shadows } = useTheme();
   const motion = useMotion();
   const [expanded, setExpanded] = useState(false);
-  const insights = buildInsights(input);
+  // The aggregate decides emptiness: a loaded month with no expense is a fact, not a missing series.
+  const emptyMonth = seriesStatus === 'ready' && input.monthlyExpense === 0;
+  const insights = emptyMonth ? [] : buildInsights(input);
   const days = input.dailyExpenses ? recentDays(input.dailyExpenses, input.daysElapsed, 7) : [];
   const peak = Math.max(...days.map((day) => day.amount), 0);
   // Limit usage and pace are both shown collapsed; the estimate and category share sit behind the expander.
@@ -155,7 +160,20 @@ export function InsightCard({ input, seriesStatus, onRetrySeries, animateOnMount
         </View>
       ) : null}
 
-      {seriesStatus === 'ready' && days.length > 0 ? (
+      {emptyMonth ? (
+        <View style={[styles.emptyMonth, { backgroundColor: colors.surfaceSubtle }]} testID="insight-empty">
+          <Ionicons name="leaf-outline" size={18} color={colors.primaryText} />
+          <View style={styles.flex}>
+            <AppText variant="meta">Bu ay hələ xərc qeyd olunmayıb</AppText>
+            <AppText variant="caption" color="textSecondary">
+              İlk xərcdən sonra gündəlik bölgü və ay sonu təxmini burada görünəcək.
+            </AppText>
+          </View>
+          {onAddExpense ? <Button title="Xərc əlavə et" variant="soft" size="sm" icon="add" onPress={onAddExpense} /> : null}
+        </View>
+      ) : null}
+
+      {seriesStatus === 'ready' && !emptyMonth && days.length > 0 ? (
         <View style={styles.daysRow} accessibilityRole="list">
           {days.map((day) => {
             const ratio = peak > 0 ? day.amount / peak : 0;
@@ -194,7 +212,7 @@ export function InsightCard({ input, seriesStatus, onRetrySeries, animateOnMount
         </Entrance>
       ) : null}
 
-      {details.length > 0 || (seriesStatus === 'ready' && input.dailyExpenses) ? (
+      {details.length > 0 || (seriesStatus === 'ready' && !emptyMonth && input.dailyExpenses) ? (
         <Pressable accessibilityRole="button" accessibilityState={{ expanded }} accessibilityLabel={expanded ? 'Daha az' : 'Tam ay və ətraflı'} onPress={() => setExpanded((value) => !value)} hitSlop={8} style={styles.toggle}>
           <AppText variant="meta" color="primaryText">
             {expanded ? 'Daha az' : 'Tam ay və ətraflı'}
@@ -224,6 +242,14 @@ const DAY_BAR_HEIGHT = 40;
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
+  },
+  emptyMonth: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
   },
   tabular: {
     fontVariant: ['tabular-nums'],

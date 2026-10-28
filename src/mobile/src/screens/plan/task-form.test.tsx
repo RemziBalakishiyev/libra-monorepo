@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 
 import { ToastProvider } from '@/components/toast';
+import { dateFromIso, isoDateOf, todayIsoDate } from '@/lib/dates';
 import { useSessionStore } from '@/lib/session-store';
 import { TaskFormScreen } from '@/screens/plan/task-form';
 import { createTestQueryClient } from '@/test/create-test-query-client';
@@ -19,6 +20,12 @@ interface Call {
   path: string;
   method: string;
   body: Record<string, unknown> | undefined;
+}
+
+/** The calendar day after today, built from calendar parts rather than by adding milliseconds. */
+function tomorrowIso(): string {
+  const base = dateFromIso(todayIsoDate());
+  return isoDateOf(new Date(base.getFullYear(), base.getMonth(), base.getDate() + 1, 12));
 }
 
 describe('TaskFormScreen', () => {
@@ -100,6 +107,27 @@ describe('TaskFormScreen', () => {
       note: null,
     });
     expect(posts()[0]!.body!.clientRequestId).toEqual(expect.any(String));
+  });
+
+  it('schedules tomorrow from the shortcut, and allows future dates the way Nutrition does not', async () => {
+    mockApi();
+    // Opened on today, which is what the Plan screen passes; a form opened on another day matches neither
+    // shortcut, and that is correct — "Bu gün" means today.
+    const view = await renderForm({ date: todayIsoDate() });
+
+    // The shown day is the selected shortcut until another one is pressed.
+    expect(view.getByTestId('task-date-today').props.accessibilityState.checked).toBe(true);
+
+    await fireEvent.press(view.getByTestId('task-date-tomorrow'));
+    expect(view.getByTestId('task-date-tomorrow').props.accessibilityState.checked).toBe(true);
+    expect(view.getByTestId('task-date-today').props.accessibilityState.checked).toBe(false);
+
+    await fireEvent.changeText(view.getByTestId('task-title'), 'Sabahkı iş');
+    await fireEvent.press(view.getByTestId('task-submit'));
+
+    await waitFor(() => expect(posts()).toHaveLength(1));
+    // A plan is about the future: the day after today is accepted, not blocked.
+    expect(posts()[0]!.body).toMatchObject({ title: 'Sabahkı iş', plannedDate: tomorrowIso() });
   });
 
   it('reports a missing title next to its field and sends nothing', async () => {

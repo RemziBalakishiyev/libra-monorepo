@@ -31,8 +31,8 @@ describe('BalanceHero', () => {
     const amount = view.getByLabelText('Hesab balansı 3.126,41 AZN');
     expect(flatten(amount.props.style).color).toBe('#FFFFFF');
     expect(colors.onHero).toBe('#FFFFFF');
-    // The primary-button foreground stays a separate token (dark on the light indigo of the dark palette).
-    expect(colors.onPrimary).toBe(scheme === 'dark' ? '#0C1017' : '#FFFFFF');
+    // The primary-button foreground stays a separate token (dark on the pale green of the dark palette).
+    expect(colors.onPrimary).toBe(scheme === 'dark' ? '#15231A' : '#FFFFFF');
   });
 
   it('keeps the white foreground after switching currency and under reduced motion', async () => {

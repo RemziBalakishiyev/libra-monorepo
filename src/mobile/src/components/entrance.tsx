@@ -17,6 +17,8 @@ type EntranceProps = ViewProps & {
   containerStyle?: StyleProp<ViewStyle>;
   /** Total travel in px for `below`/`above`. */
   distance?: number;
+  /** Fade/rise duration in ms (default `Motion.base`); Home's larger blocks use a slightly longer 320 ms. */
+  duration?: number;
   /** Skip the animation entirely (e.g. background refetch re-renders). */
   disabled?: boolean;
 };
@@ -28,7 +30,7 @@ type EntranceProps = ViewProps & {
  * Reduced motion keeps the fade (it explains the state change) and drops translation, scale, and stagger.
  * It only animates on mount: re-renders from background refetches never replay it.
  */
-export function Entrance({ index = 0, from = 'below', distance = 8, exiting, layout, containerStyle, disabled = false, style, children, ...rest }: EntranceProps) {
+export function Entrance({ index = 0, from = 'below', distance = 8, duration: durationOverride, exiting, layout, containerStyle, disabled = false, style, children, ...rest }: EntranceProps) {
   const { reducedMotion } = useTheme();
   const progress = useSharedValue(disabled ? 1 : 0);
 
@@ -37,7 +39,7 @@ export function Entrance({ index = 0, from = 'below', distance = 8, exiting, lay
       progress.set(1);
       return;
     }
-    const duration = reducedMotion ? Motion.quick : Motion.base;
+    const duration = reducedMotion ? Motion.quick : (durationOverride ?? Motion.base);
     const delay = reducedMotion ? 0 : Math.min(index, Motion.staggerCap) * Motion.stagger;
     progress.set(withDelay(delay, withTiming(1, { duration, easing: Motion.easeOut })));
     // Mount-only by design: the value must not replay when data refreshes.

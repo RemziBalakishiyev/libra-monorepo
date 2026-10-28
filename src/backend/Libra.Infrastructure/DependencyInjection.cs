@@ -1,3 +1,4 @@
+using Libra.Application.Assistant;
 using Libra.Application.Common;
 using Libra.Application.Nutrition.FoodAnalysis;
 using Libra.Infrastructure.Ai;
@@ -51,6 +52,18 @@ public static class DependencyInjection
         else
         {
             services.AddHttpClient<IAiFoodAnalyzer, OpenAiFoodAnalyzer>();
+        }
+
+        // The assistant has its own provider for the same reason it has its own options: the two features must
+        // not share a budget, a limit or a failure mode. Both gates are independent of photo analysis.
+        var useAssistantFixture = environment.IsDevelopment() && configuration.GetValue<bool>("Ai:Assistant:UseDevelopmentFixture");
+        if (useAssistantFixture)
+        {
+            services.AddSingleton<IAssistantProvider, DevelopmentFixtureAssistant>();
+        }
+        else
+        {
+            services.AddHttpClient<IAssistantProvider, OpenAiAssistant>();
         }
 
         services.AddHostedService<FoodAnalysisCleanupService>();

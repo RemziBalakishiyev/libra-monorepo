@@ -1,0 +1,136 @@
+{
+  "shots": [
+    {
+      "name": "01-plan-focus-card-idle-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "02-plan-task-focus-action-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "03-focus-ready-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "04-focus-settings-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "05-focus-ready-one-minute-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "06-focus-running-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "07-focus-paused-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "08-plan-focus-card-paused-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "09-focus-completed-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "10-focus-break-ready-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "11-focus-dark-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "12-focus-360x800",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "13-focus-430x932",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "14-focus-reduced-motion-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "15-focus-large-text-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "16-focus-desktop-1440x900",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": [
+        "Ayan Məmmədova",
+        "focus-1790785152719@example.com"
+      ]
+    }
+  ],
+  "checks": {
+    "cardIsOneRow": true,
+    "pausedCountdownIsFrozen": true,
+    "completedOffersNextPhase": true
+  },
+  "measurements": {
+    "cardIdle": "Bu gün 1 dəqiqə fokus",
+    "readyCountdown": "25:00",
+    "readyLink": "Tapşırıqsız fokus",
+    "demoCountdown": "01:00",
+    "runningCountdown": "00:56",
+    "runningStatus": "Fokus",
+    "pausedCountdown": "00:56",
+    "pausedStatus": "Pauzada",
+    "pausedCountdownLater": "00:56",
+    "cardPaused": "Fokus · Pauzada",
+    "resumedCountdown": "00:55",
+    "resultTitle": "Fokus tamamlandı",
+    "resultDetail": "1 dəqiqə fokus",
+    "breakCountdown": "05:00",
+    "breakStatus": "Qısa fasilə",
+    "serverSummary": {
+      "timeZone": "Asia/Baku",
+      "today": {
+        "date": "2026-09-30",
+        "activeSeconds": 120,
+        "completedSessions": 2,
+        "stoppedSessions": 0
+      }
+    },
+    "scaledNodes": 14
+  },
+  "consoleErrors": []
+}

@@ -1,0 +1,299 @@
+{
+  "shots": [
+    {
+      "name": "light-01-ready",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "light-02-settings",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "light-03-running",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "light-04-paused",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "light-05-completed",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "light-06-break",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "dark-01-ready",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "dark-02-settings",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "dark-03-running",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "dark-04-paused",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "dark-05-completed",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "dark-06-break",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "07a-stop-confirmation",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "light-07-stopped",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "dark-07-stopped",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "08-ready-360x800",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "09-ready-430x932",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "10-ready-large-text",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "11-ready-reduced-motion",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    }
+  ],
+  "checks": {
+    "sceneRadiusInRange": true,
+    "hourglassInRange": true,
+    "countdownInRange": true,
+    "stoppedLeadsWithFocusedTime": true,
+    "stoppedDoesNotAdvanceCycle": true,
+    "completedAdvancesCycle": true
+  },
+  "measurements": {
+    "lightReady": {
+      "scene": {
+        "w": 350,
+        "h": 441,
+        "top": 190
+      },
+      "hourglass": {
+        "w": 96,
+        "h": 146,
+        "top": 209
+      },
+      "ring": {
+        "w": 196,
+        "h": 196,
+        "top": 370
+      },
+      "countdownFontPx": 64,
+      "sceneRadius": 32,
+      "markers": 4,
+      "title": "Fokusa hazır",
+      "figure": "25:00",
+      "label": "qalıb",
+      "primary": "Başla"
+    },
+    "lightRunning": {
+      "title": "Fokus",
+      "figure": "00:56",
+      "primary": "Pauza",
+      "stop": "Sessiyanı dayandır"
+    },
+    "lightPaused": {
+      "title": "Pauzadadır",
+      "figure": "00:56",
+      "primary": "Davam et"
+    },
+    "lightCompleted": {
+      "title": "Fokus tamamlandı",
+      "figure": "1 dəqiqə",
+      "label": "tamamlanmış fokus",
+      "cycle": "1 / 4 tamamlanmış fokus",
+      "primary": "Fasiləyə başla"
+    },
+    "lightBreak": {
+      "title": "Qısa fasilə",
+      "figure": "05:00",
+      "primary": "Fasiləyə başla"
+    },
+    "darkReady": {
+      "scene": {
+        "w": 350,
+        "h": 441,
+        "top": 190
+      },
+      "hourglass": {
+        "w": 96,
+        "h": 146,
+        "top": 209
+      },
+      "ring": {
+        "w": 196,
+        "h": 196,
+        "top": 370
+      },
+      "countdownFontPx": 64,
+      "sceneRadius": 32,
+      "markers": 4,
+      "title": "Fokusa hazır",
+      "figure": "25:00",
+      "label": "qalıb",
+      "primary": "Başla"
+    },
+    "darkRunning": {
+      "title": "Fokus",
+      "figure": "00:56",
+      "primary": "Pauza",
+      "stop": "Sessiyanı dayandır"
+    },
+    "darkPaused": {
+      "title": "Pauzadadır",
+      "figure": "00:56",
+      "primary": "Davam et"
+    },
+    "darkCompleted": {
+      "title": "Fokus tamamlandı",
+      "figure": "1 dəqiqə",
+      "label": "tamamlanmış fokus",
+      "cycle": "1 / 4 tamamlanmış fokus",
+      "primary": "Fasiləyə başla"
+    },
+    "darkBreak": {
+      "title": "Qısa fasilə",
+      "figure": "05:00",
+      "primary": "Fasiləyə başla"
+    },
+    "lightStopped": {
+      "title": "Sessiya dayandırıldı",
+      "figure": "4 saniyə",
+      "label": "fokuslanmış vaxt",
+      "detail": "Planlaşdırılan: 25 dəqiqə",
+      "cycle": "0 / 4 tamamlanmış fokus",
+      "primary": "Yenidən fokuslan"
+    },
+    "darkStopped": {
+      "title": "Sessiya dayandırıldı",
+      "figure": "3 saniyə",
+      "label": "fokuslanmış vaxt",
+      "detail": "Planlaşdırılan: 25 dəqiqə",
+      "cycle": "0 / 4 tamamlanmış fokus",
+      "primary": "Yenidən fokuslan"
+    },
+    "08-ready-360x800": {
+      "scene": {
+        "w": 320,
+        "h": 441,
+        "top": 190
+      },
+      "hourglass": {
+        "w": 96,
+        "h": 146,
+        "top": 209
+      },
+      "ring": {
+        "w": 196,
+        "h": 196,
+        "top": 370
+      },
+      "countdownFontPx": 64,
+      "sceneRadius": 32,
+      "markers": 4
+    },
+    "09-ready-430x932": {
+      "scene": {
+        "w": 390,
+        "h": 441,
+        "top": 190
+      },
+      "hourglass": {
+        "w": 96,
+        "h": 146,
+        "top": 209
+      },
+      "ring": {
+        "w": 196,
+        "h": 196,
+        "top": 370
+      },
+      "countdownFontPx": 64,
+      "sceneRadius": 32,
+      "markers": 4
+    },
+    "largeText": {
+      "scene": {
+        "w": 350,
+        "h": 447,
+        "top": 190
+      },
+      "hourglass": {
+        "w": 96,
+        "h": 146,
+        "top": 209
+      },
+      "ring": {
+        "w": 196,
+        "h": 196,
+        "top": 370
+      },
+      "countdownFontPx": 64,
+      "sceneRadius": 32,
+      "markers": 4
+    }
+  },
+  "consoleErrors": []
+}

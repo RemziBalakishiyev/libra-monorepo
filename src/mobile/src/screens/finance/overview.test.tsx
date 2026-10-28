@@ -114,7 +114,7 @@ describe('FinanceOverview', () => {
     await view.findByText('Sentyabr 2026');
 
     // Income − expense stays what it was; the principal line is separate and explicitly labelled.
-    expect(view.getByText('Xalis axın')).toBeTruthy();
+    expect(view.getByLabelText('Xalis axın: 250,50 AZN')).toBeTruthy();
     expect(view.getByTestId('dashboard-principal').props.accessibilityLabel).toBe('Borc hərəkətləri: −300,00 AZN; nağd dəyişimi: −49,50 AZN');
     expect(view.getByTestId('dashboard-net-position').props.accessibilityLabel).toBe('Alacaq 300,00 AZN, borc 500,00 AZN, xalis mövqe 50,50 AZN');
     expect(view.getByText(/1 gecikib/)).toBeTruthy();

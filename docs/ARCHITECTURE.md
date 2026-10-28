@@ -38,6 +38,8 @@ Libra.Application/
     FoodAnalysis/           IAiFoodAnalyzer.cs, FoodAnalysisContracts.cs, FoodAnalysisNormalization.cs,
                             FoodAnalysisOptions.cs, FoodAnalysisCommands.cs, ImageServices.cs, FoodAnalysisHandler.cs
   Sleep/                    SleepContracts.cs, SleepCommands.cs, SleepHandler.cs
+  Assistant/                AssistantContext.cs, AssistantContextBuilder.cs, AssistantContracts.cs,
+                            AssistantHandler.cs, AssistantOptions.cs, AssistantValidators.cs, IAssistantProvider.cs
   Finance/Recurring/        RecurringContracts.cs, RecurringHandler.cs
   Finance/Debts/            DebtContracts.cs, DebtsHandler.cs
   ...
@@ -47,15 +49,17 @@ Libra.Domain/
   Nutrition/                NutritionEntry.cs, NutritionEntryItem.cs, NutritionGoal.cs, NutritionAmounts.cs,
                             FoodAnalysisDraft.cs, FoodAnalysisImage.cs, FoodAnalysisEnums.cs
   Sleep/                    SleepSession.cs
+  Assistant/                AssistantConversation.cs
 Libra.Infrastructure/
   Ai/                       OpenAiFoodAnalyzer.cs, FoodImageProcessor.cs, FileSystemImageStore.cs,
-                            FoodAnalysisCleanupService.cs
+                            FoodAnalysisCleanupService.cs, OpenAiAssistant.cs, DevelopmentFixtureAssistant.cs
   Persistence/              LibraDbContext.cs, Configurations/<Module>/*.cs, Migrations/
 Libra.Api/
   Finance/                  endpoint mapping for the module (Minimal APIs)
   Nutrition/                NutritionEndpoints.cs, FoodAnalysisEndpoints.cs
   Tasks/                    TaskEndpoints.cs
   Sleep/                    SleepEndpoints.cs
+  Assistant/                AssistantEndpoints.cs
 ```
 
 Rules:
@@ -102,6 +106,26 @@ Rules:
   restricted to completed rows — half-open, so adjacent sessions may touch but not cross.
 - Api: `SleepEndpoints` maps `/api/sleep/*` under `RequireAuthorization()`. `GET /active` answers 204 when nothing
   is running, so "no session" is not an error.
+
+### Assistant module (Phase 7A)
+
+- Domain: `AssistantConversation` and `AssistantMessage`. A conversation records the modules and period it was
+  started with; a message carries the text, and, for an answer, the serialized answer **and the snapshot it was
+  grounded in**, so an old turn keeps the figures it actually used.
+- Application: `AssistantContextBuilder` composes `AssistantContextSnapshot` out of the existing module
+  aggregates (`DashboardHandler`, `NutritionDayHandler`, `TasksHandler`, `SleepHandler`, `FocusHandler`) — never
+  out of a paginated list — through the profile's IANA zone, and a module that throws degrades to a single
+  `Unavailable` fact rather than failing the snapshot. `AssistantHandler` owns the order that matters: replay
+  check, rate limit, owner-scoped conversation lookup, scope comparison, snapshot, bounded history, a
+  `SemaphoreSlim` slot, the provider call, `IsGrounded`, then persistence.
+- Provider boundary: `IAssistantProvider`, deliberately separate from `IAiFoodAnalyzer` so neither feature
+  shares the other's budget, timeout or limit. `OpenAiAssistant` calls the Responses API with strict structured
+  output; `DevelopmentFixtureAssistant` answers deterministically for tests and Development.
+- Persistence: `assistant_conversations` and `assistant_messages`, both `jsonb` columns for the answer and the
+  snapshot, and the filtered unique index `ix_assistant_messages_client` on `(user_id, client_request_id)` that
+  makes a retried send return the stored turn instead of asking twice.
+- Api: `AssistantEndpoints` maps `/api/assistant/*` under `RequireAuthorization()`. Every conversation id is
+  resolved together with the caller's user id.
 
 ### Host composition
 
@@ -151,6 +175,27 @@ src/mobile/src/
 - **Credentials**: Expo SecureStore only (Phase 1).
 - **Design tokens**: `constants/theme.ts` (semantic light/dark palettes, spacing, radii, type ramp, shadows, motion, layout breakpoints, category colours) read through `hooks/use-theme.ts`. Screens must not use raw values. See [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md).
 - **Shell**: `app/_layout.tsx` (providers, session restore), `app/(app)/_layout.tsx` (headerless stack + desktop sidebar), `app/(app)/(tabs)/_layout.tsx` (custom floating tab bar). Native headers are off; screens render `ScreenHeader`.
+
+## Focus timer (mobile)
+
+The timer is the one piece of state in the app that outlives every screen, so it lives outside them:
+
+```text
+lib/focus/machine.ts      Pure state machine. Every function takes the instant; nothing reads a clock.
+lib/focus/storage.ts      Account-scoped persistence and the upload outbox. Writes are serialized.
+lib/focus/notification.ts One local alarm for the running phase. Its own channel, keys and identifiers.
+hooks/use-focus.ts        The single store: settle → apply → persist → reschedule, on every transition.
+screens/plan/focus.tsx    The screen. It renders the store; it does not own the timer.
+screens/plan/focus-card.tsx  The compact entry in Plan.
+```
+
+The store keeps the instant it last read the clock (`nowMs`) and hands it to the screens, so no component
+calls a clock during render and the card and the Focus screen can never disagree about the second they show.
+A one-second interval exists only while something is running, and only to redraw.
+
+Storage is namespaced by the signed-in account: one installation runs one timer for one account, a timer
+stored for somebody else is never adopted, and a pending record is never uploaded under another bearer token.
+On the web, a `storage` event makes a second tab follow the shared timer instead of running its own.
 
 ## CI
 

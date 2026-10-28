@@ -6,6 +6,7 @@ import { FieldMessage } from '@/components/form-field';
 import { AppText } from '@/components/text';
 import { Radius, Spacing, Type } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { separatorsFor } from '@/lib/money';
 
 type AmountInputProps = Omit<TextInputProps, 'style' | 'value' | 'onChangeText'> & {
   value: string;
@@ -76,7 +77,7 @@ export function AmountInput({ value, onChangeText, currencyCode, error, shakeKey
           editable={editable}
           keyboardType="decimal-pad"
           inputMode="decimal"
-          placeholder="0,00"
+          placeholder={`0${separatorsFor().decimal}00`}
           placeholderTextColor={colors.textPlaceholder}
           maxLength={16}
           selectTextOnFocus

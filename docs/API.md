@@ -417,9 +417,131 @@ is the mean over `recordedDays` — the dates that hold a record — never over 
 holds nothing. Totals, counts and averages cover every matching session, independently of any paging used to
 list them. `active` is the running session if there is one; `latest` is the most recently completed one.
 
+## Focus (Fokus)
+
+Both endpoints require a bearer token and are scoped to the caller. Only **focus runs** are ever recorded:
+breaks are local and are never uploaded, so nothing in this group can describe one.
+
+### Shapes
+
+```text
+FocusSession  { id, clientSessionId, taskId, taskTitle, configuredSeconds, startedAtUtc, endedAtUtc,
+                activeSeconds, outcome: "Completed" | "Stopped", createdAtUtc }
+FocusDay      { date, activeSeconds, completedSessions, stoppedSessions }
+FocusSummary  { timeZone, today: FocusDay }
+```
+
+`activeSeconds` is the time the timer actually ran, with every pause excluded — precise seconds, never the
+rounded minutes a screen displayed. `outcome` is `Completed` only for a run that reached its configured
+duration; a run the user ended early is `Stopped`, keeps the time it ran, and is never a completed Pomodoro.
+
+### Endpoints
+
+```text
+POST /api/focus/sessions            Records one finished run. 201 the first time, 200 on a replay.
+GET  /api/focus/summary[?date=]     Today's focus in the profile time zone.
+```
+
+The request body is `{ clientSessionId, taskId, taskTitle, configuredSeconds, intervals, outcome }`, where
+`intervals` is the list of `{ startedAtUtc, endedAtUtc }` stretches the timer ran for.
+
+**Idempotency.** `clientSessionId` is generated on the device *before* the run starts, and the database holds
+one row per `(user, clientSessionId)`. A retry from the offline outbox — or two racing retries — is answered
+with the record that already exists (200), so a flaky connection can never duplicate history or inflate a
+total. It is the only key the client needs; nothing else about a run is used to match it.
+
+**Validation.** `configuredSeconds` is 60–14 400. Intervals must be non-empty, must each end after they start,
+must not overlap, and must not end more than five minutes ahead of the server clock. A run claiming
+`Completed` with less active time than it was configured for is refused, as is active time exceeding the wall
+clock the run occupied. Malformed payloads are 400 with Problem Details; none of them is reshaped to fit.
+
+**The linked task.** `taskId` is validated against the caller: an id belonging to someone else, or to a
+deleted task, is treated exactly like one that does not exist and the run is stored **unlinked** rather than
+refused — the history of time actually spent outlives the task it was spent on. When the id does resolve, the
+stored title wins over the device's snapshot. Deleting the task later sets `task_id` to null and keeps the
+row, with its title snapshot, intact.
+
+**The summary.** `activeSeconds` is split across local midnight by interval, so a run that started the evening
+before counts on both dates in the proportion it was actually spent. `completedSessions` counts runs on the
+local date they *finished*. Pauses are in neither figure, and a stopped run contributes time but never a
+completed count.
+
+## Assistant (Libra AI, Phase 7)
+
+Every endpoint requires a bearer token and is owner-scoped. A conversation id belonging to another account is
+answered exactly like one that does not exist (404), and nothing in this group can read or write another
+user's records. The assistant is **read-only**: no endpoint here creates a transaction, completes a task,
+changes a goal, starts a timer or schedules a notification. A suggestion is text in a conversation.
+
+### Shapes
+
+```text
+AssistantModule       "Finance" | "Nutrition" | "Tasks" | "Sleep" | "Focus"
+AssistantPeriod       "Today" | "LastSevenDays"
+AssistantOutcome      "Answer" | "InsufficientData" | "ClarificationNeeded" | "Refusal"
+FactAvailability      "Available" | "NoRecords" | "Partial" | "Unavailable"
+
+AssistantFact         { id, module, label, availability, value, unit, text, period, caveat, sourceRoute }
+AssistantSnapshot     { timeZone, rangeFrom, rangeTo, collectedAtUtc, modules, facts }
+AssistantObservation  { text, factIds }
+AssistantAnswer       { outcome, summary, observations, suggestions, followUps, clarification,
+                        model, isFixture, snapshot }
+AssistantMessage      { id, role: "user" | "assistant", text, createdAtUtc, answer }
+AssistantConversation { id, title, modules, period, createdAtUtc, updatedAtUtc, messages }
+AssistantSummary      { id, title, modules, period, updatedAtUtc }
+AssistantStatus       { isConfigured, isFixture, model, defaultModules }
+```
+
+A **fact** is one figure this application computed, with a stable id (`finance.expense.month`,
+`nutrition.energy.today`, `sleep.average.week`, `tasks.overdue`, `focus.minutes.today`, …). `availability`
+carries the state explicitly: `Available` has a value, `NoRecords` means nothing was logged — which is *not* a
+zero the user achieved — `Partial` means the period is only partly covered, and `Unavailable` means that
+module could not be read for this request. `caveat` carries the domain qualification (logged intake may be
+incomplete; an open sleep session is not a completed night). `sourceRoute` is the module screen the figure
+came from, so the client can open it.
+
+### Endpoints
+
+```text
+GET    /api/assistant/status                  Whether the assistant can answer, and with which model.
+POST   /api/assistant/ask                     Asks one question. 200 with the whole conversation.
+GET    /api/assistant/conversations           Paged history, newest first.
+GET    /api/assistant/conversations/{id}      One conversation with every stored turn.
+DELETE /api/assistant/conversations/{id}      204. Removes the conversation and its turns.
+```
+
+`POST /ask` takes `{ conversationId, question, modules, period, clientRequestId }`. `conversationId` null
+starts a conversation; `modules` and `period` default to `Ai:Assistant:DefaultModules` and `Today`. An empty
+question, a question over `AssistantMessage.QuestionMaxLength`, an unknown module or an unknown period is 400
+with Problem Details.
+
+**Grounding.** Each question builds a fresh snapshot from the caller's own records, using the same aggregates
+the module screens use — complete aggregates, never a total summed from a page of a list — resolved through
+the profile's IANA time zone. The provider receives that snapshot, the question and at most
+`MaxHistoryTurns` earlier question/summary pairs. It receives no database access, no credentials, no SQL and
+no tools. Observations may cite only fact ids present in that snapshot: a single unknown id invalidates the
+whole answer, which is returned as 503 and **not stored**. Partial credit is never given.
+
+**Retained snapshots.** The snapshot is stored with the answer, so an older turn keeps the figures it was
+actually based on and never appears to reference today's numbers. Changing the selected modules or the period
+starts a new conversation rather than re-scoping an old one, so an earlier turn cannot reintroduce data that
+is now excluded.
+
+**Idempotency.** `clientRequestId` is generated on the device before the send. One row exists per
+`(user, clientRequestId)`, so a retry after an uncertain answer returns the turn that was already stored —
+the provider is not asked, and not paid, twice.
+
+**Limits.** `MaxQuestionsPerHour` (30) per user, process-wide concurrency of 8 with a `QueueSeconds` wait
+before 429, `TimeoutSeconds` (40) per provider call and `MaxOutputTokens` (900) per answer. They are
+configured separately from `Ai:FoodAnalysis` so neither feature can exhaust the other's budget.
+
+**Unavailable.** With no provider key the status endpoint reports `isConfigured: false` and `/ask` is 503 with
+`"AI köməkçi hələ aktiv deyil."`. No canned text is ever returned as an answer. A development fixture exists
+behind `Ai:Assistant:UseDevelopmentFixture` in Development only, and every answer it produces carries
+`isFixture: true` so the interface can label it.
+
 ## Planned endpoint groups
 
 ```text
 /api/analytics/dashboard/*          Phase 5
-/api/assistant/conversations/*      Phase 7
 ```

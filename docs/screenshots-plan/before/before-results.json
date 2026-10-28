@@ -1,0 +1,180 @@
+{
+  "shots": [
+    {
+      "name": "01-plan-one-task-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "02-plan-busy-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "03-plan-busy-full-390x2100",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "04-plan-busy-dark-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "05-plan-busy-dark-full-390x2100",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "06-plan-busy-360x800",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": [
+        "Tamamlanan"
+      ]
+    },
+    {
+      "name": "07-plan-busy-430x932",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "08-plan-busy-desktop-1440x900",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": [
+        "Ayan Məmmədova",
+        "planbusy-1790778432056@example.com"
+      ]
+    },
+    {
+      "name": "09-plan-busy-large-text-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": [
+        "Tamamlanan"
+      ]
+    },
+    {
+      "name": "10-plan-busy-reduced-motion-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "11-plan-overdue-only-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "12-plan-today-done-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "13-plan-empty-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "14-plan-upcoming-390x1200",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "14b-plan-upcoming-full-390x1200",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "15-plan-completed-390x1200",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "16-task-form-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "17-task-form-full-390x1400",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "18-task-form-validation-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    }
+  ],
+  "checks": {
+    "summaryAndFirstTaskVisible": true,
+    "noRepeatedTodayLabel": true,
+    "formHasDateShortcuts": false
+  },
+  "measurements": {
+    "oneRemaining": null,
+    "oneDetail": null,
+    "summaryBox": {
+      "top": 152,
+      "bottom": 216,
+      "vh": 844
+    },
+    "firstRow": {
+      "top": 279,
+      "bottom": 335,
+      "vh": 844
+    },
+    "planAccent": {
+      "color": "rgb(0, 0, 0)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    "busyRemaining": null,
+    "busyDetail": null,
+    "busyOverdue": "2 gecikmiş tapşırıq",
+    "rowMetas": [],
+    "scaledNodes": 77,
+    "overdueOnlyRemaining": null,
+    "overdueOnlyDetail": null,
+    "doneRemaining": null,
+    "doneDetail": null,
+    "doneOverdue": "1 gecikmiş tapşırıq",
+    "emptyRemaining": null,
+    "emptyDetail": null,
+    "upcomingHeadings": [
+      "Sabah · 1 oktyabr 2026DişçiSabah · 10:00",
+      "2 okt · 2 oktyabr 2026Dərmanı iç2 okt · ",
+      "3 okt · 3 oktyabr 2026Dərmanı iç3 okt · ",
+      "4 okt · 4 oktyabr 2026Avtomobilə baxış4 ",
+      "5 okt · 5 oktyabr 2026Dərmanı iç5 okt · ",
+      "6 okt · 6 oktyabr 2026Dərmanı iç6 okt · ",
+      "7 okt · 7 oktyabr 2026Dərmanı iç7 okt · ",
+      "8 okt · 8 oktyabr 2026Dərmanı iç8 okt · ",
+      "9 okt · 9 oktyabr 2026Dərmanı iç9 okt · ",
+      "10 okt · 10 oktyabr 2026Dərmanı iç10 okt",
+      "11 okt · 11 oktyabr 2026Dərmanı iç11 okt",
+      "12 okt · 12 oktyabr 2026Dərmanı iç12 okt",
+      "13 okt · 13 oktyabr 2026Dərmanı iç13 okt",
+      "14 okt · 14 oktyabr 2026Dərmanı iç14 okt",
+      "15 okt · 15 oktyabr 2026Dərmanı iç15 okt",
+      "16 okt · 16 oktyabr 2026Dərmanı iç16 okt",
+      "17 okt · 17 oktyabr 2026Dərmanı iç17 okt"
+    ],
+    "completedHeadings": []
+  }
+}

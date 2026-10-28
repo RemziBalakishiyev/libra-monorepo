@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef, type PropsWithChildren, type ReactNode } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -49,6 +49,10 @@ export function Sheet({ visible, onClose, title, presentation = 'sheet', anchor,
   const { colors, layout, shadows } = useTheme();
   const motion = useMotion();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  // A phone sheet may use everything under the status bar; the body shrinks and scrolls inside that bound, so
+  // the header and footer stay reachable on short screens and with enlarged text. Recomputed on rotation.
+  const sheetMaxHeight = Math.max(240, windowHeight - insets.top - Spacing.xl);
   const isPopover = presentation === 'popover' && layout !== 'compact';
   const isDialog = !isPopover && (presentation === 'dialog' || layout !== 'compact');
   const previousFocus = useRef<Element | null>(null);
@@ -164,7 +168,7 @@ export function Sheet({ visible, onClose, title, presentation = 'sheet', anchor,
             {body}
           </Entrance>
         ) : (
-          <Animated.View entering={motion.sheetIn()} exiting={motion.sheetOut()} accessibilityViewIsModal accessibilityLabel={accessibilityLabel ?? title} style={[styles.sheet, { backgroundColor: colors.surfaceRaised, paddingBottom: Math.max(insets.bottom, Spacing.md), boxShadow: shadows.overlay }]}>
+          <Animated.View entering={motion.sheetIn()} exiting={motion.sheetOut()} accessibilityViewIsModal accessibilityLabel={accessibilityLabel ?? title} style={[styles.sheet, { maxHeight: sheetMaxHeight, backgroundColor: colors.surfaceRaised, paddingBottom: Math.max(insets.bottom, Spacing.md), boxShadow: shadows.overlay }]} testID={testID ? `${testID}-surface` : undefined}>
             {body}
           </Animated.View>
         )}
@@ -188,9 +192,9 @@ const styles = StyleSheet.create({
   },
   container: {
     maxHeight: '100%',
+    flexShrink: 1,
   },
   sheet: {
-    maxHeight: '86%',
     borderTopLeftRadius: Radius.xl,
     borderTopRightRadius: Radius.xl,
     borderCurve: 'continuous',
@@ -249,8 +253,10 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flexGrow: 0,
+    flexShrink: 1,
   },
   body: {
+    flexShrink: 1,
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.md,
     gap: Spacing.xxs,

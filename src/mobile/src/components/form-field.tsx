@@ -232,6 +232,10 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    // On the web an <input> carries an intrinsic width of about 180 px, which makes it overrun a narrow
+    // column (a third of a phone's width) even though the field's box draws correctly. Allowing it to
+    // shrink keeps the invisible element — and its touch area — inside the field it belongs to.
+    minWidth: 0,
     ...Type.body,
     fontSize: 16,
     paddingVertical: Spacing.sm,

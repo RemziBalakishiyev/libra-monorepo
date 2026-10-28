@@ -1,13 +1,5 @@
-import { PlaceholderScreen } from '@/screens/placeholder';
+import { AssistantScreen } from '@/screens/ai';
 
 export default function AiRoute() {
-  return (
-    <PlaceholderScreen
-      title="AI"
-      icon="sparkles-outline"
-      accent="moduleAi"
-      description="Şəxsi məlumatlarınıza əsaslanan köməkçi sonrakı mərhələdə əlavə olunacaq."
-      upcoming={['Həftəlik nəticələr', 'Məlumatlarınız üzrə söhbət', 'Təsdiqlə işləyən təkliflər']}
-    />
-  );
+  return <AssistantScreen />;
 }

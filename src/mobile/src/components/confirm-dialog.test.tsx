@@ -2,7 +2,6 @@ import { act, fireEvent, render } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
 import { ConfirmProvider } from '@/components/confirm-dialog';
-import { CalendarSheet } from '@/components/date-field';
 import { confirmAsync } from '@/lib/confirm';
 
 describe('ConfirmProvider + confirmAsync', () => {
@@ -27,28 +26,5 @@ describe('ConfirmProvider + confirmAsync', () => {
     await view.findByText('Silinsin?');
     await fireEvent.press(view.getByRole('button', { name: 'Ləğv et' }));
     await expect(result).resolves.toBe(false);
-  });
-});
-
-describe('CalendarSheet', () => {
-  it('lists every day of the month as a labelled radio and selects one', async () => {
-    const onChange = jest.fn();
-    const onClose = jest.fn();
-    const view = await render(<CalendarSheet visible value="2026-09-06" onClose={onClose} onChange={onChange} title="Tarix" />);
-
-    expect(view.getByText('Sentyabr 2026')).toBeTruthy();
-    // Days are the choices of one radio group, so the selected day is checked, not merely "selected".
-    // React Native merges the `aria-checked` prop into accessibilityState, which is what this renderer sees;
-    // the DOM attribute itself is verified in the browser run (docs/screenshots-3a-a11y).
-    expect(view.getByRole('radio', { name: '30 sentyabr 2026' })).toBeTruthy();
-    expect(view.getByRole('radio', { name: '6 sentyabr 2026' }).props.accessibilityState.checked).toBe(true);
-    expect(view.getByRole('radio', { name: '12 sentyabr 2026' }).props.accessibilityState.checked).toBe(false);
-
-    await fireEvent.press(view.getByRole('radio', { name: '12 sentyabr 2026' }));
-    expect(onChange).toHaveBeenCalledWith('2026-09-12');
-    expect(onClose).toHaveBeenCalled();
-
-    await fireEvent.press(view.getByRole('button', { name: 'Növbəti ay' }));
-    expect(view.getByText('Oktyabr 2026')).toBeTruthy();
   });
 });

@@ -161,6 +161,79 @@ walkthrough against the live API (51/51 checks) with screenshots and two inspect
 provider key was available; native camera capture, permission dialogs, keyboard, dynamic type and haptics remain
 unverified on a device.
 
+## Home redesign (2026-09-18)
+
+- [x] Green token system in both palettes (`accent`/`onAccent`, `heroGlow` added; every text pair ≥ 4.5:1)
+- [x] Home: profile-time-zone date, first-name greeting, initials avatar; deep-green hero with the supplied
+      illustration and a data-derived line; Quick Add from the hero on phones (sidebar keeps it on desktop)
+- [x] Four overview cards (Maliyyə, Qidalanma, Plan, Yuxu) with "Qeyd yoxdur" vs genuine zero, sub-minute sleep,
+      separately labelled overdue and other currencies; today's tasks with the existing completion mutation
+- [x] Evidence: `docs/screenshots-home/` (before/after, light/dark, 360/390/430/1440, enlarged text, reduced
+      motion, `results.json` 39/39, normal and reduced-motion MP4s)
+
+## Nutrition redesign (2026-09-28)
+
+- [x] Macro tokens in both palettes (`protein`/`carb`/`fat` + `*Text`, `nutritionTint`/`nutritionTintBorder`;
+      label contrast 4.79:1 light and 7.74:1 dark on the tinted summary)
+- [x] Diary: single "Hədəflər" action, the seven-day `WeekStrip` (no future day, shared `CalendarSheet` behind a
+      calendar button, no invented "has entries" marker) replacing `DateNav`; groups keep real totals, empty
+      groups one compact row, an empty day one short line (the supplied bowl illustration at 88 units from an
+      83 KB derivative, decorative and shown only after a successful empty load) instead of an oversized empty
+      state
+- [x] Summary: consumed energy, configured target, labelled remaining/exceeded, a view-drawn `ProgressRing`
+      clamped to the real target (exceeding is stated, never celebrated); no target → no ring and a compact goal
+      action; each macro goal independently optional with the recorded grams always shown
+- [x] Food editor: name → basis stated once → quantity → kalori → macros; one live total for one food; blank
+      stays blank ("—" plus how many foods are incomplete) while a typed 0 counts; calculation, snapshots and
+      the analysis → draft → confirm flow untouched
+- [x] Gates: mobile `typecheck`, `lint`, `jest` (46 suites / 358 tests), `expo export --platform web`,
+      `git diff --check`
+- [x] Evidence: `docs/screenshots-nutrition/` (before/after, light/dark, 360/390/430, browser-scaled text,
+      reduced motion, five named fixtures, `results.json` 8/8, normal and reduced-motion MP4s). Dynamic Type,
+      the native keyboard and screen readers are listed in `docs/DEVICE-CHECKS.md`, not claimed here
+
+## Plan redesign (2026-09-30)
+
+- [x] Retired the leftover blue: `modulePlan` (`#3978E8`, the `transfer` value) became the primary green in
+      both palettes, and the filled checkbox moved from `onHero` to `onPrimary`
+- [x] Header with the profile-time-zone weekday and date, a labelled "Yuxu" chip (same destination) and one
+      add action; `DaySummary` leading with the open count, the fraction as support, one track, overdue apart,
+      and four distinct states (empty / only-overdue / partial / done, the last scoped to today)
+- [x] Row metadata by context (clock, "Gün ərzində", the original overdue date, the planned day in Completed);
+      priority drawn only when it is not the default, all three words kept in the accessible name; a one-line
+      note preview; the amber checkbox reserved for the overdue section
+- [x] Completed grouped by the day each task was finished (the field the API already pages by); upcoming
+      grouping and the three disjoint views unchanged
+- [x] Form: "Bu gün" / "Sabah" shortcuts above the existing date field, one save path, future dates still
+      allowed; validation, retained input and the stale-edit 409 untouched
+- [x] Query layer unchanged — ordering, counts, timezone rules and idempotency were already correct, so no
+      backend check was re-run for this task
+- [x] Gates: mobile `typecheck`, `lint`, `jest` (46 suites / 379 tests), `expo export --platform web`,
+      `git diff --check`
+- [x] Evidence: `docs/screenshots-plan/` (before/after, five named fixtures, light/dark, 360/390/430/1440,
+      browser-scaled text, reduced motion, `before-results.json` / `after-results.json`, and normal and
+      reduced-motion create → complete → upcoming MP4s)
+
+## Fokus — Pomodoro inside Plan (2026-09-30)
+
+- [x] Backend: `FocusSession` aggregate (active intervals in a `jsonb` column, precise durations, outcome,
+      optional task link with a title snapshot), EF configuration and the `AddFocusSessions` migration;
+      `POST /api/focus/sessions` idempotent on a database-unique `(user_id, client_session_id)` and
+      `GET /api/focus/summary` splitting active time across profile-local midnight
+- [x] Mobile: clock-injected state machine (`ready`/`running`/`paused`/`finished` × focus/short/long break),
+      account-scoped persistence and upload outbox, one local notification per running phase with its own
+      channel and identifiers, the `/plan/focus` screen, the compact Plan entry card and "Bu işə fokuslan"
+- [x] Reliability: settle at the real deadline, exactly-once completion, no optimistic writes, storage written
+      on transitions only, serialized writes, web multi-tab coordination, sign-out pauses rather than discards
+- [x] Gates: `dotnet format --verify-no-changes`, `dotnet build`, `dotnet test` (233 unit + 276 integration,
+      1 skipped), mobile `typecheck`, `lint`, `jest` (52 suites / 455 tests), `expo export --platform web`,
+      `git diff --check`
+- [x] Evidence: `docs/screenshots-focus/` (ready, running, paused, break, completed, settings, the Plan card
+      idle and paused, the task action, dark, 360/390/430/1440, browser-scaled text, reduced motion,
+      `results.json` with the server summary read back, and normal and reduced-motion MP4s). Notification
+      delivery, locked-screen behaviour, force-close, haptics and native accessibility are listed in
+      `docs/DEVICE-CHECKS.md` and were **not** tested on hardware
+
 ## Phase 3 — Recurring transactions and debts
 
 - [x] Domain: `RecurringTransaction` (monthly plan, day clamped to the last valid day and back to the original
@@ -293,6 +366,35 @@ policy, the limits, the draft → review → confirm flow, the fixture-based pro
 test all ship there.
 
 ## Phase 7 — AI chat and insights
+
+### 7A — Grounded read-only assistant (done)
+
+The first usable version of Libra AI: it answers questions about the user's own records and changes nothing.
+
+- [x] `AssistantContextSnapshot`: owner-scoped facts with stable ids, values and units, the profile time zone,
+      resolved ranges, the collection timestamp, the selected modules, and explicit
+      available / no-records / partial / unavailable states
+- [x] `AssistantContextBuilder` over the existing aggregates (dashboard, nutrition day, tasks, sleep, focus) —
+      complete aggregates, never totals summed from a page; separate currencies; per-module degradation
+- [x] `IAssistantProvider` behind `OpenAiAssistant` (Responses API, strict structured output, `store: false`)
+      kept separate from the food-analysis service, plus `DevelopmentFixtureAssistant`
+- [x] `AssistantHandler`: fact-id validation that rejects a whole ungrounded answer, retained snapshots per
+      answer, scope changes starting a new conversation, client-request-id replay, per-user hourly limit,
+      bounded concurrency with a queue wait
+- [x] `AssistantConversation` / `AssistantMessage` with a unique `(user, client_request_id)` index and
+      migration `20261003145320_AddAssistantConversations`
+- [x] `GET /api/assistant/status`, `POST /api/assistant/ask`, `GET`/`DELETE` conversations
+- [x] Mobile AI tab: landing composition (header with history, orb, "Bu gün nəyə diqqət edək?", four prompt
+      cards, visible context control, keyboard-aware composer), conversation turns with server-backed metric
+      cards, "Mənbələr" source details, follow-ups, retry, honest loading, and
+      "AI köməkçi hələ aktiv deyil" when unconfigured
+- [x] Tests: 10 assistant unit tests, 19 integration tests (cross-user, scoping, injection-as-data, retry
+      dedup, provider failures, history and deletion, unconfigured, fixture labelling), 10 mobile screen tests
+- [x] Evidence in `docs/screenshots-ai/`, light and dark, including fixture-labelled answers
+
+API-key setup and live-provider verification are deliberately deferred; no paid call has been made.
+
+### 7B — Proposals and insights (next)
 
 - [ ] Least-privilege tool catalog, proposal previews with scoped single-use confirmation tokens
 - [ ] Streaming chat, audit, limits, prompt-injection defenses

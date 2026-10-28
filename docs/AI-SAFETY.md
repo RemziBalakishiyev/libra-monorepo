@@ -77,3 +77,82 @@ Consequences that follow from the rules above and from D-045:
 - Confirmation is idempotent per draft: repeated, retried or concurrent confirmations return the first meal, even
   under a different `clientRequestId`.
 - Estimates are labelled as estimates in the UI up to the moment the user confirms them.
+
+## The assistant as built (Phase 7, first usable version)
+
+`question → owner-scoped snapshot → provider call → strict structured answer → fact-id validation →
+stored turn with its snapshot`
+
+**Read-only, by construction.** This version answers questions about Finance, Nutrition, Tasks, Sleep and
+Focus and writes nothing to any of them. No endpoint in `/api/assistant` creates a record, completes a task,
+changes a goal, starts a timer or schedules a notification, and the model is given no tools at all — so the
+read-only promise is a property of what the provider can reach, not a rule it is asked to obey. A plan the
+assistant proposes is text in a conversation and stays a proposal.
+
+**What the model receives.** One snapshot and the question, plus at most `MaxHistoryTurns` earlier
+question/summary pairs. The snapshot holds the profile's IANA time zone, the resolved date range, the
+collection timestamp, the selected modules and a bounded list of facts, each with a stable id, a label, a
+value and unit, the period it covers, its caveat and its source route. It is built from the same aggregates
+the module screens use — complete aggregates, never a total summed from a page of a list — through the
+caller's own queries. No credentials, no SQL, no database handle, no tools, no network access. Nothing else
+about the user travels with the request: no email, no identifiers, no raw meal photos, and no free-text notes
+or task titles unless a fact's own `text` needs them, in which case that text is clipped and is data.
+
+**Availability is explicit, and that is the point.** `NoRecords` means nothing was logged and is never a zero
+the user achieved; `Partial` means the period is only partly covered; `Unavailable` means that module could
+not be read for this request, which degrades one module instead of failing the answer. The domain rules
+travel as caveats and are preserved verbatim: currencies stay separate and are never combined, transfers are
+not expenses, nutrition figures describe logged intake only, sleep keeps its existing attribution and
+duration rules and an open session is not a completed night, today's tasks and overdue tasks stay distinct,
+and focused duration excludes breaks and paused time.
+
+**What the model returns.** A strict structured output (`text.format.type = "json_schema"`, `strict: true`,
+schema `libra_assistant_answer`) with one of four outcomes — `Answer`, `InsufficientData`,
+`ClarificationNeeded`, `Refusal` — a short summary, bounded observations each carrying the fact ids it rests
+on, suggestions kept in their own list, optional follow-up questions, and a clarification when one is needed.
+
+**Grounding is verified, not requested.** `AssistantHandler.IsGrounded` walks every observation's fact ids
+against the snapshot that was just built. One id the snapshot does not contain invalidates the whole answer:
+it is returned as 503 and nothing is stored. There is no partial credit and no repair. Displayed figures are
+rendered by the client from the snapshot, so the model cannot supply a replacement financial total or
+nutrition calculation even in an answer that is otherwise accepted.
+
+**Untrusted content.** Task titles, notes, meal names, the user's own messages and every string inside the
+snapshot are data. The instruction says so, and nothing in the pipeline executes, follows or re-dispatches on
+them. An injected "ignore previous instructions" stored in a task title travels as a quoted fact value and
+changes nothing; the integration tests assert exactly that.
+
+**Conversations and scope.** Each answer is stored with the snapshot it was based on, so an older turn keeps
+the figures it actually used and never appears to cite today's numbers. Changing the selected modules or the
+period starts a new conversation rather than re-scoping an old one, so an earlier turn cannot reintroduce
+data that is now excluded. Every read and delete resolves the conversation id together with the caller's user
+id, so another account's conversation behaves exactly like one that does not exist.
+
+**Idempotency.** `clientRequestId` is generated on the device before the send and the database holds one row
+per `(user, clientRequestId)`. A retry after an uncertain answer returns the stored turn; the provider is not
+asked, and not paid, twice.
+
+**Unavailable, never substituted.** With no key the provider reports `IsConfigured` false, `/ask` answers 503
+with `"AI köməkçi hələ aktiv deyil."`, and the app shows that sentence with the composer disabled. No canned
+advice is ever presented as an answer. A deterministic fixture (`DevelopmentFixtureAssistant`) exists only in
+tests and in Development behind `Ai:Assistant:UseDevelopmentFixture`; every answer it produces carries
+`isFixture: true`, the app labels it "Nümunə cavab (fixture)", and evidence captured from it is marked as
+fixture evidence.
+
+**Retention — Libra's, separately from the provider's.**
+
+| | Libra | OpenAI |
+|---|---|---|
+| Question and answer | Stored as conversation turns until the user deletes the conversation | `store: false` is sent on every call, so responses are not retained for the account. Abuse monitoring may still hold data for up to 30 days ([data controls](https://developers.openai.com/api/docs/guides/your-data)) |
+| Snapshot | Stored as `jsonb` beside the answer it grounded, and deleted with the conversation | Sent inline with the request; not retained under `store: false` beyond that window |
+
+`store: false` is a provider setting, not a blanket zero-retention guarantee: the abuse-monitoring window
+above still applies, and Libra's own retention is the row lifetime in the table on the left.
+
+**Limits.** `MaxQuestionsPerHour` (30) per user, process-wide concurrency of 8 with a `QueueSeconds` (5) wait
+before 429, `TimeoutSeconds` (40) per call and `MaxOutputTokens` (900) per answer, all under `Ai:Assistant`
+and deliberately separate from `Ai:FoodAnalysis` so neither feature can exhaust the other's budget. API-key
+setup and live-provider verification are deferred: no paid call has been made, and CI makes none.
+
+**Logs.** A failed provider call logs the status code or the failure kind and nothing else. Prompt bodies,
+snapshots, questions, answers and the API key never reach the log.

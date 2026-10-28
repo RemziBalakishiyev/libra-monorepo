@@ -1,34 +1,42 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 
-import { Button, IconButton } from '@/components/button';
-import { DateNav } from '@/components/date-nav';
-import { CalendarSheet } from '@/components/date-field';
+import { Button } from '@/components/button';
+import { CalendarSheet } from '@/components/calendar-sheet';
 import { Entrance } from '@/components/entrance';
 import { MealGroup } from '@/components/meal-group';
 import { NutritionSummary } from '@/components/nutrition-summary';
+import { PressableScale } from '@/components/pressable-scale';
 import { Screen } from '@/components/screen';
 import { ScreenHeader } from '@/components/screen-header';
 import { Sheet } from '@/components/sheet';
-import { PressableScale } from '@/components/pressable-scale';
-import { EmptyState, ErrorState, ListSkeleton, Skeleton, StaleNotice } from '@/components/states';
+import { ErrorState, Skeleton, StaleNotice } from '@/components/states';
 import { AppText } from '@/components/text';
 import { useToast } from '@/components/toast';
-import { Ionicons } from '@expo/vector-icons';
+import { WeekStrip } from '@/components/week-strip';
 import { MinTouchTarget, Radius, Spacing } from '@/constants/theme';
 import { useDeleteNutritionEntry, useNutritionDay } from '@/hooks/use-nutrition';
 import { useTheme } from '@/hooks/use-theme';
 import { describeError } from '@/lib/api/errors';
 import type { MealType, NutritionEntry } from '@/lib/api/nutrition';
 import { confirmAsync } from '@/lib/confirm';
-import { formatLongDate, todayIsoDate } from '@/lib/dates';
+import { formatLongDate, todayInProfileZone } from '@/lib/dates';
 import { describeEntry, formatKcal } from '@/lib/nutrition';
 
-/** Local time of an entry, in the device time zone (the diary's day boundaries come from the API). */
-function timeOf(entry: NutritionEntry): string {
-  const date = new Date(entry.consumedAtUtc);
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+/** A third of the derivative's 264 px, so the bitmap is still sharp at 3× without shipping the 1 MB source. */
+const EMPTY_ILLUSTRATION = 88;
+const emptyIllustration = require('../../../assets/images/nutrition-empty-bowl-card.png');
+
+/** Local time of an entry in the profile time zone, so a row's clock matches the day it is filed under. */
+function timeOf(entry: NutritionEntry, timeZone: string | undefined): string {
+  try {
+    return new Intl.DateTimeFormat('az-AZ', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone }).format(new Date(entry.consumedAtUtc));
+  } catch {
+    const date = new Date(entry.consumedAtUtc);
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
 }
 
 /**
@@ -47,9 +55,13 @@ export function NutritionDiary() {
   const [copyFor, setCopyFor] = useState<NutritionEntry | null>(null);
 
   const day = useNutritionDay(selectedDate);
+  // The signed-in layout stores the profile time zone, so "today" is that calendar day even before the
+  // day response arrives; the response's own zone then formats the entry times.
+  const timeZone = day.data?.timeZone;
+  const today = todayInProfileZone();
   // Until a day is picked, the API decides which day "today" is in the profile time zone.
-  const activeDate = selectedDate ?? day.data?.date ?? todayIsoDate();
-  const isToday = activeDate === todayIsoDate();
+  const activeDate = selectedDate ?? day.data?.date ?? today;
+  const isToday = activeDate === today;
   const wide = layout === 'wide';
 
   const onRefresh = () => {
@@ -57,8 +69,7 @@ export function NutritionDiary() {
     void day.refetch().finally(() => setRefreshing(false));
   };
 
-  const openNew = (mealType?: MealType) =>
-    router.push(`/nutrition/new?date=${activeDate}${mealType ? `&mealType=${mealType}` : ''}` as never);
+  const openNew = (mealType?: MealType) => router.push(`/nutrition/new?date=${activeDate}${mealType ? `&mealType=${mealType}` : ''}` as never);
 
   /** The photo route only ever opens a draft; the diary changes when the estimate is confirmed there. */
   const openPhoto = () => router.push(`/nutrition/photo?date=${activeDate}` as never);
@@ -81,7 +92,8 @@ export function NutritionDiary() {
     <NutritionSummary
       totals={day.data.totals}
       goal={day.data.goal}
-      label={isToday ? 'Günün cəmi' : `${formatLongDate(activeDate)} · cəmi`}
+      entryCount={day.data.entryCount}
+      label={isToday ? 'Bu gün' : formatLongDate(activeDate)}
       onConfigureGoal={() => router.push('/nutrition/goals' as never)}
       animateOnMount
     />
@@ -89,49 +101,59 @@ export function NutritionDiary() {
     <SummarySkeleton />
   );
 
-  const groups = day.data ? (
-    day.data.entryCount === 0 ? (
-      <View style={styles.empty}>
-        <EmptyState
-          icon="nutrition-outline"
-          accent={colors.moduleNutrition}
-          title="Bu gün üçün qeyd yoxdur"
-          message="İlk yeməyi əlavə edin: adı, miqdarı və qidalanma dəyərləri kifayətdir."
-          actionTitle="İlk yeməyi əlavə et"
-          onAction={() => openNew()}
-          compact
-        />
-        <Button title="Şəkildən əlavə et" variant="ghost" size="sm" icon="camera-outline" onPress={openPhoto} testID="nutrition-photo-empty" />
+  const meals = day.data ? (
+    <View style={styles.meals}>
+      {day.data.entryCount === 0 ? (
+        <View style={[styles.emptyNote, { backgroundColor: colors.surfaceSubtle }]} testID="nutrition-empty-note-line">
+          {/* Decorative, and shown only on a day that loaded with nothing in it — never beside a real meal and
+              never once per empty group. The slot is sized up front so the groups do not shift when it decodes. */}
+          <Entrance from="scale" style={styles.illustrationSlot} aria-hidden importantForAccessibility="no-hide-descendants">
+            <Image source={emptyIllustration} style={styles.illustration} resizeMode="contain" accessible={false} fadeDuration={0} testID="nutrition-empty-illustration" />
+          </Entrance>
+          <AppText variant="caption" color="textSecondary" style={styles.flex}>
+            Günə başlamaq üçün aşağıdakı öyünlərdən birinə yemək əlavə edin.
+          </AppText>
+        </View>
+      ) : null}
+      {day.data.meals.map((group) => (
+        <MealGroup key={group.mealType} group={group} timeOf={(entry) => timeOf(entry, timeZone)} onAdd={openNew} onOpenEntry={(entry) => router.push(`/nutrition/${entry.id}` as never)} onEntryActions={setActionsFor} />
+      ))}
+      <View style={styles.addRow}>
+        <Button title="Yemək əlavə et" icon="add" onPress={() => openNew()} style={styles.flex} testID="nutrition-add" />
+        <Button title="Şəkildən" variant="soft" icon="camera-outline" onPress={openPhoto} testID="nutrition-photo" />
       </View>
-    ) : (
-      <View style={styles.groups}>
-        {day.data.meals.map((group) => (
-          <MealGroup key={group.mealType} group={group} timeOf={timeOf} onAdd={openNew} onOpenEntry={(entry) => router.push(`/nutrition/${entry.id}` as never)} onEntryActions={setActionsFor} />
-        ))}
-      </View>
-    )
+    </View>
   ) : (
-    <ListSkeleton rows={4} label="Gün yüklənir…" />
+    <MealsSkeleton />
   );
 
   return (
-    <Screen tabInset refreshing={refreshing} onRefresh={onRefresh} testID="nutrition-screen">
+    <Screen tabInset refreshing={refreshing} onRefresh={onRefresh} contentStyle={styles.page} testID="nutrition-screen">
       <Entrance index={0}>
         <ScreenHeader
           title="Qidalanma"
-          eyebrow="Gündəlik"
+          size="compact"
           trailing={
-            <>
-              <IconButton icon="flag-outline" accessibilityLabel="Hədəflər" accessibilityHint="Kalori və makro hədəflərini açır" variant="filled" size={20} onPress={() => router.push('/nutrition/goals' as never)} testID="nutrition-goals" />
-              <IconButton icon="camera-outline" accessibilityLabel="Şəkildən əlavə et" accessibilityHint="Şəkildən AI təxmini alır; təsdiqlədikdən sonra yazılır" variant="filled" size={20} onPress={openPhoto} testID="nutrition-photo" />
-              <IconButton icon="add" accessibilityLabel="Yemək əlavə et" accessibilityHint="Yeni yemək qeydi yaradır" variant="primary" onPress={() => openNew()} testID="nutrition-add" />
-            </>
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel="Hədəflər"
+              accessibilityHint="Kalori və makro hədəflərini açır"
+              onPress={() => router.push('/nutrition/goals' as never)}
+              scaleTo={0.96}
+              pressedStyle={{ backgroundColor: colors.surfaceInteractive }}
+              style={[styles.goalsAction, { backgroundColor: colors.surfaceSubtle }]}
+              testID="nutrition-goals">
+              <Ionicons name="flag-outline" size={16} color={colors.primaryText} />
+              <AppText variant="meta" color="primaryText">
+                Hədəflər
+              </AppText>
+            </PressableScale>
           }
         />
       </Entrance>
 
       <Entrance index={1}>
-        <DateNav value={activeDate} onChange={setSelectedDate} maximumDate={new Date()} title="Gün seç" />
+        <WeekStrip value={activeDate} onChange={setSelectedDate} today={today} calendarTitle="Gün seç" />
       </Entrance>
 
       {day.isError && !day.data ? (
@@ -142,7 +164,7 @@ export function NutritionDiary() {
           {wide ? (
             <View style={styles.columns}>
               <Entrance index={2} style={styles.columnMain}>
-                {groups}
+                {meals}
               </Entrance>
               <Entrance index={3} style={styles.columnSide}>
                 {summary}
@@ -151,7 +173,7 @@ export function NutritionDiary() {
           ) : (
             <>
               <Entrance index={2}>{summary}</Entrance>
-              <Entrance index={3}>{groups}</Entrance>
+              <Entrance index={3}>{meals}</Entrance>
             </>
           )}
         </>
@@ -189,8 +211,9 @@ export function NutritionDiary() {
         visible={copyFor !== null}
         value={activeDate}
         title="Hansı günə köçürülsün?"
+        today={today}
         onClose={() => setCopyFor(null)}
-        onChange={(date) => {
+        onConfirm={(date) => {
           const entry = copyFor;
           setCopyFor(null);
           if (entry) {
@@ -232,36 +255,85 @@ function ActionRow({ icon, title, hint, onPress, tone = 'default', testID }: { i
   );
 }
 
-/** Bones shaped like the summary card: energy line, bar, three macro columns. */
+/** Bones shaped like the summary: energy figure and ring, then three macro rows. */
 function SummarySkeleton() {
   const { colors } = useTheme();
   return (
-    <View style={[styles.skeletonCard, { backgroundColor: colors.surface, borderColor: colors.border }]} accessibilityLiveRegion="polite" accessibilityLabel="Qidalanma məlumatları yüklənir…">
-      <Skeleton width={90} height={12} />
-      <Skeleton width="45%" height={28} radius={Radius.md} />
-      <Skeleton height={6} radius={3} />
-      <View style={styles.skeletonMacros}>
-        {[0, 1, 2].map((index) => (
-          <View key={index} style={styles.skeletonMacro}>
-            <Skeleton width={60} height={11} />
-            <Skeleton width="70%" height={16} />
-          </View>
-        ))}
+    <View style={[styles.skeletonCard, { backgroundColor: colors.nutritionTint, borderColor: colors.nutritionTintBorder }]} accessibilityLiveRegion="polite" accessibilityLabel="Qidalanma məlumatları yüklənir…">
+      <View style={styles.skeletonEnergy}>
+        <View style={styles.flex}>
+          <Skeleton width={70} height={11} />
+          <Skeleton width="60%" height={34} radius={Radius.md} />
+          <Skeleton width={110} height={11} />
+        </View>
+        <Skeleton width={74} height={74} radius={37} />
       </View>
+      {[0, 1, 2].map((index) => (
+        <View key={index} style={styles.skeletonMacro}>
+          <Skeleton width="40%" height={12} />
+          <Skeleton height={4} radius={2} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** Four meal headings with a row each, so the page does not jump when the day arrives. */
+function MealsSkeleton() {
+  return (
+    <View style={styles.meals} accessibilityLiveRegion="polite" accessibilityLabel="Öyünlər yüklənir…">
+      {[0, 1, 2, 3].map((index) => (
+        <View key={index} style={styles.skeletonMeal}>
+          <Skeleton width={120} height={16} />
+          <Skeleton height={44} radius={Radius.md} />
+        </View>
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  page: {
+    gap: Spacing.lg,
+  },
   full: {
     width: '100%',
   },
-  empty: {
-    gap: Spacing.sm,
-    alignItems: 'center',
+  flex: {
+    flex: 1,
+    minWidth: 0,
   },
-  groups: {
+  goalsAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    minHeight: MinTouchTarget - 8,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.full,
+  },
+  meals: {
+    gap: Spacing.lg,
+  },
+  emptyNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: Spacing.md,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    borderCurve: 'continuous',
+  },
+  illustrationSlot: {
+    width: EMPTY_ILLUSTRATION,
+    height: EMPTY_ILLUSTRATION,
+  },
+  illustration: {
+    width: EMPTY_ILLUSTRATION,
+    height: EMPTY_ILLUSTRATION,
+  },
+  addRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingTop: Spacing.xs,
   },
   columns: {
     flexDirection: 'row',
@@ -301,18 +373,20 @@ const styles = StyleSheet.create({
   },
   skeletonCard: {
     padding: Spacing.lg,
-    borderRadius: Radius.lg,
+    borderRadius: 22,
     borderCurve: 'continuous',
-    borderWidth: 1,
-    gap: Spacing.sm,
-  },
-  skeletonMacros: {
-    flexDirection: 'row',
+    borderWidth: StyleSheet.hairlineWidth,
     gap: Spacing.md,
-    paddingTop: Spacing.sm,
+  },
+  skeletonEnergy: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.lg,
   },
   skeletonMacro: {
-    flex: 1,
+    gap: Spacing.xs,
+  },
+  skeletonMeal: {
     gap: Spacing.sm,
   },
 });

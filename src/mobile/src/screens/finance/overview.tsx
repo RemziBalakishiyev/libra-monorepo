@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -10,6 +11,7 @@ import { CategoryBreakdown } from '@/components/category-breakdown';
 import { Entrance } from '@/components/entrance';
 import { InsightCard } from '@/components/insight-card';
 import { MetricItem } from '@/components/metric-item';
+import { PressableScale } from '@/components/pressable-scale';
 import { QuickAction, quickActionDefinitions, type QuickActionKind } from '@/components/quick-action';
 import { QuickAddMenu } from '@/components/quick-add-menu';
 import { Screen } from '@/components/screen';
@@ -20,7 +22,8 @@ import { EmptyState, ErrorState, Skeleton, StaleNotice } from '@/components/stat
 import { AppText, MoneyText, formatAmount } from '@/components/text';
 import { useToast } from '@/components/toast';
 import { TransactionList, describeTransaction, type TransactionRowItem } from '@/components/transaction-row';
-import { Radius, Spacing } from '@/constants/theme';
+import type { IconName } from '@/constants/categories';
+import { MinTouchTarget, Radius, Spacing } from '@/constants/theme';
 import { useAccounts, useDashboard, useDeleteTransaction, useMonthExpenses } from '@/hooks/use-finance';
 import { useTheme } from '@/hooks/use-theme';
 import { describeError } from '@/lib/api/errors';
@@ -33,7 +36,7 @@ import { quickActionHref } from '@/lib/quick-add';
 /** Finance tab: onboarding when there is no account, otherwise the single-currency dashboard. */
 export function FinanceOverview() {
   const router = useRouter();
-  const { layout } = useTheme();
+  const { layout, colors } = useTheme();
   const toast = useToast();
   const accounts = useAccounts();
   const [currency, setCurrency] = useState<string | undefined>(undefined);
@@ -122,6 +125,7 @@ export function FinanceOverview() {
       animateOnMount
       seriesStatus={seriesStatus}
       onRetrySeries={() => void monthExpenses.refetch()}
+      onAddExpense={() => onQuickAdd('expense')}
       input={{
         currencyCode: data.currencyCode,
         year: data.year,
@@ -141,13 +145,17 @@ export function FinanceOverview() {
     <Entrance index={4} style={styles.section}>
       <SectionHeader title="Son əməliyyatlar" actionTitle="Hamısı" onAction={() => router.push('/finance/transactions')} />
       <TransactionList
+        groupByDay
         transactions={data.recentTransactions}
         onPress={(transaction) => router.push(`/finance/transactions/${transaction.id}`)}
         onDelete={(transaction) => void onDeleteTransaction(transaction)}
         empty={
-          <AppText color="textSecondary" style={styles.emptyLine}>
-            Hələ əməliyyat yoxdur. İlk xərci və ya gəliri əlavə edin.
-          </AppText>
+          <View style={[styles.emptyRecent, { backgroundColor: colors.surfaceSubtle }]} testID="recent-empty">
+            <AppText variant="meta" color="textSecondary" style={styles.flex}>
+              Hələ əməliyyat yoxdur. İlk xərci və ya gəliri əlavə edin.
+            </AppText>
+            <Button title="Əlavə et" variant="soft" size="sm" icon="add" onPress={() => setMenuOpen(true)} />
+          </View>
         }
       />
     </Entrance>
@@ -202,12 +210,9 @@ export function FinanceOverview() {
         <SectionHeader title="Xərc kateqoriyaları" caption={data.expenseByCategory.length > 0 ? `${formatMonth(data.year, data.month)} · ${data.expenseByCategory.length} kateqoriya` : undefined} />
         <CategoryBreakdown items={data.expenseByCategory} currencyCode={data.currencyCode} animateOnMount />
       </Entrance>
-      <Entrance index={5} style={styles.links}>
-        <Button title="Köçürmələr" variant="soft" size="sm" icon="swap-horizontal-outline" onPress={() => router.push('/finance/transfers')} />
-        <Button title="Büdcələr" variant="soft" size="sm" icon="pie-chart-outline" onPress={() => router.push('/finance/budgets')} />
-        <Button title="Kateqoriyalar" variant="soft" size="sm" icon="pricetags-outline" onPress={() => router.push('/finance/categories')} />
-        <Button title="Təkrarlananlar" variant="soft" size="sm" icon="repeat-outline" onPress={() => router.push('/finance/recurring')} testID="finance-link-recurring" />
-        <Button title="Borclar" variant="soft" size="sm" icon="people-outline" onPress={() => router.push('/finance/debts')} testID="finance-link-debts" />
+      <Entrance index={5} style={styles.section}>
+        <SectionHeader title="İdarəetmə" />
+        <ManagementList onOpen={(href) => router.push(href)} />
       </Entrance>
     </>
   ) : null;
@@ -247,26 +252,42 @@ export function FinanceOverview() {
   );
 }
 
-/** Income · Expense · Net on one white surface, with the daily average as a second line. */
+/**
+ * This month's cash flow, kept apart from the balance above it: income and expense side by side, the net flow as
+ * its own labelled line, then the daily average. Principal movements and the debt position stay separate rows.
+ */
 function SummaryCard({ data }: { data: Dashboard }) {
   const { colors, shadows } = useTheme();
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, boxShadow: shadows.card }]}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, boxShadow: shadows.card }]} testID="finance-flow">
+      <AppText variant="caption" color="textMuted">
+        Bu ayın pul axını · {formatMonth(data.year, data.month)}
+      </AppText>
       <View style={styles.metrics}>
-        <MetricItem label="Gəlir" amount={data.monthlyIncome} currencyCode={data.currencyCode} flow="Income" />
+        <View style={styles.flex}>
+          <MetricItem label="Gəlir" amount={data.monthlyIncome} currencyCode={data.currencyCode} flow="Income" variant="heading" />
+        </View>
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
-        <MetricItem label="Xərc" amount={data.monthlyExpense} currencyCode={data.currencyCode} flow="Expense" />
-        <View style={[styles.divider, { backgroundColor: colors.border }]} />
-        <MetricItem label="Xalis axın" amount={data.monthlyNet} currencyCode={data.currencyCode} flow="Net" />
+        <View style={styles.flex}>
+          <MetricItem label="Xərc" amount={data.monthlyExpense} currencyCode={data.currencyCode} flow="Expense" variant="heading" />
+        </View>
       </View>
-      <View style={[styles.averageRow, { borderTopColor: colors.border }]}>
-        <AppText variant="caption" color="textSecondary">
+      <View style={[styles.netRow, { borderTopColor: colors.border }]} accessible accessibilityLabel={`Xalis axın: ${formatAmount(data.monthlyNet, data.currencyCode)}`} testID="finance-net-flow">
+        <AppText variant="meta" color="textSecondary" style={styles.flex}>
+          Xalis axın (gəlir − xərc)
+        </AppText>
+        <MoneyText variant="bodyStrong" amount={data.monthlyNet} currencyCode={data.currencyCode} highlightNegative showCode />
+      </View>
+      <View style={styles.averageRow}>
+        <AppText variant="caption" color="textMuted" style={styles.flex}>
           Gündəlik orta xərc · {data.daysElapsed} gün
         </AppText>
-        <AppText variant="meta">{formatAmount(data.dailyAverageExpense, data.currencyCode)}</AppText>
+        <AppText variant="caption" color="textSecondary">
+          {formatAmount(data.dailyAverageExpense, data.currencyCode)}
+        </AppText>
       </View>
       {data.debts && data.debts.monthlyPrincipalNet !== 0 ? (
-        <View style={[styles.averageRow, { borderTopColor: colors.border }]} accessible accessibilityLabel={`Borc hərəkətləri: ${formatAmount(data.debts.monthlyPrincipalNet, data.currencyCode)}; nağd dəyişimi: ${formatAmount(data.debts.monthlyCashChange, data.currencyCode)}`} testID="dashboard-principal">
+        <View style={[styles.averageRow, styles.topRule, { borderTopColor: colors.border }]} accessible accessibilityLabel={`Borc hərəkətləri: ${formatAmount(data.debts.monthlyPrincipalNet, data.currencyCode)}; nağd dəyişimi: ${formatAmount(data.debts.monthlyCashChange, data.currencyCode)}`} testID="dashboard-principal">
           <AppText variant="caption" color="textSecondary" style={styles.flex}>
             Borc hərəkətləri (gəlir/xərc deyil) · nağd dəyişimi {formatAmount(data.debts.monthlyCashChange, data.currencyCode)}
           </AppText>
@@ -291,23 +312,69 @@ function SummaryCard({ data }: { data: Dashboard }) {
   );
 }
 
-function BudgetBlock({ data, pace, layout, onCreate }: { data: Dashboard; pace: ReturnType<typeof budgetPace>; layout: 'full' | 'compact'; onCreate: () => void }) {
-  const { colors, shadows } = useTheme();
+const managementDestinations: readonly { title: string; caption: string; icon: IconName; href: '/finance/accounts' | '/finance/transfers' | '/finance/budgets' | '/finance/categories' | '/finance/recurring' | '/finance/debts'; testID?: string }[] = [
+  { title: 'Hesablar', caption: 'Nağd, kart, yığım', icon: 'wallet-outline', href: '/finance/accounts' },
+  { title: 'Köçürmələr', caption: 'Hesablar arasında', icon: 'swap-horizontal-outline', href: '/finance/transfers' },
+  { title: 'Büdcələr', caption: 'Aylıq limitlər', icon: 'pie-chart-outline', href: '/finance/budgets' },
+  { title: 'Kateqoriyalar', caption: 'Gəlir və xərc növləri', icon: 'pricetags-outline', href: '/finance/categories' },
+  { title: 'Təkrarlananlar', caption: 'Aylıq planlar', icon: 'repeat-outline', href: '/finance/recurring', testID: 'finance-link-recurring' },
+  { title: 'Borclar', caption: 'Alacaq və borc', icon: 'people-outline', href: '/finance/debts', testID: 'finance-link-debts' },
+];
+
+/** The six management destinations on one surface: every existing route, as rows rather than a pile of pills. */
+function ManagementList({ onOpen }: { onOpen: (href: (typeof managementDestinations)[number]['href']) => void }) {
+  const { colors } = useTheme();
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, boxShadow: shadows.card }]}>
-      {data.overallBudget ? (
-        <BudgetProgress budget={data.overallBudget} currencyCode={data.currencyCode} title="Ümumi büdcə" layout={layout} pace={pace} animateOnMount />
-      ) : (
-        <View style={styles.budgetEmpty}>
+    <View style={[styles.management, { backgroundColor: colors.surface, borderColor: colors.border }]} testID="finance-management">
+      {managementDestinations.map((item, index) => (
+        <PressableScale
+          key={item.href}
+          accessibilityRole="button"
+          accessibilityLabel={item.title}
+          accessibilityHint={item.caption}
+          onPress={() => onOpen(item.href)}
+          scaleTo={0.995}
+          containerStyle={styles.full}
+          pressedStyle={{ backgroundColor: colors.surfaceSubtle }}
+          style={[styles.managementRow, index > 0 ? { borderTopColor: colors.border, borderTopWidth: StyleSheet.hairlineWidth } : null]}
+          testID={item.testID}>
+          <View style={[styles.managementIcon, { backgroundColor: colors.surfaceSubtle }]}>
+            <Ionicons name={item.icon} size={18} color={colors.primaryText} />
+          </View>
           <View style={styles.flex}>
-            <AppText variant="bodyStrong">Bu ay üçün büdcə yoxdur</AppText>
-            <AppText variant="caption" color="textSecondary">
-              Aylıq limit təyin edin ki, xərc tempi izlənsin.
+            <AppText variant="bodyStrong" numberOfLines={1}>
+              {item.title}
+            </AppText>
+            <AppText variant="caption" color="textMuted" numberOfLines={1}>
+              {item.caption}
             </AppText>
           </View>
-          <Button title="Büdcə yarat" variant="soft" size="sm" onPress={onCreate} />
+          <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+        </PressableScale>
+      ))}
+    </View>
+  );
+}
+
+function BudgetBlock({ data, pace, layout, onCreate }: { data: Dashboard; pace: ReturnType<typeof budgetPace>; layout: 'full' | 'compact'; onCreate: () => void }) {
+  const { colors, shadows } = useTheme();
+  if (!data.overallBudget) {
+    return (
+      <View style={[styles.budgetEmpty, { backgroundColor: colors.surfaceSubtle }]} testID="budget-empty">
+        <Ionicons name="pie-chart-outline" size={18} color={colors.primaryText} />
+        <View style={styles.flex}>
+          <AppText variant="meta">Bu ay üçün büdcə yoxdur</AppText>
+          <AppText variant="caption" color="textSecondary">
+            Aylıq limit təyin edin ki, xərc tempi izlənsin.
+          </AppText>
         </View>
-      )}
+        <Button title="Büdcə yarat" variant="soft" size="sm" onPress={onCreate} />
+      </View>
+    );
+  }
+  return (
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, boxShadow: shadows.card }]}>
+      <BudgetProgress budget={data.overallBudget} currencyCode={data.currencyCode} title="Ümumi büdcə" layout={layout} pace={pace} animateOnMount />
     </View>
   );
 }
@@ -396,13 +463,55 @@ const styles = StyleSheet.create({
     width: StyleSheet.hairlineWidth,
     alignSelf: 'stretch',
   },
+  netRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   averageRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.sm,
+  },
+  topRule: {
     paddingTop: Spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  full: {
+    width: '100%',
+  },
+  management: {
+    borderRadius: Radius.lg,
+    borderCurve: 'continuous',
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: Spacing.sm,
+  },
+  managementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    minHeight: MinTouchTarget + 6,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
+  },
+  managementIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: Radius.sm + 2,
+    borderCurve: 'continuous',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyRecent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
   },
   debtRows: {
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -421,15 +530,11 @@ const styles = StyleSheet.create({
   budgetEmpty: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
-  },
-  emptyLine: {
-    paddingVertical: Spacing.sm,
-  },
-  links: {
-    flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.sm,
+    gap: Spacing.md,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    borderCurve: 'continuous',
   },
   gate: {
     paddingHorizontal: Spacing.sm,

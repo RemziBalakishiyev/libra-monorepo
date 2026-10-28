@@ -45,7 +45,11 @@ public sealed class SchemaLengthTests
     [Fact]
     public void Column_names_are_snake_case()
     {
+        // Entities mapped into a JSON column have document keys rather than columns, and EF's own internals
+        // inside one (the owner key, the array ordinal) cannot be named at all. The convention is about the
+        // real table columns.
         var names = Context.Model.GetEntityTypes()
+            .Where(entity => entity.GetContainerColumnName() is null)
             .SelectMany(entity => entity.GetProperties())
             .Select(property => property.GetColumnName())
             .ToArray();

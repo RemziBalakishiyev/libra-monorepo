@@ -72,7 +72,7 @@ export function DateNav({ value, onChange, maximumDate, title = 'Tarix' }: DateN
       </PressableScale>
       <NavButton icon="chevron-forward" label="Növbəti gün" onPress={() => move(1)} disabled={nextDisabled} testID="date-nav-next" />
 
-      <CalendarSheet visible={open} value={value} title={title} maximumDate={maximumDate} onClose={() => setOpen(false)} onChange={onChange} />
+      <CalendarSheet visible={open} value={value} title={title} maximumDate={maximumDate} onClose={() => setOpen(false)} onConfirm={onChange} />
     </View>
   );
 }

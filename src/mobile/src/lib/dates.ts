@@ -9,6 +9,27 @@ export function todayIsoDate(now = new Date()): string {
   return isoDateOf(now);
 }
 
+let profileTimeZone: string | undefined;
+
+/** Remembered from the profile once it loads, so date-only pickers can resolve "today" in the profile zone. */
+export function setProfileTimeZone(timeZone: string | null | undefined): void {
+  profileTimeZone = timeZone && timeZone.trim() !== '' ? timeZone : undefined;
+}
+
+export function getProfileTimeZone(): string | undefined {
+  return profileTimeZone;
+}
+
+/**
+ * Today as a calendar date in the profile time zone (the device zone when none is known). A calendar that
+ * marks "Bu gün" or blocks future days must use this, not the device's midnight, so a user in Baku with a phone
+ * still set to another zone gets the day the API will bucket their records into.
+ */
+export function todayInProfileZone(now = new Date(), timeZone = profileTimeZone): string {
+  const { year, month, day } = calendarDayIn(now.toISOString(), timeZone);
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
 export function isoDateOf(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');

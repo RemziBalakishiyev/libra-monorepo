@@ -249,7 +249,49 @@ the device adds native pickers, the keyboard and haptics.
 11. Dark mode: **Profil → Görünüş → Tünd**, then reopen the record sheet and the payment sheet.
     **Expected:** white text on the primary buttons, readable chips, the same controls.
 
-## Android checklist
+## iPhone: the redesigned Home (2026-09-18)
+
+Three minutes on Expo Go, signed in as a user with an account, a meal, a task and a recorded night.
+
+1. Open the app. **Expected:** the splash is still the template blue (native config, deliberately unchanged),
+   then Home in the green palette with no flash of the old indigo.
+2. **Hero.** The illustration should show its native gradient behind the glow, sit inside the hero with nothing
+   clipped, and drift very slightly (about 3 px over seven seconds). Switch to Maliyyə and back: the drift
+   restarts; background the app and return: it restarts from rest. Turn on **Settings → Accessibility → Motion →
+   Reduce Motion**: no drift, no rise on entrance, only fades.
+3. **Dynamic Type at the largest accessibility size.** Cards go to one column, the hero's "Qeyd əlavə et" moves
+   under the row, no card clips its figure, the tab bar labels wrap rather than truncate.
+4. **VoiceOver.** Swipe through: date, "Salam, …", "Profil: <full name>", "Gününə bir baxış" as a heading, the
+   one-line sentence, "Qeyd əlavə et" button, four cards read as single sentences, the task checkboxes announce
+   "tamamlanmayıb / tamamlanıb". The illustration is skipped.
+5. **Press feedback.** Cards and the hero action scale slightly; the tab bar's active pill slides between tabs.
+6. **Data.** Complete a task from Home: the checkbox, the Plan card and the hero line update after the server
+   answers; pull to refresh keeps every figure without replaying the entrance.
+
+## iPhone: Finance safe areas, keyboard and the calendar (2026-09-18)
+
+Three minutes on Expo Go. These are the checks the browser cannot make.
+
+1. **Status bar.** Open Maliyyə: the header sits clear of the status bar. Scroll down: content disappears under
+   an opaque cream strip at the top, never behind the clock and battery. Repeat in Tünd.
+2. **Home indicator.** The tab bar stays clear of the home indicator; a sheet's "Təsdiqlə" sits above it.
+3. **Keyboard → calendar.** Yeni xərc opens with the decimal keyboard up. Type 12,50, then tap **Tarix**.
+   **Expected:** the keyboard goes down, the "Tarix seç" sheet slides up with the *whole* month grid, both
+   shortcuts, the summary and "Təsdiqlə" on screen — nothing hidden under a keyboard. Close it: the form has not
+   grown a keyboard-sized gap and the footer button is where it was.
+4. **Six-week month.** Navigate to Mart 2026 on the smallest phone you have: six rows and the footer still fit;
+   with the largest accessibility text the grid scrolls while "Tarix seç" and "Təsdiqlə" stay put.
+5. **Dismissal.** Pick another day, then swipe the sheet down / tap the scrim / use the back gesture on
+   Android: the field keeps its old date. Reopen: the old date is checked, its month shown. Pick and confirm: the
+   field updates once.
+6. **Rotation.** Rotate with the calendar open: it resizes to the new height without clipping.
+7. **Keyboard on the form.** Tap the note field: the save button rises above the keyboard; every field and its
+   error can be scrolled into view; dragging the list or tapping outside dismisses the keyboard.
+8. **Money.** Dashboard, rows, accounts, budget labels and chart labels all read "5.000,00 AZN"-style separators,
+   and the amount field's placeholder is "0,00".
+9. **VoiceOver / TalkBack.** Days announce as "18 sentyabr 2026, bu gün"; the chosen day is "selected"; blocked
+   days are "dimmed"; the month heading is announced when it changes.
+
 
 Same flow, with these differences to watch for.
 
@@ -273,6 +315,122 @@ Same flow, with these differences to watch for.
 7. **Icon.** In Expo Go the icon is Expo Go's. In our own build, without the `icon` plugin property, Android
    falls back to the app icon, which usually renders as a white square. Cosmetic, and the reason `icon` is on
    the deferred list above.
+
+## iPhone / Android: Nutrition diary, summary and food editor (2026-09-28)
+
+The browser evidence in `docs/screenshots-nutrition/` proves layout, copy, contrast and the calculations. It
+cannot show a soft keyboard, Dynamic Type or a screen reader, and no physical device was available to the
+session that built this screen. These are the checks that are still outstanding.
+
+1. **Dynamic Type.** Settings → Accessibility → Display & Text Size → Larger Text, near the maximum. Open
+   Qidalanma. **Expected:** the summary stacks its ring under the figures rather than squeezing them; each
+   entry row moves its energy figure onto its own line and the food name is no longer truncated; the meal
+   groups keep their totals. In Yeni yemək the three macro fields stack one per row with their full labels
+   ("Karbohidrat (q)" whole, never cut), and the four meal segments drop their icons and keep their names.
+   These reflows key off `PixelRatio.getFontScale()`, which a browser cannot change — the screenshots at 1.35×
+   scale CSS only and therefore do **not** show them.
+2. **Keyboard.** Yeni yemək with the decimal keyboard up: the focused nutrient field and "Yemək əlavə et" both
+   stay reachable; an invalid submit still scrolls to the failing field with the keyboard open; dragging the
+   form dismisses the keyboard. Both `,` and `.` must be accepted in every nutrient field.
+3. **Week strip touch targets.** Each day cell and the calendar button are at least 44 pt tall; tapping between
+   two cells does not select the wrong day. Scroll the diary while pressing a cell: the press is cancelled, not
+   committed.
+4. **VoiceOver / TalkBack.** The summary reads as one sentence ("Bu gün: 1.055 kkal, hədəf 2.200 kkal,
+   1.145 kkal qalıb"); each macro row reads its own grams, target and difference, and an untracked macro says
+   "hədəf təyin edilməyib"; the ring is announced once as an image with its real figures, never as a changing
+   number; each entry row speaks its name, time, portion and the three macros; day cells announce as
+   "Bu gün, 28 sentyabr 2026" and the selected one as checked.
+5. **Reduce Motion.** Settings → Accessibility → Motion → Reduce Motion on. Open Qidalanma: the ring and the
+   macro bars appear at their final values with no sweep, the entrance animations are gone, and pressing a row
+   still gives feedback. Refetch by pulling or switching days: nothing replays a count-up.
+6. **Time zone boundaries.** With the profile time zone Asia/Baku, add a meal just before and just after local
+   midnight and confirm each lands on the day the strip shows — no shift from a UTC conversion.
+
+
+## iPhone / Android: Plan (2026-09-30)
+
+The browser evidence in `docs/screenshots-plan/` proves layout, copy, states and the completion flow. These are
+the checks it cannot make, and no physical device was available to the session that built the screen.
+
+1. **Dynamic Type.** Larger Text near the maximum, then open Plan. **Expected:** the three view segments drop
+   their icons so "Tamamlanan" stays whole; the summary's headline wraps instead of clipping; a task row's
+   title wraps and the overflow control keeps its 48 pt target. The browser cannot change
+   `PixelRatio.getFontScale()`, so the enlarged-text screenshot does **not** exercise the segment reflow.
+2. **Completion feedback.** Tap a checkbox: the press scale is immediate, the tick grows in when the server
+   answers, and the row does not move or vanish. Tap twice quickly: only one request goes out. Turn the network
+   off and tap: an error toast appears and the box is still unchecked.
+3. **Keyboard.** In "Yeni tapşırıq" with the keyboard up, the title field, its validation message and
+   "Tapşırıq əlavə et" are all reachable; an invalid submit still scrolls to and focuses the title.
+4. **VoiceOver / TalkBack.** The summary reads as one sentence ("3 tapşırıq qalıb, 1 / 4 tamamlanıb, 2 gecikmiş
+   tapşırıq"); each row announces its title, when it is due, its priority word and its checked state; the
+   checkbox and the "əməliyyatlar" control are separate, and completing a task does not move focus onto a
+   control that has gone.
+5. **Reduce Motion.** The section entrances and the tick animation are gone; the progress track lands on its
+   value without sweeping; press feedback remains.
+6. **Time zone boundary.** With the profile zone Asia/Baku, a task planned for today at a time that has just
+   passed should read with a warning-coloured time but stay in today's list, not the overdue section.
+
+
+## iPhone / Android: Fokus (2026-09-30)
+
+The browser evidence in `docs/screenshots-focus/` proves the layout, the copy, the state machine end to end
+(a real one-minute run, recorded and read back from the API) and that a paused countdown does not move. It
+cannot prove anything about the operating system. **None of the following was tested on hardware**, because no
+physical device was available to this session:
+
+1. **Local notification delivery.** Start a 1–2 minute phase, lock the screen and wait. **Expected:** the
+   notification arrives at roughly the deadline (Doze on Android and the iOS scheduler may be late), tapping it
+   opens Fokus showing the settled result, and it never records anything by itself. Then pause a phase and
+   confirm no notification arrives at the original deadline.
+2. **Sleep reminder isolation.** Turn on a sleep reminder, then start and end several focus phases.
+   **Expected:** the sleep reminder is still scheduled afterwards. Fokus must never cancel it.
+3. **Permission refused.** Deny notification permission when first starting a phase. **Expected:** the timer
+   works exactly as before; only the alarm is missing.
+4. **Force close and reopen.** Start a phase, force-quit the app, wait past the deadline, reopen.
+   **Expected:** the run is recorded as its configured length, ending at its real deadline — not at the moment
+   the app was reopened — and the completed state is shown.
+5. **Lock screen and background.** Start a phase, lock the device for several minutes, unlock. **Expected:**
+   the countdown shows the real remaining time, never the value it had when the screen went off.
+6. **Haptics.** The completion haptic on iOS and Android, and that nothing fires while merely scrolling.
+7. **Native accessibility.** VoiceOver / TalkBack: the ring is announced once with the phase and remaining
+   time, not as a changing number; the countdown is readable on demand; pause, Bitir and "Tapşırığı bitir" are
+   distinguishable; focus is preserved through the settings sheet and the confirmation dialog.
+8. **Dynamic Type.** At the largest text the ring gives up its place and the countdown stays whole. The browser
+   cannot change `PixelRatio.getFontScale()`, so the enlarged-text screenshot does not exercise that path.
+9. **Airplane mode.** Complete a run offline, confirm the screen reports a pending record, then re-enable the
+   network and confirm it uploads exactly once and today's figure moves by the right amount.
+
+
+## iPhone / Android: Libra AI (2026-10-03)
+
+The browser evidence in `docs/screenshots-ai/` proves the layout, the copy, every state the screen has, and the
+whole request contract end to end — grounded answer, source details, follow-up, retry under one request id,
+insufficient data, and the unavailable screen with no provider key. It was captured against the **development
+fixture provider**, which is labelled as such in the product and in the evidence, and **no paid call was ever
+made**. It cannot prove anything about the operating system. **None of the following was tested on hardware**,
+because no physical device was available to this session:
+
+1. **The keyboard.** Focus the composer on a real phone. **Expected:** the composer rises with the keyboard,
+   the last turn stays visible above it, the send control stays reachable, and dismissing the keyboard does not
+   lose the draft. Shot 16 only shortens the viewport; it is not a keyboard.
+2. **Long questions.** Type several lines. **Expected:** the input grows to its cap and then scrolls; the
+   conversation above is never pushed off screen.
+3. **Native Reduce Motion.** Turn it on in system settings. **Expected:** the orb stops drifting and the turn
+   entrances arrive without travel. The browser emulates `prefers-reduced-motion`, which is not the same switch.
+4. **Backgrounding.** Send a question, background the app before it answers, return. **Expected:** the answer is
+   there or the retry strip is, and nothing is asked twice. Then leave the tab idle and confirm the orb stops
+   animating while the app is in the background.
+5. **Native accessibility.** VoiceOver / TalkBack: the orb is skipped entirely; the loading card announces once,
+   politely; an answer is readable in order — outcome, fixture badge, summary, each metric card with its label
+   and figure, observations, suggestions; "Mənbələr" announces its count and the sheet traps focus and restores
+   it on close.
+6. **Dynamic Type.** At the largest text the prompt cards, the metric cards and the context control grow rather
+   than clip. `PixelRatio.getFontScale()` cannot be changed from the browser.
+7. **Offline.** Ask with the network off. **Expected:** the retry strip appears with the question intact; after
+   reconnecting, the retry returns one stored turn rather than creating a second.
+8. **A real provider.** Everything above was answered by the fixture. Once a key is configured, the whole set
+   has to be repeated against the real provider — above all that an answer citing a fact the snapshot does not
+   contain is refused rather than shown.
 
 ---
 

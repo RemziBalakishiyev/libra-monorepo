@@ -24,7 +24,7 @@ import { describeError } from '@/lib/api/errors';
 import type { CreateTaskInput, TaskDetail, TaskRecurrenceInput, UpdateTaskInput } from '@/lib/api/tasks';
 import { useClientRequestId } from '@/lib/client-request-id';
 import { confirmAsync } from '@/lib/confirm';
-import { todayIsoDate } from '@/lib/dates';
+import { dateFromIso, isoDateOf, todayIsoDate } from '@/lib/dates';
 import { successHaptic } from '@/lib/haptics';
 import { priorities, recurrenceLabels, timeLabel, weekdays as weekdayOptions } from '@/lib/tasks';
 import { taskFormSchema, type TaskForm } from '@/lib/validation/tasks';
@@ -63,6 +63,16 @@ export function TaskFormScreen({ id, date }: TaskFormScreenProps) {
   }
 
   return <TaskEditor detail={existing.data} date={date} />;
+}
+
+/** "Bu gün" and "Sabah" as calendar dates; anything else goes through the shared calendar in `DateField`. */
+function dateShortcuts(today = todayIsoDate()): { key: string; label: string; date: string }[] {
+  const base = dateFromIso(today);
+  const tomorrow = isoDateOf(new Date(base.getFullYear(), base.getMonth(), base.getDate() + 1, 12));
+  return [
+    { key: 'today', label: 'Bu gün', date: today },
+    { key: 'tomorrow', label: 'Sabah', date: tomorrow },
+  ];
 }
 
 type Phase = 'idle' | 'submitting' | 'success';
@@ -281,7 +291,30 @@ function TaskEditor({ detail, date }: { detail: TaskDetail | undefined; date: st
           name="date"
           render={({ field, fieldState }) => (
             <View style={styles.whenCell}>
-              {/* No maximum: a plan is about the future. Nutrition keeps its own restriction. */}
+              {/* Two shortcuts for the answers most tasks want, then the shared calendar for everything else.
+                  No maximum: a plan is about the future. Nutrition keeps its own restriction. */}
+              <View style={styles.shortcuts}>
+                {dateShortcuts().map((shortcut) => {
+                  const selected = field.value === shortcut.date;
+                  return (
+                    <PressableScale
+                      key={shortcut.date}
+                      accessibilityRole="radio"
+                      aria-checked={selected}
+                      aria-disabled={busy}
+                      accessibilityLabel={shortcut.label}
+                      disabled={busy}
+                      onPress={() => field.onChange(shortcut.date)}
+                      scaleTo={0.96}
+                      style={[styles.shortcut, { backgroundColor: selected ? colors.primarySoft : colors.surfaceSubtle, borderColor: selected ? colors.primaryText : colors.border }]}
+                      testID={`task-date-${shortcut.key}`}>
+                      <AppText variant="caption" color={selected ? 'primaryText' : 'textSecondary'}>
+                        {shortcut.label}
+                      </AppText>
+                    </PressableScale>
+                  );
+                })}
+              </View>
               <DateField label="Tarix" value={field.value} onChange={field.onChange} error={fieldState.error?.message} disabled={busy} />
             </View>
           )}
@@ -299,7 +332,7 @@ function TaskEditor({ detail, date }: { detail: TaskDetail | undefined; date: st
         ) : null}
       </View>
 
-      {!showTime ? <Button title="Saat əlavə et" variant="ghost" size="sm" icon="time-outline" onPress={() => setShowTime(true)} disabled={busy} testID="task-add-time" /> : null}
+      {!showTime ? <Button title="Saat əlavə et" variant="ghost" size="sm" icon="time-outline" onPress={() => setShowTime(true)} disabled={busy} style={styles.inlineAction} testID="task-add-time" /> : null}
 
       <View onLayout={(event) => onFieldLayout('priority', event)}>
         <AppText variant="meta" color="textSecondary" style={styles.label}>
@@ -404,7 +437,7 @@ function TaskEditor({ detail, date }: { detail: TaskDetail | undefined; date: st
               ) : null}
             </>
           ) : (
-            <Button title="Təkrarlanma əlavə et" variant="ghost" size="sm" icon="repeat-outline" onPress={() => setShowRepeat(true)} disabled={busy} testID="task-add-recurrence" />
+            <Button title="Təkrarlanma əlavə et" variant="ghost" size="sm" icon="repeat-outline" onPress={() => setShowRepeat(true)} disabled={busy} style={styles.inlineAction} testID="task-add-recurrence" />
           )}
         </View>
       ) : task.seriesId ? (
@@ -437,7 +470,7 @@ function TaskEditor({ detail, date }: { detail: TaskDetail | undefined; date: st
             )}
           />
         ) : (
-          <Button title="Qeyd əlavə et" variant="ghost" size="sm" icon="create-outline" onPress={() => setShowNote(true)} disabled={busy} testID="task-add-note" />
+          <Button title="Qeyd əlavə et" variant="ghost" size="sm" icon="create-outline" onPress={() => setShowNote(true)} disabled={busy} style={styles.inlineAction} testID="task-add-note" />
         )}
       </View>
 
@@ -493,6 +526,22 @@ const styles = StyleSheet.create({
   whenCell: {
     flex: 3,
     minWidth: 0,
+    gap: Spacing.xs,
+  },
+  inlineAction: {
+    alignSelf: 'flex-start',
+  },
+  shortcuts: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+  },
+  shortcut: {
+    minHeight: MinTouchTarget - 12,
+    paddingHorizontal: Spacing.md,
+    justifyContent: 'center',
+    borderRadius: Radius.full,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   whenCellNarrow: {
     flex: 2,

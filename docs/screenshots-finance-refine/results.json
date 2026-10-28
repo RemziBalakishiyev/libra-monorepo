@@ -1,0 +1,450 @@
+{
+  "capturedAt": "2026-09-18T00:40:47.217Z",
+  "passed": 39,
+  "total": 39,
+  "checks": {
+    "balanceUsesAzerbaijaniSeparators": true,
+    "netFlowLabelled": true,
+    "balanceAndFlowStayApart": true,
+    "budgetEmptyIsCompact": true,
+    "recentEmptyHasAction": true,
+    "insightEmptyExplainsInsteadOfBars": true,
+    "managementKeepsEveryDestination": true,
+    "noHorizontalOverflowEmpty390": true,
+    "largeBalanceFormatted": true,
+    "otherCurrencyKeptSeparate": true,
+    "currencySwitchPresent": true,
+    "recentRowsGroupedByDay": true,
+    "rowHasOverflowControl": true,
+    "rowAmountFormatted": true,
+    "seriesChartsRealValues": true,
+    "currencySwitchShowsUsdOnly": true,
+    "noHorizontalOverflow360": true,
+    "wideShellStillHasManagement": true,
+    "enlargedTextNoOverflow": true,
+    "categoryShortcutsCompactAndInside": true,
+    "hamisiActionPresent": true,
+    "amountPlaceholderUsesComma": true,
+    "detailsSectionGroupsFields": true,
+    "noHorizontalOverflowForm": true,
+    "failedSubmitKeepsValues": true,
+    "calendarFullyOnScreen": true,
+    "calendarSevenColumnsMondayFirst": true,
+    "calendarDaysAreLabelledRadios": true,
+    "todayIsMarkedNotSelected": true,
+    "calendarHeadingAndClose": true,
+    "arrowKeysMovePendingDay": true,
+    "escapeDiscardsPendingDate": true,
+    "focusReturnsToDateField": true,
+    "shortcutOnlyChangesPending": true,
+    "confirmCommitsYesterday": true,
+    "reopenRestoresCommitted": true,
+    "monthNavigationDoesNotWrite": true,
+    "sixRowMonthFitsShortScreen": true,
+    "noConsoleErrors": true
+  },
+  "measurements": {
+    "emptyBalance": "Bu ayın pul axını · Sentyabr 2026Gəlir0,00Xərc0,00Xalis axın (gəlir − xərc)0,00 AZNGündəlik orta xərc · 18 gün0,00 AZN",
+    "heroLabel": "Hesab balansı 5.000,00 AZN",
+    "management": [
+      "Hesablar",
+      "Köçürmələr",
+      "Büdcələr",
+      "Kateqoriyalar",
+      "Təkrarlananlar",
+      "Borclar"
+    ],
+    "dataHero": "Hesab balansı 1.249.916,30 AZN",
+    "groupHeadings": [
+      "BU GÜN"
+    ],
+    "rowAmount": "AbunəliklərMarket · Bank kartı−84,20",
+    "chips": [
+      {
+        "label": "Abunəliklər",
+        "right": 135,
+        "height": 44
+      },
+      {
+        "label": "Digər xərc",
+        "right": 251,
+        "height": 44
+      },
+      {
+        "label": "Ev",
+        "right": 321,
+        "height": 44
+      },
+      {
+        "label": "Kommunal",
+        "right": 132,
+        "height": 44
+      }
+    ],
+    "afterFailedSubmit": {
+      "amount": "12,50",
+      "note": "Netflix",
+      "category": true,
+      "error": true
+    },
+    "calendar": {
+      "sheet": {
+        "top": 261,
+        "bottom": 844,
+        "left": 0,
+        "right": 390,
+        "width": 390,
+        "height": 583
+      },
+      "confirm": {
+        "top": 772,
+        "bottom": 820,
+        "left": 12,
+        "right": 378,
+        "width": 366,
+        "height": 48
+      },
+      "grid": {
+        "top": 437,
+        "bottom": 657,
+        "left": 12,
+        "right": 378,
+        "width": 366,
+        "height": 220
+      },
+      "inner": 844,
+      "weekdays": "B.e.Ç.a.Ç.C.a.C.Ş.B.",
+      "cells": [
+        {
+          "iso": "2026-09-01",
+          "role": "radio",
+          "label": "1 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-02",
+          "role": "radio",
+          "label": "2 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-03",
+          "role": "radio",
+          "label": "3 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-04",
+          "role": "radio",
+          "label": "4 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-05",
+          "role": "radio",
+          "label": "5 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-06",
+          "role": "radio",
+          "label": "6 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-07",
+          "role": "radio",
+          "label": "7 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-08",
+          "role": "radio",
+          "label": "8 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-09",
+          "role": "radio",
+          "label": "9 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-10",
+          "role": "radio",
+          "label": "10 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-11",
+          "role": "radio",
+          "label": "11 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-12",
+          "role": "radio",
+          "label": "12 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-13",
+          "role": "radio",
+          "label": "13 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-14",
+          "role": "radio",
+          "label": "14 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-15",
+          "role": "radio",
+          "label": "15 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-16",
+          "role": "radio",
+          "label": "16 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-17",
+          "role": "radio",
+          "label": "17 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-18",
+          "role": "radio",
+          "label": "18 sentyabr 2026, bu gün",
+          "checked": "true",
+          "current": "date",
+          "tab": "0",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-19",
+          "role": "radio",
+          "label": "19 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-20",
+          "role": "radio",
+          "label": "20 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-21",
+          "role": "radio",
+          "label": "21 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-22",
+          "role": "radio",
+          "label": "22 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-23",
+          "role": "radio",
+          "label": "23 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-24",
+          "role": "radio",
+          "label": "24 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-25",
+          "role": "radio",
+          "label": "25 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-26",
+          "role": "radio",
+          "label": "26 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-27",
+          "role": "radio",
+          "label": "27 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-28",
+          "role": "radio",
+          "label": "28 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-29",
+          "role": "radio",
+          "label": "29 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        },
+        {
+          "iso": "2026-09-30",
+          "role": "radio",
+          "label": "30 sentyabr 2026",
+          "checked": "false",
+          "current": null,
+          "tab": "-1",
+          "h": 44,
+          "w": 52
+        }
+      ]
+    },
+    "keyboard": {
+      "summary": "10 sentyabr 2026",
+      "checked": "calendar-day-2026-09-10",
+      "focused": "calendar-day-2026-09-10"
+    },
+    "focusAfterClose": "Tarix: 18 sentyabr 2026",
+    "shortCalendar": {
+      "month": "Mart 2026",
+      "rows": 6,
+      "confirm": {
+        "top": 568,
+        "bottom": 616,
+        "left": 12,
+        "right": 348,
+        "width": 336,
+        "height": 48
+      },
+      "sheet": {
+        "top": 20,
+        "bottom": 640,
+        "left": 0,
+        "right": 360,
+        "width": 360,
+        "height": 620
+      },
+      "inner": 640
+    },
+    "consoleErrors": []
+  },
+  "consoleErrors": []
+}

@@ -1,0 +1,243 @@
+{
+  "shots": [
+    {
+      "name": "01-diary-full-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "02-diary-full-390x1900",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "03-diary-dark-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "04-diary-dark-full-390x1900",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "05-diary-360x800",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "06-diary-430x932",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "07-diary-large-text-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": [
+        "Toyuq döşü",
+        "Qoz-fındıq qarışığı"
+      ]
+    },
+    {
+      "name": "08-diary-large-text-390x1900",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": [
+        "Toyuq döşü",
+        "Qoz-fındıq qarışığı"
+      ]
+    },
+    {
+      "name": "09-diary-reduced-motion-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "10-diary-empty-no-goals-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "11-diary-empty-no-goals-390x1500",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "10b-diary-empty-no-goals-dark-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "12-diary-empty-with-goals-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "12b-diary-empty-with-goals-dark-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "13-diary-partial-goals-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "14-diary-exceeded-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "15-diary-exceeded-390x1700",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "16-calendar-from-strip-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "17-form-blank-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "18-form-filled-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "19-form-filled-390x1500",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "20-form-second-food-incomplete-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "21-form-two-foods-390x1900",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "22-form-large-text-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": [
+        "Axşam"
+      ]
+    },
+    {
+      "name": "23-form-large-text-390x1900",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": [
+        "Axşam"
+      ]
+    },
+    {
+      "name": "24-form-validation-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    }
+  ],
+  "checks": {
+    "summaryAndFirstGroupVisible": true,
+    "noEmptyNoteOnPopulatedDay": true,
+    "emptyNoGoalsOffersGoalAction": true,
+    "emptyNoGoalsHasNoRing": true,
+    "emptyExplained": true,
+    "emptyKeepsFirstGroupVisible": true,
+    "illustrationHiddenFromReaders": true,
+    "blankTotalIsDash": true,
+    "carbLabelWhole": true,
+    "validationKeepsTypedName": true
+  },
+  "measurements": {
+    "energy": "1.055",
+    "energyDifference": "1.145 kkal qalıb",
+    "ring": "48%",
+    "summarySpoken": "Bu gün: 1.055 kkal, hədəf 2.200 kkal, 1.145 kkal qalıb",
+    "firstGroupAdd": {
+      "top": 432,
+      "bottom": 472,
+      "vh": 844
+    },
+    "contrastProteinLight": 4.79,
+    "contrastCarbLight": 4.79,
+    "contrastFatLight": 4.79,
+    "contrastProteinDark": 7.74,
+    "contrastCarbDark": 7.74,
+    "contrastFatDark": 7.74,
+    "scaledNodes": 81,
+    "emptyFirstGroupAdd": {
+      "top": 591,
+      "bottom": 631,
+      "vh": 844
+    },
+    "emptyIllustration": {
+      "top": 471,
+      "bottom": 559,
+      "vh": 844
+    },
+    "illustrationBox": {
+      "top": 471,
+      "bottom": 559,
+      "vh": 844
+    },
+    "emptyWithGoalsEnergy": "0",
+    "emptyWithGoalsDifference": "2.200 kkal qalıb",
+    "partialMacroLabels": [
+      "Zülal: 21,0 q / 130,0 q, 109,0 q qalıb",
+      "Karbohidrat: 18,0 q, hədəf təyin edilməyib",
+      "Karbohidrat: hədəf yoxdur",
+      "Yağ: 18,0 q, hədəf təyin edilməyib",
+      "Yağ: hədəf yoxdur"
+    ],
+    "exceededEnergy": "2.506",
+    "exceededDifference": "706 kkal artıq",
+    "exceededRing": "139%",
+    "weekDays": [
+      "2026-09-24",
+      "2026-09-25",
+      "2026-09-26",
+      "2026-09-27",
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30"
+    ],
+    "blankTotal": "—",
+    "blankMacros": "Zülal —Karbohidrat —Yağ —",
+    "basis": "Dəyərlər 1 porsiya üçündür",
+    "filledTotal": "320",
+    "filledMacros": "Zülal 21,0 qKarbohidrat 18,0 qYağ 18,0 q",
+    "incompleteNote": "1 yeməyin dəyərləri tam deyil; cəmə daxil edilməyib.",
+    "incompleteItemLine": "Bu yemək: — (dəyərlər tam deyil)"
+  }
+}

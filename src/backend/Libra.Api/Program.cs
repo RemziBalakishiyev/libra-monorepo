@@ -1,7 +1,9 @@
 using System.Globalization;
 using System.Text.Json.Serialization;
+using Libra.Api.Assistant;
 using Libra.Api.Cors;
 using Libra.Api.Finance;
+using Libra.Api.Focus;
 using Libra.Api.Health;
 using Libra.Api.Identity;
 using Libra.Api.Nutrition;
@@ -58,6 +60,8 @@ try
     app.MapFoodAnalysisEndpoints();
     app.MapTaskEndpoints();
     app.MapSleepEndpoints();
+    app.MapFocusEndpoints();
+    app.MapAssistantEndpoints();
 
     if (app.Services.GetRequiredService<JwtSigningMaterial>().IsEphemeral)
     {

@@ -1,13 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { IconButton } from '@/components/button';
 import { PressableScale } from '@/components/pressable-scale';
 import { AppText } from '@/components/text';
-import { MinTouchTarget, Radius, Spacing } from '@/constants/theme';
+import { MinTouchTarget, Motion, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { Task } from '@/lib/api/tasks';
-import { overdueLabel, priorityIcon, priorityLabel, taskAccessibilityLabel, whenLabel } from '@/lib/tasks';
+import { hasTime, priorityIcon, priorityLabel, rowMeta, taskAccessibilityLabel, type RowContext } from '@/lib/tasks';
 
 type TaskRowProps = {
   task: Task;
@@ -19,23 +21,44 @@ type TaskRowProps = {
   onMore: (task: Task) => void;
   /** True while this row's own completion request is in flight. */
   busy?: boolean;
-  /** Shows the day it was planned for instead of a relative label — used in the overdue section. */
-  showOverdueDate?: boolean;
+  /** Decides what the metadata line may leave out — the heading above already says the rest. */
+  context?: RowContext;
   today?: string;
   showSeparator?: boolean;
 };
 
 /**
- * One task: a completion control, the title (which wraps rather than being cut), when it is due, its priority
- * and an overflow control.
+ * One task: a completion control, the title, when it is due, its priority and an overflow control.
  *
- * The completion control is a checkbox, so its state is announced once and the whole row stays a separate
- * button that opens the task. Priority is a small labelled chip with its own glyph — never colour alone.
+ * The title is the strongest thing in the row and wraps rather than being cut. The metadata line under it is
+ * whatever the heading above has not already said — a clock, "Gün ərzində", or the day an overdue task was
+ * actually planned for. Priority is only drawn when it is not the default: "Yüksək" gets a restrained tonal
+ * chip, "Aşağı" a quiet word, and Normal nothing at all. All three words stay in the accessible name, so
+ * nothing about priority depends on seeing a colour.
+ *
+ * Completion, opening and the overflow menu are three separate targets; pressing the checkbox can never open
+ * the editor.
  */
-export function TaskRow({ task, onToggle, onPress, onMore, busy = false, showOverdueDate = false, today, showSeparator = false }: TaskRowProps) {
-  const { colors } = useTheme();
-  const when = showOverdueDate ? overdueLabel(task) : whenLabel(task, today);
+export function TaskRow({ task, onToggle, onPress, onMore, busy = false, context = 'day', today, showSeparator = false }: TaskRowProps) {
+  const { colors, reducedMotion } = useTheme();
+  const meta = rowMeta(task, context, today);
+  // A timed task is already "overdue" once its own time has passed today — a real domain rule, and a different
+  // thing from the overdue section, which holds earlier days. The time says so in the warning colour; only the
+  // section's rows get the amber box, so one signal keeps one meaning.
   const late = task.isOverdue;
+  const lateBox = context === 'overdue';
+  const timed = hasTime(task) && context === 'day';
+  const high = task.priority === 'High';
+  const low = task.priority === 'Low';
+
+  // The tick grows in over ~160 ms when the server confirms the completion, so the change is legible without
+  // the row moving. Reduced motion lands on the final state directly, and nothing loops.
+  const checked = useSharedValue(task.isCompleted ? 1 : 0);
+  useEffect(() => {
+    const target = task.isCompleted ? 1 : 0;
+    checked.set(reducedMotion ? target : withTiming(target, { duration: Motion.quick, easing: Motion.easeOut }));
+  }, [task.isCompleted, reducedMotion, checked]);
+  const tickStyle = useAnimatedStyle(() => ({ opacity: checked.get(), transform: [{ scale: 0.6 + 0.4 * checked.get() }] }));
 
   return (
     <View style={[styles.wrapper, showSeparator ? { borderTopColor: colors.border, borderTopWidth: StyleSheet.hairlineWidth } : null]} testID={`task-row-${task.id}`}>
@@ -50,18 +73,19 @@ export function TaskRow({ task, onToggle, onPress, onMore, busy = false, showOve
         disabled={busy}
         dimWhenDisabled={false}
         onPress={() => onToggle(task, !task.isCompleted)}
-        scaleTo={0.9}
+        scaleTo={0.88}
         containerStyle={styles.checkSlot}
         style={styles.checkTarget}
         testID={`task-toggle-${task.id}`}>
         <View
           style={[
             styles.checkbox,
-            task.isCompleted
-              ? { backgroundColor: colors.modulePlan, borderColor: colors.modulePlan }
-              : { borderColor: late ? colors.warningText : colors.borderStrong },
+            task.isCompleted ? { backgroundColor: colors.modulePlan, borderColor: colors.modulePlan } : { borderColor: lateBox ? colors.warningText : colors.borderStrong },
+            busy ? { opacity: 0.55 } : null,
           ]}>
-          {task.isCompleted ? <Ionicons name="checkmark" size={16} color={colors.onHero} /> : null}
+          <Animated.View style={tickStyle}>
+            <Ionicons name="checkmark" size={16} color={colors.onPrimary} />
+          </Animated.View>
         </View>
       </PressableScale>
 
@@ -75,15 +99,35 @@ export function TaskRow({ task, onToggle, onPress, onMore, busy = false, showOve
         pressedStyle={{ backgroundColor: colors.surfaceSubtle }}
         style={styles.body}
         testID={`task-open-${task.id}`}>
+        {/* A restrained mark for high priority: a rule beside the title, not a loud pill in the row. */}
+        {high && !task.isCompleted ? <View style={[styles.priorityRule, { backgroundColor: colors.modulePlan }]} /> : null}
+
         <View style={styles.text}>
-          {/* The title wraps to three lines; a long task is readable rather than truncated to a stub. */}
           <AppText variant="bodyStrong" numberOfLines={3} color={task.isCompleted ? 'textMuted' : 'textPrimary'} style={task.isCompleted ? styles.done : undefined}>
             {task.title}
           </AppText>
+
           <View style={styles.metaRow}>
-            <AppText variant="caption" color={late ? 'warningText' : 'textMuted'} numberOfLines={1}>
-              {when}
+            <AppText
+              variant="caption"
+              color={late ? 'warningText' : timed ? 'textSecondary' : 'textMuted'}
+              style={timed ? styles.tabular : undefined}
+              numberOfLines={1}
+              testID={`task-meta-${task.id}`}>
+              {meta}
             </AppText>
+            {high ? (
+              <View style={[styles.chip, { backgroundColor: colors.primarySoft }]}>
+                <Ionicons name={priorityIcon(task.priority)} size={12} color={colors.primaryText} />
+                <AppText variant="caption" color="primaryText" numberOfLines={1}>
+                  {priorityLabel(task.priority)}
+                </AppText>
+              </View>
+            ) : low ? (
+              <AppText variant="caption" color="textMuted" numberOfLines={1}>
+                {priorityLabel(task.priority)}
+              </AppText>
+            ) : null}
             {task.seriesId ? (
               <View style={styles.metaItem}>
                 <Ionicons name="repeat-outline" size={13} color={colors.textMuted} />
@@ -93,13 +137,13 @@ export function TaskRow({ task, onToggle, onPress, onMore, busy = false, showOve
               </View>
             ) : null}
           </View>
-        </View>
 
-        <View style={[styles.priority, { backgroundColor: colors.surfaceSubtle }]}>
-          <Ionicons name={priorityIcon(task.priority)} size={13} color={colors.textSecondary} />
-          <AppText variant="caption" color="textSecondary" numberOfLines={1}>
-            {priorityLabel(task.priority)}
-          </AppText>
+          {/* A preview only: the whole note stays in the task's own screen. */}
+          {task.note && !task.isCompleted ? (
+            <AppText variant="caption" color="textMuted" numberOfLines={1} testID={`task-note-${task.id}`}>
+              {task.note}
+            </AppText>
+          ) : null}
         </View>
       </PressableScale>
 
@@ -154,6 +198,12 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     minHeight: MinTouchTarget,
   },
+  priorityRule: {
+    width: 3,
+    alignSelf: 'stretch',
+    minHeight: 20,
+    borderRadius: Radius.full,
+  },
   text: {
     flex: 1,
     minWidth: 0,
@@ -173,12 +223,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 3,
   },
-  priority: {
+  chip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
     paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
+    paddingVertical: 2,
     borderRadius: Radius.full,
+  },
+  tabular: {
+    fontVariant: ['tabular-nums'],
   },
 });

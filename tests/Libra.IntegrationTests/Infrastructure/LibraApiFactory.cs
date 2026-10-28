@@ -1,4 +1,5 @@
 using System.Globalization;
+using Libra.Application.Assistant;
 using Libra.Application.Nutrition.FoodAnalysis;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -26,6 +27,9 @@ public sealed class LibraApiFactory : WebApplicationFactory<Program>, IAsyncLife
 
     /// <summary>Analysis photo bytes, in memory, so storage and deletion are observable.</summary>
     public InMemoryImageStore Images { get; } = new();
+
+    /// <summary>The scripted assistant provider. Tests script the answer; nothing reaches a network.</summary>
+    public FakeAssistantProvider Assistant { get; } = new();
 
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:18-alpine")
         .WithDatabase("libra_test")
@@ -69,6 +73,8 @@ public sealed class LibraApiFactory : WebApplicationFactory<Program>, IAsyncLife
             services.AddSingleton<IAiFoodAnalyzer>(Analyzer);
             services.RemoveAll<IImageStore>();
             services.AddSingleton<IImageStore>(Images);
+            services.RemoveAll<IAssistantProvider>();
+            services.AddSingleton<IAssistantProvider>(Assistant);
         });
     }
 }

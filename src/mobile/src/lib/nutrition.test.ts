@@ -7,8 +7,11 @@ import {
   formatQuantity,
   gramsDifferenceLabel,
   itemTotals,
+  macroBreakdown,
   mealForHour,
   mealLabel,
+  ringLabel,
+  ringPercent,
   sumTotals,
   targetProgress,
 } from '@/lib/nutrition';
@@ -143,5 +146,47 @@ describe('meal helpers', () => {
     expect(describeEntry([{ name: 'Omlet' }])).toBe('Omlet');
     expect(describeEntry([{ name: 'Omlet' }, { name: 'Düyü' }])).toBe('Omlet +1');
     expect(describeEntry([])).toBe('Yemək');
+  });
+});
+
+describe('macro breakdown', () => {
+  const totals = { energyKcal: 695, proteinGrams: 40.1, carbGrams: 31.2, fatGrams: 19.3 };
+
+  it('keeps each macro goal independently optional', () => {
+    const rows = macroBreakdown(totals, { proteinGrams: 130, carbGrams: null, fatGrams: 70 });
+
+    expect(rows.map((row) => row.label)).toEqual(['Zülal', 'Karbohidrat', 'Yağ']);
+    // The untracked macro still reports its recorded grams; only its progress is absent.
+    expect(rows[1]).toMatchObject({ value: 31.2, progress: null });
+    expect(rows[0]!.progress).toMatchObject({ target: 130, over: false });
+    expect(rows[2]!.progress).toMatchObject({ target: 70 });
+  });
+
+  it('reports the recorded grams when nothing at all is tracked', () => {
+    expect(macroBreakdown(totals, null).map((row) => [row.value, row.progress])).toEqual([
+      [40.1, null],
+      [31.2, null],
+      [19.3, null],
+    ]);
+  });
+});
+
+describe('ring figures', () => {
+  it('clamps the drawn arc while the label keeps the real share', () => {
+    const over = targetProgress(2400, 2200)!;
+    expect(ringPercent(over)).toBe(100);
+    // 2400 / 2200 is 109%, and that is what the centre says — exceeding is not completion.
+    expect(ringLabel(over)).toBe('109%');
+  });
+
+  it('draws the real share below the target', () => {
+    const under = targetProgress(695, 2200)!;
+    expect(Math.round(ringPercent(under))).toBe(32);
+    expect(ringLabel(under)).toBe('32%');
+  });
+
+  it('has nothing to draw or say without a target', () => {
+    expect(ringPercent(null)).toBe(0);
+    expect(ringLabel(null)).toBeNull();
   });
 });

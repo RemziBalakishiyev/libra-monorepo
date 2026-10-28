@@ -185,6 +185,28 @@ The backend is a modular monolith. Each module owns its entities, use cases, and
   the user supplies it.
 - **Rounding** — unchanged from 3A: one multiplication from the entered values, rounded once at the end.
 
+## Focus rules (Fokus)
+
+- A focus run is a list of **active intervals** — the stretches the timer ran between a start or resume and a
+  pause or the end — plus the duration it was configured for. Active time is those intervals summed; the
+  pauses between them are the gaps, and belong to no total.
+- Elapsed time is always derived from stored instants. Nothing counts seconds: a display tick redraws the
+  screen, it never decides how much time has passed. This is what lets a phase that expired while the app was
+  closed be settled at **its own deadline** rather than at the moment it was noticed.
+- A run is `Completed` only if it reached its configured duration; ending early records `Stopped`, which keeps
+  the time spent but never counts towards the four-run cycle or a completed-session total.
+- **Breaks are not recorded at all.** They are a local matter, are never uploaded, and can therefore never
+  reach a focus total.
+- Every phase is started explicitly. The app never runs a focus/break cycle on its own while unattended:
+  reopening after several hours settles the single phase that expired and offers the next one, and cannot
+  manufacture sessions that never happened.
+- Completing a focus run never completes its linked task. That is a separate, explicit action through the
+  ordinary task completion API.
+- Derived values are clamped so nothing impossible can be shown or stored: remaining time is never negative,
+  and active time never exceeds the configured duration. **Device clock changes are not defended against** —
+  an app cannot tell a corrected clock from a manipulated one — but a clock moved backwards cannot produce
+  negative time, and one moved forwards past the deadline settles the phase exactly as real waiting would.
+
 ## Invariants
 
 1. All timestamps are stored in UTC and rendered in the user's IANA timezone. Default timezone `Asia/Baku`, locale `az-AZ`.

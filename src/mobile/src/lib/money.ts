@@ -51,10 +51,12 @@ const knownSeparators: Record<string, NumberSeparators> = {
   en: { decimal: '.', group: ',' },
 };
 
-const DEFAULT_LOCALE = 'az-AZ';
+/** The interface language. Every number on screen follows its separators ("5.000,00"), on native and on web. */
+export const UI_LOCALE = 'az-AZ';
+const DEFAULT_LOCALE = UI_LOCALE;
 let displayLocale = DEFAULT_LOCALE;
 
-/** Locale used by every display formatter; set from the profile preference once it is known. */
+/** Locale used by every display formatter. The app sets it to `UI_LOCALE`; tests may pin another. */
 export function setDisplayLocale(locale: string | null | undefined): void {
   displayLocale = locale && locale.trim() !== '' ? locale : DEFAULT_LOCALE;
 }

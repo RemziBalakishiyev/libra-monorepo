@@ -1,15 +1,14 @@
-import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, useFieldArray, useForm, useWatch, type FieldErrors } from 'react-hook-form';
-import { StyleSheet, View, type LayoutChangeEvent, type ScrollView } from 'react-native';
+import { PixelRatio, StyleSheet, View, type LayoutChangeEvent, type ScrollView } from 'react-native';
 
 import { Button } from '@/components/button';
 import { DateField } from '@/components/date-field';
 import { Entrance } from '@/components/entrance';
 import { TextField } from '@/components/form-field';
-import { NutritionItemEditor } from '@/components/nutrition-item-editor';
+import { NutritionItemEditor, itemNutrients } from '@/components/nutrition-item-editor';
 import { Screen } from '@/components/screen';
 import { ScreenHeader } from '@/components/screen-header';
 import { SegmentedControl } from '@/components/segmented-control';
@@ -27,7 +26,7 @@ import { confirmAsync } from '@/lib/confirm';
 import { isoDateOf, todayIsoDate } from '@/lib/dates';
 import { successHaptic } from '@/lib/haptics';
 import { parseDecimalInput } from '@/lib/money';
-import { describeEntry, formatGrams, formatKcal, itemTotals, mealForHour, meals, sumTotals } from '@/lib/nutrition';
+import { describeEntry, formatGrams, formatKcal, itemTotals, macroKinds, mealForHour, meals, sumTotals } from '@/lib/nutrition';
 import { nutritionEntryFormSchema, type NutritionEntryForm, type NutritionItemForm } from '@/lib/validation/nutrition';
 import { ServerErrorBanner } from '@/screens/auth/server-error-banner';
 
@@ -161,19 +160,28 @@ function NutritionEditor({ entry, copyFrom, date, mealType }: EditorProps) {
   const items = useWatch({ control, name: 'items' });
   const busy = phase === 'submitting' || remove.isPending;
 
+  /**
+   * The live total counts only the items whose four nutrient fields are all filled. A half-typed food
+   * contributes nothing and is reported as such, so an unfinished form never looks like a finished
+   * zero-calorie meal; an explicitly typed 0 is a value and does count.
+   */
+  const rows = (items ?? []).map((item) => ({ item, nutrients: itemNutrients(item) }));
+  const completeRows = rows.filter((row) => row.nutrients !== null);
+  const incompleteCount = rows.length - completeRows.length;
   const totals = sumTotals(
-    (items ?? []).map((item) =>
+    completeRows.map((row) =>
       itemTotals({
-        name: item?.name ?? '',
-        quantityMode: item?.quantityMode ?? 'PerPortion',
-        quantity: parseDecimalInput(item?.quantity ?? '', 3) ?? 0,
-        energyKcalPerUnit: parseDecimalInput(item?.energyKcal ?? '', 2) ?? 0,
-        proteinGramsPerUnit: parseDecimalInput(item?.protein ?? '', 2) ?? 0,
-        carbGramsPerUnit: parseDecimalInput(item?.carbs ?? '', 2) ?? 0,
-        fatGramsPerUnit: parseDecimalInput(item?.fat ?? '', 2) ?? 0,
+        name: row.item?.name ?? '',
+        quantityMode: row.item?.quantityMode ?? 'PerPortion',
+        quantity: row.nutrients!.quantity,
+        energyKcalPerUnit: row.nutrients!.energyKcal,
+        proteinGramsPerUnit: row.nutrients!.protein,
+        carbGramsPerUnit: row.nutrients!.carbs,
+        fatGramsPerUnit: row.nutrients!.fat,
       }),
     ),
   );
+  const hasTotal = completeRows.length > 0;
 
   useEffect(
     () => () => {
@@ -265,6 +273,9 @@ function NutritionEditor({ entry, copyFrom, date, mealType }: EditorProps) {
   const title = entry ? 'Yeməyə düzəliş' : copyFrom ? 'Yeməyin nüsxəsi' : 'Yeni yemək';
   const submitTitle = entry ? 'Yadda saxla' : 'Yemək əlavə et';
 
+  // The meal segments and the macro row only fit their decorations at ordinary text sizes.
+  const compactText = PixelRatio.getFontScale() <= 1.2;
+
   const form = (
     <>
       <View onLayout={(event) => onFieldLayout('meal', event)}>
@@ -279,7 +290,8 @@ function NutritionEditor({ entry, copyFrom, date, mealType }: EditorProps) {
               onChange={field.onChange}
               disabled={busy}
               size="sm"
-              options={meals.map((meal) => ({ value: meal.type, label: meal.shortLabel, accessibilityLabel: meal.label, icon: meal.icon }))}
+              // At enlarged text the icons give up their width so the four short names stay whole.
+              options={meals.map((meal) => ({ value: meal.type, label: meal.shortLabel, accessibilityLabel: meal.label, icon: compactText ? meal.icon : undefined }))}
             />
           )}
         />
@@ -308,17 +320,21 @@ function NutritionEditor({ entry, copyFrom, date, mealType }: EditorProps) {
 
       <View style={styles.items} onLayout={(event) => onFieldLayout('items', event)}>
         {fields.map((field, index) => (
-          <NutritionItemEditor key={field.id} control={control} index={index} disabled={busy} onRemove={fields.length > 1 ? () => removeItem(index) : undefined} />
+          <NutritionItemEditor key={field.id} control={control} index={index} disabled={busy} onRemove={fields.length > 1 ? () => removeItem(index) : undefined} hideContribution={fields.length === 1} />
         ))}
         {formState.errors.items?.message ? (
           <AppText variant="caption" color="error" accessibilityRole="alert">
             {formState.errors.items.message}
           </AppText>
         ) : null}
-        <Button title="Başqa yemək əlavə et" variant="soft" icon="add" onPress={() => append(blankItem())} disabled={busy || fields.length >= 20} testID="add-item" />
       </View>
 
-      <View onLayout={(event) => onFieldLayout('note', event)}>
+      <View style={styles.disclosure} onLayout={(event) => onFieldLayout('note', event)}>
+        <Button title="Başqa yemək" variant="ghost" size="sm" icon="add" onPress={() => append(blankItem())} disabled={busy || fields.length >= 20} testID="add-item" />
+        {showNote ? null : <Button title="Qeyd əlavə et" variant="ghost" size="sm" icon="create-outline" onPress={() => setShowNote(true)} disabled={busy} testID="add-note" />}
+      </View>
+
+      <View>
         {showNote ? (
           <Controller
             control={control}
@@ -338,9 +354,7 @@ function NutritionEditor({ entry, copyFrom, date, mealType }: EditorProps) {
               />
             )}
           />
-        ) : (
-          <Button title="Qeyd əlavə et" variant="ghost" size="sm" icon="create-outline" onPress={() => setShowNote(true)} disabled={busy} testID="add-note" />
-        )}
+        ) : null}
       </View>
 
       {entry ? (
@@ -352,19 +366,35 @@ function NutritionEditor({ entry, copyFrom, date, mealType }: EditorProps) {
   );
 
   const summary = (
-    <View style={[styles.totals, { backgroundColor: colors.surface, borderColor: colors.border }]} accessibilityRole="summary" accessibilityLiveRegion="polite">
+    <View style={[styles.totals, { backgroundColor: colors.nutritionTint, borderColor: colors.nutritionTintBorder }]} accessibilityRole="summary" accessibilityLiveRegion="polite" testID="entry-total">
       <View style={styles.totalsHeader}>
-        <Ionicons name="nutrition-outline" size={18} color={colors.moduleNutrition} />
-        <AppText variant="bodyStrong" style={styles.flex}>
-          Cəmi
+        <AppText variant="meta" color="textSecondary" style={styles.flex}>
+          {fields.length > 1 ? 'Bu yeməyin cəmi' : 'Bu yemək'}
         </AppText>
-        <AppText variant="bodyStrong" style={styles.tabular} testID="entry-total-energy">
-          {formatKcal(totals.energyKcal)}
-        </AppText>
+        <View style={styles.totalsValue}>
+          <AppText variant="title" style={[styles.tabular, { color: colors.textPrimary }]} testID="entry-total-energy">
+            {hasTotal ? formatKcal(totals.energyKcal, false) : '—'}
+          </AppText>
+          <AppText variant="meta" color="textSecondary">
+            kkal
+          </AppText>
+        </View>
       </View>
-      <AppText variant="caption" color="textSecondary" testID="entry-total-macros">
-        Zülal {formatGrams(totals.proteinGrams)} · Karbohidrat {formatGrams(totals.carbGrams)} · Yağ {formatGrams(totals.fatGrams)}
-      </AppText>
+      <View style={styles.totalsMacros} testID="entry-total-macros">
+        {macroKinds.map((macro) => (
+          <View key={macro.key} style={styles.totalsMacro}>
+            <View style={[styles.macroDot, { backgroundColor: colors[macro.fill] }]} />
+            <AppText variant="caption" color="textSecondary" numberOfLines={1}>
+              {macro.label} {hasTotal ? formatGrams(macro.key === 'protein' ? totals.proteinGrams : macro.key === 'carb' ? totals.carbGrams : totals.fatGrams) : '—'}
+            </AppText>
+          </View>
+        ))}
+      </View>
+      {incompleteCount > 0 ? (
+        <AppText variant="caption" color="warningText" testID="entry-total-incomplete">
+          {rows.length === 1 ? 'Dəyərlər tam deyil — bütün xanaları doldurun.' : `${incompleteCount} yeməyin dəyərləri tam deyil; cəmə daxil edilməyib.`}
+        </AppText>
+      ) : null}
       {copyFrom && !entry ? (
         <AppText variant="caption" color="textMuted">
           Nüsxə ayrıca qeyd kimi yaradılacaq; ilkin yemək dəyişmir.
@@ -433,17 +463,42 @@ const styles = StyleSheet.create({
   dangerZone: {
     paddingTop: Spacing.xs,
   },
+  disclosure: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
   totals: {
     padding: Spacing.md,
     borderRadius: Radius.lg,
     borderCurve: 'continuous',
-    borderWidth: 1,
-    gap: Spacing.xs,
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: Spacing.sm,
   },
   totalsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
+  },
+  totalsValue: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: Spacing.xs,
+  },
+  totalsMacros: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+  },
+  totalsMacro: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  macroDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   tabular: {
     fontVariant: ['tabular-nums'],

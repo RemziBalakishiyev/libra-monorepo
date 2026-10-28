@@ -1,0 +1,206 @@
+{
+  "capturedAt": "2026-09-17T23:15:21.169Z",
+  "passed": 39,
+  "total": 39,
+  "checks": {
+    "greetingUsesFirstName": true,
+    "heroWithinBudget": true,
+    "heroLineNeutralWithoutData": true,
+    "balanceShown": true,
+    "nutritionNoRecord": true,
+    "planNoRecord": true,
+    "subMinuteSleepLabelled": true,
+    "noAiAdvertised": true,
+    "navNeverCoversContent": true,
+    "quickAddOffersGlobalActions": true,
+    "escapeClosesQuickAdd": true,
+    "longNameGreetsFirstName": true,
+    "profileKeepsStoredName": true,
+    "heroLineFromTasks": true,
+    "largeBalanceReadable": true,
+    "nutritionAgainstTarget": true,
+    "planCountsToday": true,
+    "sleepDuration": true,
+    "overdueLabelledSeparately": true,
+    "overdueTaskFirstWithDate": true,
+    "atMostThreeTasksPlusMore": true,
+    "longBalanceGetsFullWidthCards": true,
+    "taskCompletionRefreshesHome": true,
+    "noHorizontalOverflowAt360": true,
+    "twoColumnsAt360ForNormalBalance": true,
+    "wideLayoutHasNoDuplicateQuickAdd": true,
+    "enlargedTextNoOverflow": true,
+    "enlargedTextOneColumn": true,
+    "enlargedHeroKeepsAction": true,
+    "heroHeadingIsHeading": true,
+    "cardsAreLabelledButtons": true,
+    "checkboxesCarryState": true,
+    "profileTarget": true,
+    "quickAddTarget": true,
+    "navMarksCurrentPage": true,
+    "progressBarsLabelled": true,
+    "illustrationHiddenFromReaders": true,
+    "keyboardReachesHeroAndCards": true,
+    "noConsoleErrors": true
+  },
+  "measurements": {
+    "emptyHero": {
+      "top": 82,
+      "bottom": 246,
+      "left": 20,
+      "right": 370,
+      "width": 350,
+      "height": 164
+    },
+    "emptyLine": "Bu gün üçün hələ qeyd yoxdur.",
+    "emptyGreeting": "Salam, Rəmzi",
+    "sleepValue": "1 dəq-dən az",
+    "navRect": {
+      "top": 766,
+      "bottom": 844,
+      "left": 0,
+      "right": 390,
+      "width": 390,
+      "height": 78
+    },
+    "tasksRect": {
+      "top": 574,
+      "bottom": 672,
+      "left": 20,
+      "right": 370,
+      "width": 350,
+      "height": 98
+    },
+    "quickAddActions": [
+      "Bağla",
+      "Bağla",
+      "Xərc",
+      "Gəlir",
+      "Yemək",
+      "Tapşırıq",
+      "Yuxu",
+      "Köçürmə"
+    ],
+    "dataGreeting": "Salam, Məhəmmədəli",
+    "dataLine": "Bu gün 2 tapşırıq qalıb · 1 gecikib",
+    "financeValue": "1.249.916,30AZN",
+    "financeLabel": "Maliyyə, hesab balansı 1.249.916,30 AZN, bu ayın xalis axını −84,20 AZN, ayrıca 340,00 USD",
+    "nutritionValue": "960 / 2.200 kkal",
+    "planValue": "1 / 3",
+    "sleepValueData": "7 s 30 d",
+    "taskRows": [
+      "Kirayəni ödəGecikib · 17 sen",
+      "Süd və çörək alBu gün · 18:30",
+      "Axşam 30 dəqiqə gəzintiBu gün · 20:00"
+    ],
+    "financeRect": {
+      "top": 266,
+      "bottom": 408,
+      "left": 20,
+      "right": 370,
+      "width": 350,
+      "height": 142
+    },
+    "nutritionRect": {
+      "top": 420,
+      "bottom": 562,
+      "left": 20,
+      "right": 370,
+      "width": 350,
+      "height": 142
+    },
+    "narrowOverflow": 0,
+    "emptyFinanceRect360": {
+      "top": 266,
+      "bottom": 406,
+      "left": 20,
+      "right": 174,
+      "width": 154,
+      "height": 140
+    },
+    "emptyNutritionRect360": {
+      "top": 266,
+      "bottom": 406,
+      "left": 186,
+      "right": 340,
+      "width": 154,
+      "height": 140
+    },
+    "enlargedOverflow": 0,
+    "a11y": {
+      "heading": [
+        "Gününə bir baxış",
+        "Bu günün tapşırıqları"
+      ],
+      "cards": [
+        {
+          "role": "button",
+          "label": "Maliyyə, hesab balansı 1.249.916,30 AZN, bu ayın xalis axını −84,20 AZN, ayrıca 340,00 USD",
+          "min": 140
+        },
+        {
+          "role": "button",
+          "label": "Qidalanma, bu gün 960 kkal / hədəf 2.200 kkal",
+          "min": 140
+        },
+        {
+          "role": "button",
+          "label": "Plan, bu gün 2 / 3 tapşırıq tamamlanıb, 1 gecikib",
+          "min": 144
+        },
+        {
+          "role": "button",
+          "label": "Yuxu, son yuxu Dünən, 7 saat 30 dəqiqə",
+          "min": 144
+        }
+      ],
+      "checkboxes": [
+        {
+          "label": "Kirayəni ödə: tamamlanmayıb",
+          "checked": "false",
+          "min": 48
+        },
+        {
+          "label": "Axşam 30 dəqiqə gəzinti: tamamlanmayıb",
+          "checked": "false",
+          "min": 48
+        },
+        {
+          "label": "Hesabatı göndər: tamamlanıb",
+          "checked": "true",
+          "min": 48
+        }
+      ],
+      "profile": {
+        "label": "Profil: Məhəmmədəli Ağabəyzadə-Qarabağlı",
+        "min": 48
+      },
+      "quickAdd": {
+        "role": "button",
+        "min": 44
+      },
+      "current": [
+        "Ana səhifə"
+      ],
+      "progress": [
+        {
+          "label": "Enerji hədəfi: 44%",
+          "now": null
+        },
+        {
+          "label": "Bu günün tapşırıqları: 67%",
+          "now": null
+        }
+      ],
+      "illustrationHidden": true
+    },
+    "focusOrder": [
+      "home-profile",
+      "home-quick-add",
+      "home-card-finance-open",
+      "home-card-nutrition-open"
+    ],
+    "consoleErrors": []
+  },
+  "consoleErrors": []
+}

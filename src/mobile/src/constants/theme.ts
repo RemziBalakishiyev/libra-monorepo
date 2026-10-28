@@ -1,7 +1,9 @@
 /**
  * Libra design tokens — the single visual source of truth for production screens.
  *
- * Light-first, calm, data-rich. Every colour is semantic; screens and components never use raw values.
+ * Light-first, calm, data-rich, in a warm green system: an off-white canvas, deep-green primary and hero, a
+ * sage soft surface and one pistachio accent that is always paired with dark text. Every colour is semantic;
+ * screens and components never use raw values.
  * Both palettes expose identical keys so components stay theme-agnostic. Motion and layout constants live
  * here too so durations, breakpoints, and spacing come from one place.
  *
@@ -35,7 +37,7 @@ export interface Palette {
   textDisabled: string;
   /** Text on the primary button (dark on the light indigo of the dark palette). */
   onPrimary: string;
-  /** Text on the deep-indigo hero gradient: white in both palettes. */
+  /** Text on the deep-green hero: white in both palettes, and never `onPrimary` (dark in the dark palette). */
   onHero: string;
   onHeroMuted: string;
   primary: string;
@@ -46,6 +48,11 @@ export interface Palette {
   primaryText: string;
   heroGradientStart: string;
   heroGradientEnd: string;
+  /** One layer of the hero's tonal glow: a low-alpha pistachio wash, stacked three times behind the illustration. */
+  heroGlow: string;
+  /** Pistachio highlight for one chip or figure per surface; always paired with `onAccent`. */
+  accent: string;
+  onAccent: string;
   income: string;
   incomeSoft: string;
   incomeText: string;
@@ -60,8 +67,22 @@ export interface Palette {
   warningText: string;
   error: string;
   errorSoft: string;
+  /**
+   * Nutrition macros. The fills are muted so three bars next to each other stay calm; the `*Text` foregrounds
+   * are the readable version for labels and figures (≥ 4.5:1 on surface, canvas and the tinted summary).
+   */
+  protein: string;
+  proteinText: string;
+  carb: string;
+  carbText: string;
+  fat: string;
+  fatText: string;
+  /** The nutrition summary's softly tinted surface, and its border. */
+  nutritionTint: string;
+  nutritionTintBorder: string;
   moduleFinance: string;
   moduleNutrition: string;
+  /** Plan's accent is the primary green: the module had a leftover blue that belonged to no palette. */
   modulePlan: string;
   moduleSleep: string;
   moduleAi: string;
@@ -75,100 +96,122 @@ export interface Palette {
 
 export const palettes: Record<'light' | 'dark', Palette> = {
   light: {
-    canvas: '#F5F7FB',
-    surface: '#FFFFFF',
-    surfaceSubtle: '#F0F3F8',
-    surfaceRaised: '#FFFFFF',
-    surfaceInteractive: '#E9EDF5',
-    border: '#E2E7F0',
-    borderStrong: '#CBD4E1',
-    textPrimary: '#111827',
-    textSecondary: '#5C6878',
-    textMuted: '#5F6A7D',
-    textPlaceholder: '#5F6A7D',
-    textDisabled: '#AEB6C2',
+    canvas: '#F5F3EE',
+    surface: '#FFFEFA',
+    surfaceSubtle: '#EDEFE8',
+    surfaceRaised: '#FFFEFA',
+    surfaceInteractive: '#E8EBE3',
+    border: '#D8DED5',
+    borderStrong: '#BFC8BE',
+    textPrimary: '#182A23',
+    textSecondary: '#5E6C63',
+    textMuted: '#56645B',
+    textPlaceholder: '#56645B',
+    textDisabled: '#A9B3AA',
     onPrimary: '#FFFFFF',
     onHero: '#FFFFFF',
     onHeroMuted: 'rgba(255, 255, 255, 0.84)',
-    primary: '#4F5FE7',
-    primaryPressed: '#3F4CC5',
-    primarySoft: '#ECEEFF',
-    primaryAccent: '#6F7BF0',
-    primaryText: '#3F4CC5',
-    heroGradientStart: '#30376F',
-    heroGradientEnd: '#5159C6',
+    primary: '#1E5345',
+    primaryPressed: '#163E34',
+    primarySoft: '#E4EADF',
+    primaryAccent: '#2C6E5C',
+    primaryText: '#1E5345',
+    heroGradientStart: '#102F28',
+    heroGradientEnd: '#1A473B',
+    heroGlow: 'rgba(216, 235, 134, 0.07)',
+    accent: '#D8EB86',
+    onAccent: '#182A23',
     income: '#109B72',
-    incomeSoft: '#E6F7F1',
+    incomeSoft: '#E4F4EC',
     incomeText: '#087A58',
     expense: '#DC5656',
-    expenseSoft: '#FDECEC',
+    expenseSoft: '#FBEAE8',
     expenseText: '#B83F4A',
     transfer: '#3978E8',
-    transferSoft: '#EAF1FE',
+    transferSoft: '#E8EFFB',
     transferText: '#2B5FC0',
     warning: '#D68A17',
-    warningSoft: '#FFF4DC',
+    warningSoft: '#FCF2DC',
     warningText: '#8A5A0A',
     error: '#B83F4A',
-    errorSoft: '#FDECEC',
-    moduleFinance: '#4F5FE7',
-    moduleNutrition: '#159E91',
-    modulePlan: '#3978E8',
+    errorSoft: '#FBEAE8',
+    protein: '#3E8C7A',
+    proteinText: '#2B6A5E',
+    carb: '#9A8A2C',
+    carbText: '#6B5E12',
+    fat: '#C07A3C',
+    fatText: '#8A5320',
+    nutritionTint: '#EDF0E6',
+    nutritionTintBorder: '#DCE2D2',
+    moduleFinance: '#1E5345',
+    moduleNutrition: '#128A7E',
+    modulePlan: '#1E5345',
     moduleSleep: '#6765D8',
     moduleAi: '#8758D5',
-    skeleton: '#E9EDF5',
-    skeletonHighlight: '#F5F7FB',
-    scrim: 'rgba(17, 24, 39, 0.42)',
-    navSurface: '#FFFFFF',
-    navBorder: '#E2E7F0',
+    skeleton: '#E8EBE3',
+    skeletonHighlight: '#F5F3EE',
+    scrim: 'rgba(24, 42, 35, 0.42)',
+    navSurface: '#FFFEFA',
+    navBorder: '#D8DED5',
   },
   dark: {
-    canvas: '#0C1017',
-    surface: '#141A24',
-    surfaceSubtle: '#19212D',
-    surfaceRaised: '#1C2532',
-    surfaceInteractive: '#233043',
-    border: '#293545',
-    borderStrong: '#39485E',
-    textPrimary: '#F7F9FC',
-    textSecondary: '#ADB7C6',
-    textMuted: '#8B97AB',
-    textPlaceholder: '#8B97AB',
-    textDisabled: '#55617A',
-    onPrimary: '#0C1017',
+    canvas: '#0E1713',
+    surface: '#18251F',
+    surfaceSubtle: '#1F2F27',
+    surfaceRaised: '#1E2D25',
+    surfaceInteractive: '#2A3D33',
+    border: '#30443A',
+    borderStrong: '#44594E',
+    textPrimary: '#F3F4ED',
+    textSecondary: '#B3BDB3',
+    textMuted: '#A3AEA4',
+    textPlaceholder: '#A3AEA4',
+    textDisabled: '#5C6B60',
+    onPrimary: '#15231A',
     onHero: '#FFFFFF',
     onHeroMuted: 'rgba(255, 255, 255, 0.84)',
-    primary: '#8993F5',
-    primaryPressed: '#A3ABF8',
-    primarySoft: '#22284A',
-    primaryAccent: '#9FA8FF',
-    primaryText: '#A3ABF8',
-    heroGradientStart: '#242B5E',
-    heroGradientEnd: '#3E48A8',
+    primary: '#C9DD95',
+    primaryPressed: '#D9E9AE',
+    primarySoft: '#263A2B',
+    primaryAccent: '#B7CE7E',
+    primaryText: '#C9DD95',
+    heroGradientStart: '#102F28',
+    heroGradientEnd: '#1A473B',
+    heroGlow: 'rgba(216, 235, 134, 0.06)',
+    accent: '#D8EB86',
+    onAccent: '#15231A',
     income: '#38D2A0',
-    incomeSoft: '#12362C',
+    incomeSoft: '#14352A',
     incomeText: '#4ADBA8',
     expense: '#FF7377',
-    expenseSoft: '#3B2124',
+    expenseSoft: '#3B2426',
     expenseText: '#FF8A8D',
     transfer: '#69A0FF',
-    transferSoft: '#1C2A44',
+    transferSoft: '#1E2E42',
     transferText: '#8FA8FF',
     warning: '#F3BD57',
-    warningSoft: '#3A2F15',
+    warningSoft: '#3A301A',
     warningText: '#F6C363',
     error: '#FF8A8D',
-    errorSoft: '#3B2124',
-    moduleFinance: '#8993F5',
+    errorSoft: '#3B2426',
+    protein: '#6FBFA3',
+    proteinText: '#8FCBA6',
+    carb: '#C9B85E',
+    carbText: '#D9C86A',
+    fat: '#D9946A',
+    fatText: '#E8A87C',
+    nutritionTint: '#1B2A22',
+    nutritionTintBorder: '#2B3E33',
+    moduleFinance: '#C9DD95',
     moduleNutrition: '#3BC2B4',
-    modulePlan: '#69A0FF',
+    modulePlan: '#C9DD95',
     moduleSleep: '#9B98F0',
     moduleAi: '#B08CF0',
-    skeleton: '#1C2532',
-    skeletonHighlight: '#233043',
+    skeleton: '#1F2F27',
+    skeletonHighlight: '#2A3D33',
     scrim: 'rgba(0, 0, 0, 0.55)',
-    navSurface: '#171E2A',
-    navBorder: '#293545',
+    navSurface: '#18251F',
+    navBorder: '#30443A',
   },
 };
 
@@ -226,12 +269,12 @@ export type TypeName = keyof typeof Type;
  */
 export const Shadows = {
   light: {
-    card: '0 1px 2px rgba(17, 24, 39, 0.04)',
-    raised: '0 4px 14px rgba(17, 24, 39, 0.08)',
-    overlay: '0 12px 32px rgba(17, 24, 39, 0.16)',
-    hero: '0 6px 18px rgba(48, 55, 111, 0.16)',
-    nav: '0 2px 12px rgba(17, 24, 39, 0.08)',
-    fab: '0 6px 16px rgba(79, 95, 231, 0.28)',
+    card: '0 1px 2px rgba(24, 42, 35, 0.05)',
+    raised: '0 4px 14px rgba(24, 42, 35, 0.08)',
+    overlay: '0 12px 32px rgba(24, 42, 35, 0.16)',
+    hero: '0 8px 22px rgba(16, 47, 40, 0.20)',
+    nav: '0 2px 12px rgba(24, 42, 35, 0.08)',
+    fab: '0 6px 16px rgba(30, 83, 69, 0.28)',
   },
   dark: {
     card: '0 1px 2px rgba(0, 0, 0, 0.25)',
@@ -294,7 +337,7 @@ export const MaxContentWidth = Layout.maxContent;
  */
 export const CategoryColors = {
   light: {
-    indigo: '#4F5FE7',
+    indigo: '#1E5345',
     teal: '#159E91',
     amber: '#D68A17',
     coral: '#DC5656',
@@ -307,7 +350,7 @@ export const CategoryColors = {
     slate: '#64748B',
   },
   dark: {
-    indigo: '#8993F5',
+    indigo: '#C9DD95',
     teal: '#3BC2B4',
     amber: '#F3BD57',
     coral: '#FF7377',

@@ -1,0 +1,178 @@
+{
+  "shots": [
+    {
+      "name": "01-light-ready-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "01-light-running-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "01-light-completed-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "02-dark-ready-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "02-dark-running-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "02-dark-completed-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "03-ready-360x800",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "04-ready-430x932",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "05-ready-large-text-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "06-ready-reduced-motion-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    }
+  ],
+  "checks": {
+    "illustrationIsDecorative": true,
+    "illustrationKeepsItsAspect": true,
+    "illustrationIsCompact": true,
+    "slotReservedWhileRunning": true
+  },
+  "measurements": {
+    "01-lightReady": {
+      "image": {
+        "w": 56,
+        "h": 88,
+        "top": 164
+      },
+      "countdown": {
+        "w": 135,
+        "h": 60,
+        "top": 364
+      },
+      "hiddenFromReaders": true,
+      "fit": "fill"
+    },
+    "01-lightRunning": {
+      "image": null,
+      "countdown": {
+        "w": 135,
+        "h": 60,
+        "top": 364
+      },
+      "hiddenFromReaders": null,
+      "fit": null
+    },
+    "01-lightCompleted": {
+      "image": {
+        "w": 56,
+        "h": 88,
+        "top": 164
+      },
+      "countdown": {
+        "w": 135,
+        "h": 60,
+        "top": 364
+      },
+      "hiddenFromReaders": true,
+      "fit": "fill"
+    },
+    "02-darkReady": {
+      "image": {
+        "w": 56,
+        "h": 88,
+        "top": 164
+      },
+      "countdown": {
+        "w": 135,
+        "h": 60,
+        "top": 364
+      },
+      "hiddenFromReaders": true,
+      "fit": "fill"
+    },
+    "02-darkRunning": {
+      "image": null,
+      "countdown": {
+        "w": 135,
+        "h": 60,
+        "top": 364
+      },
+      "hiddenFromReaders": null,
+      "fit": null
+    },
+    "02-darkCompleted": {
+      "image": {
+        "w": 56,
+        "h": 88,
+        "top": 164
+      },
+      "countdown": {
+        "w": 135,
+        "h": 60,
+        "top": 364
+      },
+      "hiddenFromReaders": true,
+      "fit": "fill"
+    },
+    "narrowReady": {
+      "image": {
+        "w": 56,
+        "h": 88,
+        "top": 164
+      },
+      "countdown": {
+        "w": 135,
+        "h": 60,
+        "top": 364
+      },
+      "hiddenFromReaders": true,
+      "fit": "fill"
+    },
+    "scaledNodes": 14,
+    "largeTextReady": {
+      "image": {
+        "w": 56,
+        "h": 88,
+        "top": 171
+      },
+      "countdown": {
+        "w": 135,
+        "h": 60,
+        "top": 368
+      },
+      "hiddenFromReaders": true,
+      "fit": "fill"
+    }
+  },
+  "consoleErrors": []
+}

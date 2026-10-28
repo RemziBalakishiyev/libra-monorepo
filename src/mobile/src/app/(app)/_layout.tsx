@@ -6,7 +6,8 @@ import { Sidebar } from '@/components/sidebar';
 import { useProfile } from '@/hooks/use-profile';
 import { useSleepReminderTaps } from '@/hooks/use-sleep-reminder-taps';
 import { useTheme } from '@/hooks/use-theme';
-import { setDisplayLocale } from '@/lib/money';
+import { setProfileTimeZone } from '@/lib/dates';
+import { UI_LOCALE, setDisplayLocale } from '@/lib/money';
 
 /**
  * Signed-in group. Native headers are off: every screen renders its own `ScreenHeader` so the look is identical
@@ -15,15 +16,22 @@ import { setDisplayLocale } from '@/lib/money';
 export default function AppLayout() {
   const { layout, colors, reducedMotion } = useTheme();
   const profile = useProfile();
-  const locale = profile.data?.preferences.locale;
+  const timeZone = profile.data?.preferences.timeZone;
 
   // A tapped wake-up reminder opens the sleep screen. It never records waking on the user's behalf.
   useSleepReminderTaps();
 
-  // One display locale for every number on screen; the profile preference wins over the az-AZ default.
+  // One display convention for every number on screen: the interface language (az-AZ), so "5.000,00 AZN" reads
+  // the same on the dashboard, in rows and next to the entry field's "0,00". The stored "Dil" preference is kept
+  // for a localised interface; it no longer switches digit separators on its own.
   useEffect(() => {
-    setDisplayLocale(locale);
-  }, [locale]);
+    setDisplayLocale(UI_LOCALE);
+  }, []);
+
+  // Date-only pickers resolve "today" in the profile time zone.
+  useEffect(() => {
+    setProfileTimeZone(timeZone);
+  }, [timeZone]);
 
   const stack = (
     <Stack screenOptions={{ headerShown: false, animation: reducedMotion ? 'fade' : 'default', contentStyle: { backgroundColor: colors.canvas } }}>

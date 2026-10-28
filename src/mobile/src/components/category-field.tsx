@@ -123,7 +123,7 @@ export function CategoryField({ categories, value, onChange, error, disabled = f
                   pressedStyle={{ backgroundColor: colors.surfaceInteractive }}
                   style={[styles.chip, { backgroundColor: active ? withAlpha(color, scheme === 'dark' ? 0.24 : 0.12) : colors.surface, borderColor: active ? color : colors.border }]}>
                   <Ionicons name={active ? 'checkmark-circle' : visual.icon} size={16} color={color} />
-                  <AppText variant="meta" color={active ? 'textPrimary' : 'textSecondary'} numberOfLines={1}>
+                  <AppText variant="meta" color={active ? 'textPrimary' : 'textSecondary'} numberOfLines={1} style={styles.chipLabel}>
                     {category.name}
                   </AppText>
                 </PressableScale>
@@ -324,19 +324,28 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacing.sm,
     alignItems: 'center',
+    // Shrinks to the row so the chips wrap inside it instead of running off the screen edge.
+    flexShrink: 1,
+    minWidth: 0,
+    maxWidth: '100%',
   },
   chipSlot: {
-    minHeight: 40,
+    minHeight: MinTouchTarget - 4,
     justifyContent: 'center',
+    maxWidth: '100%',
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs + 2,
-    minHeight: 40,
+    minHeight: MinTouchTarget - 4,
     paddingHorizontal: Spacing.md,
     borderRadius: Radius.full,
     borderWidth: 1,
+    maxWidth: '100%',
+  },
+  chipLabel: {
+    flexShrink: 1,
   },
   search: {
     flexDirection: 'row',

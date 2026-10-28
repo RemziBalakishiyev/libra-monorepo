@@ -151,6 +151,8 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    // Same as the shared text field: the web <input>'s intrinsic width would overrun this half-width column.
+    minWidth: 0,
     ...Type.body,
     fontSize: 16,
     paddingVertical: Spacing.sm,

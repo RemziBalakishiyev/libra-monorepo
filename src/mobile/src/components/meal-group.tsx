@@ -1,14 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 
-import { IconButton } from '@/components/button';
 import { NutritionEntryRow } from '@/components/nutrition-entry-row';
 import { PressableScale } from '@/components/pressable-scale';
 import { AppText } from '@/components/text';
 import { MinTouchTarget, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { MealType, NutritionEntry, NutritionMealGroup } from '@/lib/api/nutrition';
-import { withAlpha } from '@/lib/color';
 import { formatKcal, mealIcon, mealLabel } from '@/lib/nutrition';
 
 type MealGroupProps = {
@@ -21,31 +19,41 @@ type MealGroupProps = {
 };
 
 /**
- * One meal of the day. A populated group shows its energy total and its entries; an empty one keeps a single
- * compact "add" row so the diary stays scannable instead of turning into four empty cards.
+ * One meal of the day. The heading carries the meal's icon, its name and its real energy total; a populated
+ * group lists its entries, and an empty one is a single compact row that adds to this meal — so an empty day is
+ * four short rows rather than four empty cards. Adding from here keeps the meal-type preset.
  */
 export function MealGroup({ group, timeOf, onAdd, onOpenEntry, onEntryActions }: MealGroupProps) {
-  const { colors, scheme } = useTheme();
+  const { colors } = useTheme();
   const label = mealLabel(group.mealType);
   const icon = mealIcon(group.mealType);
-  const tint = colors.moduleNutrition;
   const empty = group.entries.length === 0;
 
   return (
-    <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.border }]} testID={`meal-group-${group.mealType}`}>
+    <View style={styles.group} testID={`meal-group-${group.mealType}`}>
       <View style={styles.header}>
-        <View style={[styles.icon, { backgroundColor: withAlpha(tint, scheme === 'dark' ? 0.22 : 0.12) }]}>
-          <Ionicons name={icon} size={16} color={tint} />
+        <View style={[styles.icon, { backgroundColor: colors.surfaceSubtle }]}>
+          <Ionicons name={icon} size={15} color={colors.primaryText} />
         </View>
-        <AppText variant="subheading" accessibilityRole="header" numberOfLines={1} style={styles.flex}>
+        <AppText variant="bodyStrong" accessibilityRole="header" numberOfLines={1} style={styles.flex}>
           {label}
         </AppText>
         {empty ? null : (
-          <AppText variant="bodyStrong" style={styles.tabular} accessibilityLabel={`${label} cəmi ${formatKcal(group.totals.energyKcal)}`}>
+          <AppText variant="meta" color="textSecondary" style={styles.tabular} accessibilityLabel={`${label} cəmi ${formatKcal(group.totals.energyKcal)}`}>
             {formatKcal(group.totals.energyKcal)}
           </AppText>
         )}
-        <IconButton icon="add" accessibilityLabel={`${label} üçün yemək əlavə et`} size={20} variant="filled" onPress={() => onAdd(group.mealType)} testID={`meal-add-${group.mealType}`} />
+        <PressableScale
+          accessibilityRole="button"
+          accessibilityLabel={`${label} üçün yemək əlavə et`}
+          onPress={() => onAdd(group.mealType)}
+          scaleTo={0.92}
+          containerStyle={styles.addSlot}
+          pressedStyle={{ backgroundColor: colors.surfaceInteractive }}
+          style={[styles.add, { backgroundColor: colors.primarySoft }]}
+          testID={`meal-add-${group.mealType}`}>
+          <Ionicons name="add" size={18} color={colors.primaryText} />
+        </PressableScale>
       </View>
 
       {empty ? (
@@ -53,17 +61,17 @@ export function MealGroup({ group, timeOf, onAdd, onOpenEntry, onEntryActions }:
           accessibilityRole="button"
           accessibilityLabel={`${label}: yemək əlavə et`}
           onPress={() => onAdd(group.mealType)}
-          scaleTo={0.99}
+          scaleTo={0.995}
           containerStyle={styles.full}
           pressedStyle={{ backgroundColor: colors.surfaceSubtle }}
-          style={styles.emptyRow}>
-          <Ionicons name="add-circle-outline" size={18} color={colors.textMuted} />
-          <AppText variant="meta" color="textSecondary">
-            Hələ yemək yoxdur — əlavə edin
+          style={[styles.emptyRow, { borderColor: colors.border }]}
+          testID={`meal-empty-${group.mealType}`}>
+          <AppText variant="caption" color="textMuted">
+            Qeyd yoxdur — əlavə edin
           </AppText>
         </PressableScale>
       ) : (
-        <View style={styles.entries}>
+        <View style={[styles.entries, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {group.entries.map((entry, index) => (
             <NutritionEntryRow key={entry.id} entry={entry} time={timeOf(entry)} onPress={onOpenEntry} onMore={onEntryActions} showSeparator={index > 0} />
           ))}
@@ -75,22 +83,17 @@ export function MealGroup({ group, timeOf, onAdd, onOpenEntry, onEntryActions }:
 
 const styles = StyleSheet.create({
   group: {
-    borderRadius: Radius.lg,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    paddingHorizontal: Spacing.sm,
-    paddingBottom: Spacing.sm,
+    gap: Spacing.xs,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    minHeight: MinTouchTarget + 4,
-    paddingLeft: Spacing.sm,
+    minHeight: MinTouchTarget,
   },
   icon: {
-    width: 30,
-    height: 30,
+    width: 28,
+    height: 28,
     borderRadius: Radius.sm,
     borderCurve: 'continuous',
     alignItems: 'center',
@@ -103,18 +106,36 @@ const styles = StyleSheet.create({
   tabular: {
     fontVariant: ['tabular-nums'],
   },
+  addSlot: {
+    width: MinTouchTarget - 8,
+    height: MinTouchTarget - 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  add: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   full: {
     width: '100%',
   },
   emptyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    minHeight: MinTouchTarget,
-    paddingHorizontal: Spacing.sm,
+    minHeight: MinTouchTarget - 4,
+    paddingHorizontal: Spacing.md,
     borderRadius: Radius.md,
+    borderCurve: 'continuous',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderStyle: 'dashed',
   },
   entries: {
-    paddingTop: Spacing.xxs,
+    borderRadius: Radius.lg,
+    borderCurve: 'continuous',
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: Spacing.xs,
   },
 });

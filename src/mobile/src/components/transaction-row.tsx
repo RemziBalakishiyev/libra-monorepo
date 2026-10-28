@@ -23,19 +23,39 @@ export function describeTransaction(transaction: TransactionRowItem): string {
   return `${transaction.categoryName} · ${formatAmount(transaction.amount, transaction.currencyCode)} · ${transaction.accountName}`;
 }
 
-/** Second line of a row: the note when it adds information, then account and day. */
-export function transactionMeta(transaction: TransactionRowItem, now = new Date()): string {
+/** Second line of a row: the note when it adds information, then account and day (the day is left out inside a day group). */
+export function transactionMeta(transaction: TransactionRowItem, now = new Date(), includeDay = true): string {
   const note = transaction.note?.trim();
   const parts: string[] = [];
   if (note && note.toLocaleLowerCase('az') !== transaction.categoryName.toLocaleLowerCase('az')) {
     parts.push(note);
   }
-  parts.push(transaction.accountName, formatRelativeDay(transaction.occurredAtUtc, now));
+  parts.push(transaction.accountName);
+  if (includeDay) {
+    parts.push(formatRelativeDay(transaction.occurredAtUtc, now));
+  }
   return parts.join(' · ');
+}
+
+/** Rows grouped by the local day they occurred on, labelled "Bu gün", "Dünən" or the short date; API order kept. */
+export function groupTransactionsByDay<T extends TransactionRowItem>(transactions: readonly T[], now = new Date()): { label: string; transactions: T[] }[] {
+  const groups: { label: string; transactions: T[] }[] = [];
+  for (const transaction of transactions) {
+    const label = formatRelativeDay(transaction.occurredAtUtc, now);
+    const last = groups.at(-1);
+    if (last && last.label === label) {
+      last.transactions.push(transaction);
+    } else {
+      groups.push({ label, transactions: [transaction] });
+    }
+  }
+  return groups;
 }
 
 type TransactionRowProps = {
   transaction: TransactionRowItem;
+  /** Inside a day group the day is already the heading, so the meta line leaves it out. */
+  hideDay?: boolean;
   onPress?: () => void;
   /** Enables swipe-to-delete on native and an overflow menu on web. Deletion is confirmed by the caller. */
   onDelete?: () => void;
@@ -45,12 +65,12 @@ type TransactionRowProps = {
 };
 
 /** One transaction. Type is readable from the sign and the icon, not only from colour. */
-export function TransactionRow({ transaction, onPress, onDelete, isLast = false, onSurface = false }: TransactionRowProps) {
+export function TransactionRow({ transaction, hideDay = false, onPress, onDelete, isLast = false, onSurface = false }: TransactionRowProps) {
   const { colors, scheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const visual = categoryVisual(transaction.categoryName, transaction.type);
   const tint = categoryColor(transaction.categoryName, scheme, transaction.type);
-  const meta = transactionMeta(transaction);
+  const meta = transactionMeta(transaction, new Date(), !hideDay);
   const label = `${spokenMoney(transaction.amount, transaction.currencyCode, transaction.type)}, ${transaction.categoryName}, ${meta}`;
 
   const row = (
@@ -80,12 +100,12 @@ export function TransactionRow({ transaction, onPress, onDelete, isLast = false,
           <MoneyText amount={transaction.amount} currencyCode={transaction.currencyCode} flow={transaction.type} variant="bodyStrong" showCode={false} numberOfLines={1} />
         </View>
       </PressableScale>
-      {onDelete && Platform.OS === 'web' ? (
-        <Pressable accessibilityRole="button" accessibilityLabel={`${describeTransaction(transaction)}: əlavə əməliyyatlar`} onPress={() => setMenuOpen(true)} hitSlop={6} style={({ pressed }) => [styles.more, { backgroundColor: pressed ? colors.surfaceSubtle : 'transparent' }]}>
+      {onDelete ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={`${describeTransaction(transaction)}: əlavə əməliyyatlar`} accessibilityHint="Aç və sil seçimlərini göstərir" onPress={() => setMenuOpen(true)} hitSlop={6} style={({ pressed }) => [styles.more, { backgroundColor: pressed ? colors.surfaceSubtle : 'transparent' }]} testID={`transaction-more-${transaction.id}`}>
           <Ionicons name="ellipsis-horizontal" size={18} color={colors.textMuted} />
         </Pressable>
       ) : null}
-      {onDelete && Platform.OS === 'web' ? (
+      {onDelete ? (
         <Sheet visible={menuOpen} onClose={() => setMenuOpen(false)} title={describeTransaction(transaction)} presentation="dialog" maxWidth={360} scrollable={false}>
           <MenuItem
             icon="open-outline"
@@ -150,13 +170,15 @@ type TransactionListProps = {
   /** Animate entrances only for ids not in this set (rows that arrived after mount). */
   animateNew?: boolean;
   empty?: ReactNode;
+  /** Group rows under "Bu gün" / "Dünən" / date headings (the dashboard's recent list). */
+  groupByDay?: boolean;
 };
 
 /**
  * Non-virtualised list for short lists (dashboard, small pages). New rows enter with a rise and the rest reflow
  * through a layout transition; rows already present at mount render immediately.
  */
-export function TransactionList({ transactions, onPress, onDelete, onSurface = false, animateNew = true, empty }: TransactionListProps) {
+export function TransactionList({ transactions, onPress, onDelete, onSurface = false, animateNew = true, empty, groupByDay = false }: TransactionListProps) {
   const motion = useMotion();
   const [initialIds] = useState(() => new Set(transactions.map((transaction) => transaction.id)));
 
@@ -164,20 +186,32 @@ export function TransactionList({ transactions, onPress, onDelete, onSurface = f
     return <>{empty ?? null}</>;
   }
 
+  const groups = groupByDay ? groupTransactionsByDay(transactions) : [{ label: null, transactions }];
+
   return (
     <View>
-      {transactions.map((transaction, index) => (
-        <Animated.View key={transaction.id} exiting={motion.exitUp()} layout={motion.layout()}>
-          <Entrance disabled={!animateNew || initialIds.has(transaction.id)}>
-            <TransactionRow
-              transaction={transaction}
-              onSurface={onSurface}
-              isLast={index === transactions.length - 1}
-              onPress={onPress ? () => onPress(transaction) : undefined}
-              onDelete={onDelete ? () => onDelete(transaction) : undefined}
-            />
-          </Entrance>
-        </Animated.View>
+      {groups.map((group) => (
+        <View key={group.label ?? 'all'}>
+          {group.label ? (
+            <AppText variant="overline" color="textMuted" style={styles.groupLabel} accessibilityRole="header">
+              {group.label.toLocaleUpperCase('az')}
+            </AppText>
+          ) : null}
+          {group.transactions.map((transaction, index) => (
+            <Animated.View key={transaction.id} exiting={motion.exitUp()} layout={motion.layout()}>
+              <Entrance disabled={!animateNew || initialIds.has(transaction.id)}>
+                <TransactionRow
+                  transaction={transaction}
+                  hideDay={groupByDay}
+                  onSurface={onSurface}
+                  isLast={index === group.transactions.length - 1}
+                  onPress={onPress ? () => onPress(transaction) : undefined}
+                  onDelete={onDelete ? () => onDelete(transaction) : undefined}
+                />
+              </Entrance>
+            </Animated.View>
+          ))}
+        </View>
       ))}
     </View>
   );
@@ -186,6 +220,10 @@ export function TransactionList({ transactions, onPress, onDelete, onSurface = f
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
+  },
+  groupLabel: {
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xs,
   },
   outer: {
     flexDirection: 'row',

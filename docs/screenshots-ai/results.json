@@ -1,0 +1,148 @@
+{
+  "shots": [
+    {
+      "name": "01-landing-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "02-landing-dark-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "03-landing-reduced-motion-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "04-context-sheet-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "05-answer-finance-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "06-sources-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "07-follow-up-answer-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "08-answer-nutrition-dark-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "09-sources-dark-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "10-loading-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "11-failed-retry-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "12-retry-recovered-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "13-landing-no-records-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "14-insufficient-data-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "15-sources-no-records-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "16-composer-keyboard-inset-light-390x460",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "17-history-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "18-landing-desktop-light-1280x900",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": [
+        "Ayan Məmmədova",
+        "ai-full-1791042562072@example.com"
+      ]
+    },
+    {
+      "name": "19-answer-desktop-light-1280x900",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": [
+        "Ayan Məmmədova",
+        "ai-full-1791042562072@example.com"
+      ]
+    }
+  ],
+  "checks": {
+    "orbHiddenFromAccessibility": true,
+    "promptCards": 4,
+    "metricCards": 3,
+    "sourceRows": 14,
+    "turnsAfterFollowUp": 2,
+    "turnsAfterRetry": 1,
+    "sendEnabledWithText": true,
+    "historyRows": 4
+  },
+  "text": {
+    "heading": "Bu gün nəyə diqqət edək?",
+    "contextLine": "Bu gün · Bütün modullar",
+    "contextRange": "3 oktyabr 2026",
+    "summary": "Qeydlərinizə əsasən qısa mənzərə: Hesab balansı: 3914.65 AZN; Bu ayın xərci: 250.7 AZN; Bu ayın gəliri: 0 AZN.",
+    "fixtureBadge": "Nümunə cavab (fixture)",
+    "sourcesControl": "Mənbələr (7)",
+    "sourcesPeriod": "Dövr: 2026-10-03 · Məlumat 2026-10-03 19:49:54 tarixində toplanıb",
+    "thinking": "Qeydləriniz oxunur…",
+    "retry": "Göndərilmədi: Pul hara gedir?Yenidən",
+    "insufficientOutcome": "Kifayət qədər məlumat yoxdur",
+    "insufficientSummary": "Seçilmiş dövr üçün kifayət qədər qeyd yoxdur."
+  },
+  "consoleErrors": []
+}

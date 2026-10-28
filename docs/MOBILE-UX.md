@@ -34,36 +34,72 @@ and components are documented in [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md).
 
 ## Home
 
-Greeting with the current date (long names wrap to two lines), Quick Add and profile in the header, a "Bu ay"
-card that keeps **account balance** ("Hesab balansı", all included accounts in the dashboard currency, other
-currencies listed separately) apart from **this month's cash flow** (Gəlir / Xərc / Xalis axın), and a quiet
-module list: Maliyyə and Qidalanma with their own row — Qidalanma shows today's real figure ("445 / 2.200 kkal",
-or the consumed energy when no target is set, or "Bu gün qeyd yoxdur") — and the upcoming modules as small rows
-marked "Tezliklə", consistent with their placeholder screens. Under the module list sits a compact **Yuxu**
-card: the running night's elapsed time, or the last recorded night, or "Hələ qeyd yoxdur". It reports and opens
-the sleep screen — it never starts or ends a session, and it does not tick, so nothing on Home announces itself. Before Finance exists the card becomes the setup
-invitation, while Quick Add stays available and offers only what the user can do (a meal needs no account). A
-failed refresh over cached data shows a stale notice instead of hiding the numbers.
+A personal daily overview (redesigned 2026-09-18), in this order:
+
+- **Compact header**: today's date in the **profile time zone** ("Cümə, 18 sentyabr"), "Salam, Rəmzi" from the
+  first word of the stored name (the e-mail's local part when there is none; long names wrap to two lines), and
+  a 44-unit initials avatar that opens Profile and is labelled with the full stored name.
+- **Hero** (28 px radius, 160–185 units at default text): the deep-green surface, a restrained pistachio glow
+  behind the balance illustration on the right, "Gününə bir baxış", and **one line derived from real data** —
+  today's remaining tasks with the overdue count kept apart ("Bu gün 2 tapşırıq qalıb · 1 gecikib"), "Bu günün
+  N tapşırığının hamısı tamamlanıb", or the neutral "Bu gün üçün hələ qeyd yoxdur." No insight, score, streak or
+  assessment is invented. "Qeyd əlavə et" opens the existing global Quick Add sheet and replaces the header's
+  plus on phones; on the desktop shell the sidebar already offers Quick Add, so the hero has no button. Under
+  ~340 logical units the action drops below the row so its label never wraps beside the picture.
+- **Four overview cards** in two columns at normal phone widths, one column when the window is narrower than
+  360, text is enlarged past 115 %, or the balance is 12 characters or longer (so a large amount gets a wider
+  card rather than smaller text): **Maliyyə** — the account balance and its code, "Balans · bu ayın xalis
+  axını …" as the one secondary figure, other currencies as a separate "Ayrıca …" chip, never summed;
+  **Qidalanma** — today's energy against the target with a bar ("960 / 2.200 kkal", "1.240 kkal qalıb"), or
+  the consumed energy alone with "hədəf təyin edilməyib"; **Plan** — completed / scheduled for today with a
+  bar, the overdue count as its own warning chip; **Yuxu** — the last recorded night and its day, "Davam edir"
+  with the elapsed time for a running one. A missing record reads **"Qeyd yoxdur"** with the relevant action
+  (Maliyyəni quraşdır, Yemək əlavə et, Tapşırıq əlavə et, Yuxu əlavə et); a genuine zero is a number; a
+  recorded night shorter than a minute reads "1 dəq-dən az", never "0 d" or "1 d". Each card opens its module;
+  the card link and the empty-state action are sibling controls. Loading shows bones inside the card, a failed
+  module shows "Yüklənmədi" with its own retry while the other cards keep their figures, and a failed refresh
+  over cached data shows the stale notice.
+- **Bu günün tapşırıqları**: up to three rows — overdue first with the day they were planned for, then today's
+  pending, then completed — with the same checkbox semantics as Plan's rows and the same completion mutation;
+  "Daha N tapşırıq" opens Plan; no tasks offers "Tapşırıq yarat".
+- Nothing on Home advertises the AI assistant; it stays a tab with its placeholder.
+
+Motion: the header, hero, cards and task list enter with a 320 ms fade and 10 px rise, staggered 32 ms; cards and
+the hero action press to 0.98; the illustration drifts 3 px over seven seconds only while Home is focused and the
+app is in the foreground; progress bars move only when committed data changes. Reduced motion keeps the fades and
+removes the rise, the drift and the stagger. Money is never animated from zero and nothing replays on a refetch.
 
 ## Finance
 
-- **Dashboard** (flagship), phone order: compact header with the month; the ~150-unit balance hero with currency
-  chips; income / expense / net cash flow with the daily average; a 52-unit row of Xərc / Gəlir / Köçürmə pills;
-  the compact overall budget (limit status label + bar + remaining); **recent transactions** (their first row is
-  visible above the tab bar at 390 × 844 with normal text); then "Gündəlik xərc" — the last seven days with real
-  dates and values, the month and currency stated, one sentence on **limit usage** and one on **pace versus the
-  calendar** (a comparison, never a promise), a month-end estimate computed from the unrounded monthly total
-  ("Bu orta davam etsə, ay sonu xərc təxminən … olar."), and "Tam ay və ətraflı" for the whole-month
-  strip; then accounts, category breakdown and links. Desktop: hero, summary, actions and recent transactions in
-  the main column; budget (with the pace line), insight, accounts and categories in the side column.
+- **Dashboard** (flagship, refined 2026-09-18), phone order: compact header with the reporting month and the
+  add action; the ~150-unit balance hero with currency chips (other currencies listed as "Ayrıca …", never
+  summed); the **cash-flow block** — "Bu ayın pul axını · Sentyabr 2026", Gəlir and Xərc side by side, then
+  "Xalis axın (gəlir − xərc)" as its own labelled line and the daily average (a 5 000 AZN balance with 0,00 income
+  is a valid, unremarkable state); the 52-unit row of Xərc / Gəlir / Köçürmə pills; the budget — a tonal row
+  with "Büdcə yarat" when none exists, the existing progress, pace and over-budget treatment when one does;
+  **recent transactions** grouped under BU GÜN / DÜNƏN / date headings (rows keep category, note, account and
+  the signed amount, with an overflow control on every platform and swipe as a native shortcut), or a compact
+  "Hələ əməliyyat yoxdur" line with an add action; then "Gündəlik xərc" — the last seven days with real dates
+  and values, the month and currency stated, one sentence on **limit usage** and one on **pace versus the
+  calendar** (a comparison, never a promise), a month-end estimate computed from the unrounded monthly total,
+  and "Tam ay və ətraflı" for the whole-month strip. A loaded month with **no expense** shows a compact
+  explanation with "Xərc əlavə et" instead of seven empty bars or a 0,00 forecast; loading shows bones; a failed
+  series says so with a retry while the aggregate totals stay. Then accounts, the category breakdown and the
+  **İdarəetmə** list (Hesablar, Köçürmələr, Büdcələr, Kateqoriyalar, Təkrarlananlar, Borclar) on one surface.
+  Desktop: hero, flow, actions and recent transactions in the main column; budget, insight, accounts,
+  categories and management in the side column. The top safe area is owned by the screen's opaque root, so the
+  header never sits under the status bar and scrolled content never appears behind it.
 - The daily series is built from **every** expense of the month (all API pages, cents arithmetic, days bucketed in
   the profile time zone). If any page fails, the monthly totals from the dashboard aggregate stay and the daily
   breakdown is marked unavailable with a retry; a partial first page is never shown as a complete month.
 - **Create / edit transaction** (flagship): Xərc / Gəlir segmented control (tonal pill with icons, distinct from a
-  validation outline), a 40 px amount with the decimal keyboard (comma or point) and a short shake on an invalid
-  submit, account through a selection sheet, the **category field** (current choice, up to six shortcut chips —
-  this month's most used first when known, otherwise the configured order — and "Hamısı" opening a searchable
-  sheet), the localised date, an optional note, and the budget-impact note in the normal flow. Editing removes the
+  validation outline), a 40 px amount with the decimal keyboard (comma or point, placeholder `0,00`) and a short
+  shake on an invalid submit, the **category field** directly under it (current choice, up to four shortcut
+  chips that wrap at 44 units — this month's most used first when known, otherwise the configured order — and an
+  obvious "Hamısı" opening a searchable sheet), then a **TƏFƏRRÜATLAR** section with the account (selection
+  sheet), the date (the shared calendar, which dismisses the keyboard before opening) and the optional note, and
+  the budget-impact note in the normal flow. The save button lives in the sticky footer inside the keyboard-
+  avoiding view, so it stays reachable above the keyboard; a failed request keeps every entered value. Editing removes the
   original amount's contribution before comparing (same category / overall budget, same month) and shows no impact
   outside the dashboard month. The comparison baseline is frozen when a submission starts, so the save's own cache
   invalidation never makes the preview count the committed amount twice. An invalid submit scrolls to the first invalid field and announces the message.
@@ -127,19 +163,37 @@ the background.
 
 ## Qidalanma (nutrition)
 
-- **Diary**, phone order: "Qidalanma" header with the goals and add controls; day navigation (previous / next
-  plus a calendar, future days blocked); the compact day summary (energy with the remaining or exceeded
-  difference, then protein / carbohydrate / fat); then the four meal groups — **Səhər yeməyi**, **Nahar**,
-  **Axşam yeməyi**, **Ara yemək**. The first meal row is visible above the tab bar at 390 × 844 with normal text.
-  Populated groups show their energy total and their entries; empty groups keep one compact "add" row; a day with
-  nothing recorded shows a single explanation with "İlk yeməyi əlavə et" instead of four empty cards.
-- **Entry row**: the first food's name (+ n for the rest), time and quantities, the macros, and the energy. The
-  row opens the entry; a separate overflow control offers Düzəliş et / Başqa günə köçür / Sil.
-- **Add / edit**: meal type (preset from the group it was opened from, otherwise from the time of day), date and
-  time, then one food card — name, "Porsiya üzrə" or "100 q üzrə", quantity and the four nutrients for that unit —
-  with a live line for the item and a "Cəmi" card for the meal. Extra foods and the note are progressive
-  disclosure ("Başqa yemək əlavə et", "Qeyd əlavə et"). Validation sits under its field, an invalid submit scrolls
-  to the block that failed, and a failed request keeps everything typed.
+- **Diary**, phone order: the "Qidalanma" header with a single "Hədəflər" action; the seven-day strip (the days
+  around the selected one, never past today, with a calendar button for anything older); the tinted day summary;
+  then the four meal groups — **Səhər yeməyi**, **Nahar**, **Axşam yeməyi**, **Ara yemək**. The summary and the
+  first group are both visible at 390 × 844 with normal text. Populated groups show their real energy total and
+  their entries; empty groups keep one compact "Qeyd yoxdur — əlavə edin" row; a day with nothing recorded adds
+  one short line above the groups — the 88-unit bowl illustration and one sentence — rather than replacing them
+  with an empty state. That line appears only once the day has *loaded* empty: loading is a skeleton and a failed
+  request is an error, and neither shows the illustration. Manual entry is the primary bottom action
+  ("Yemək əlavə et"); "Şəkildən" sits beside it as the quiet one.
+- **Day summary**: one softly tinted surface. The consumed energy, the configured target and the labelled
+  remaining or exceeded amount, with a modest ring beside them. The ring draws logged energy ÷ the actual
+  target; past the target the arc is clamped to a full circle while the exact figure and "… artıq" stay
+  readable — reaching a target is never a completion state. Without a target there is no ring and no
+  percentage, only the consumed figure and a compact "Hədəf təyin et". Each macro is a row of name, grams,
+  target when there is one, and a thin bar; each macro goal is independently optional and an untracked macro
+  still reports its grams ("0,0 q · hədəf yoxdur"). A loaded-but-empty day keeps its real zero and says so
+  ("Sıfır — hələ heç nə qeyd olunmayıb."), which is not the same as loading, an error, or a genuine zero.
+- **Entry row**: the meal-type icon (a stored entry exposes no durable image, and a photo-analysis draft's
+  temporary URL is not a thumbnail the diary may keep showing), the first food's name (+ n for the rest), the
+  time and one portion summary, and the aligned energy. The three macro figures are spoken in the accessible
+  name instead of being crammed into the line. The row opens the entry; a separate overflow control offers
+  Düzəliş et / Başqa günə köçür / Sil. At enlarged text the energy figure moves onto its own line.
+- **Add / edit**: meal type (preset from the group it was opened from, otherwise from the time of day), a
+  compact date and time, then one food card — name, "Porsiya üzrə" or "100 q üzrə", quantity, the basis stated
+  once ("Dəyərlər 1 porsiya üçündür" / "Dəyərlər 100 q üçündür"), kalori, and the three macros in one row under
+  a "Makrolar (q)" caption that stacks at enlarged text. A single food has one live total; per-item
+  contribution lines appear only once the meal holds several. A blank field stays blank: the total reads "—"
+  and names how many foods are incomplete, so an unfinished form never looks like a finished zero-calorie meal,
+  while an explicitly typed 0 counts. Extra foods and the note are progressive disclosure ("Başqa yemək",
+  "Qeyd əlavə et"). Validation sits under its field, an invalid submit scrolls to the block that failed, and a
+  failed request keeps everything typed.
 - **Copying** a meal opens an editable draft on the chosen day; nothing is written until it is saved, the copy is
   a new entry with its own ids, and the source is never modified.
 - **Goals**: kcal and macro targets, each of which may be left empty ("İzlənmir"). The screen states that a change
@@ -166,18 +220,36 @@ the background.
 
 - **Three views** behind one segmented control: **Bu gün**, **Qarşıdakı** and **Tamamlananlar**. They are
   disjoint, so a task is in exactly one of them and never appears twice in a view.
-- **Bu gün**, in order: the compact summary ("2 / 5 tamamlanıb" with a quiet progress bar and, when there is one,
-  "n gecikmiş tapşırıq"); then the labelled **Gecikmiş** section, each row showing the day it was actually
-  planned for ("Gecikib · 5 sen"); then today's own tasks. A day with nothing on it shows one explanation and
-  "İlk tapşırığı əlavə et" instead of empty sections. At 390 × 844 the first real task row sits at 303 pt, well
-  above the navigation region at 766.
-- **Qarşıdakı** groups by day under a heading that names it twice over ("Sabah · 9 sentyabr 2026");
-  **Tamamlananlar** lists finished work newest first. Both page with "Daha çox".
-- **Task row**: a 48 pt completion checkbox, the title (wrapping to three lines rather than being cut to a stub),
-  the day and time, a "Təkrarlanan" marker when it belongs to a schedule, a labelled priority chip, and a
-  separate 48 pt overflow control. Priority is a glyph **and** a word — never colour alone.
+- **Header**: "Plan" over the weekday and date the API resolved in the profile time zone
+  ("Çərşənbə, 30 sentyabr"), a labelled **Yuxu** chip (a bare moon read as an appearance switch; the
+  destination is unchanged) and one primary add button.
+- **Daily summary**: one tonal surface that leads with the figure a person actually wants — the number of
+  tasks still open — with "c / n tamamlanıb" as quiet support and a thin track beneath. The share is drawn
+  once and never repeated as a number, a ring and a counter. Its four states are distinct: an empty day offers
+  planning instead of "0 / 0" or a fabricated 100 %; a day with nothing scheduled but earlier work owed leads
+  with the overdue count; a part-finished day reads "3 tapşırıq qalıb"; a finished one reads "Bu günün hamısı
+  tamamlandı" — scoped to today, with the overdue line still shown, because finishing today says nothing about
+  what is owed from before. Loading is a skeleton and a failed load is an error, never a zero.
+- **Bu gün**, in order: the summary; then the labelled **Gecikmiş** section, each row showing the day it was
+  actually planned for ("Gecikib · 27 sen"); then today's own tasks. The "Bu gün" heading appears only when the
+  overdue section is above it — otherwise the header already names the day. A day with nothing at all shows one
+  explanation and "İlk tapşırığı əlavə et". At 390 × 844 the summary and the first task are both on screen
+  (measured: the row ends at 333 of 844).
+- **Qarşıdakı** groups by the day a task is planned for; **Tamamlananlar** groups by the day it was finished —
+  which is also the field the API pages by, so the grouping stays consistent across pages — and each completed
+  row keeps the day it had been planned for ("Plan: 5 sen"). Both page with "Daha çox".
+- **Task row**: a 48 pt completion checkbox, the title as the strongest element (wrapping to three lines rather
+  than being cut to a stub), one metadata line, an optional one-line note preview, and a separate 48 pt overflow
+  control. The metadata line is whatever the heading has not already said: a clock for a timed task,
+  "Gün ərzində" for a date-only one — `TaskItem` carries an optional time, not a duration, and an untimed task
+  is never treated as midnight — or the original date in the overdue section. Priority is drawn only when it is
+  not the default: "Yüksək" gets a rule beside the title and a tonal chip, "Aşağı" a quiet word, Normal nothing.
+  All three words stay in the accessible name, so priority never depends on colour. A timed task whose time has
+  passed says so in the warning colour on its own line; the amber checkbox is reserved for the overdue section,
+  so one signal keeps one meaning.
 - **Creation is fast**: "Yeni tapşırıq" opens with the title focused, today's date and Normal priority already
-  chosen. **Saat**, **Qeyd** and **Təkrarlanma** are disclosures, so the first screen is one field long.
+  chosen, and **Bu gün** / **Sabah** shortcuts above the date field — anything else goes through the shared
+  calendar. **Saat**, **Qeyd** and **Təkrarlanma** are disclosures, so the first screen is one field long.
   Recurrence offers only "Təkrarlanmır", "Hər gün" and "Həftəlik" (with weekday chips and an optional end date).
   Task dates are unrestricted — a plan is about the future — while Nutrition keeps its own "not after today" rule.
 - **Editing** a task edits that one day. An occurrence of a schedule says so plainly and points at the Plan
@@ -189,6 +261,46 @@ the background.
   stays exactly as it was. Deletion asks first, naming the task.
 - **States**: loading skeletons, the empty day, an all-done day, an error with retry, and a stale notice that
   keeps the cached figures on screen after a failed refresh.
+
+## Fokus (Pomodoro)
+
+Fokus lives **inside Plan**, not in a tab of its own; the five-tab shell is unchanged.
+
+- **Entry card** in Plan, one compact row, never a dashboard above the task list. Idle it shows the configured
+  length, today's recorded focus and "Başla"; running or paused it shows what is left, the phase, the linked
+  task and "Aç". The row and its action are siblings, so neither nests inside the other.
+- **"Bu işə fokuslan"** in the task overflow sheet prepares a run linked to that task and opens the screen —
+  the run itself is always started by the user, never out of sight. A session can equally run with no task.
+- **The screen** (`/plan/focus`) is deliberately quiet: minimise and settings at the top, the phase selector
+  (**Fokus / Qısa fasilə / Uzun fasilə**), the linked task or "Tapşırıqsız fokus", a large tabular countdown
+  inside a restrained ring, the labelled cycle progress, one primary action and a quieter "Bitir". Leaving the
+  screen does not stop the timer.
+- **Durations**: 25 / 5 / 15 minutes by default with a long break after four completed focus runs. Compact
+  15 / 25 / 50 presets sit under a ready focus phase; everything else is in the settings sheet, in whole
+  minutes, clamped to 1–240. A change applies to the phases after the current one — a running phase keeps the
+  duration it started with, and the sheet says so.
+- **Actions**: **Başla**, **Pauza**, **Davam et**, **Bitir**, **Fasiləyə başla**. Pause and resume are
+  immediate; only ending early is confirmed, and that confirmation is not a deletion — it says the time will
+  be kept but will not count as a completed focus. Changing phase mid-run is refused with a message rather
+  than silently discarding the run.
+- **After a phase** a compact result appears — "Fokus tamamlandı" or "Vaxtından əvvəl bitirildi", with the
+  focus time — and the next phase is *offered*, never started automatically. Completing the linked task is a
+  separate button, because finishing a run never completes a task.
+- **The scene** is one deep forest surface holding the hourglass (144 units), the 64-unit tabular countdown,
+  a thin ring with a luminous endpoint and four cycle markers with their count. Three soft light layers drift
+  behind it and the hourglass floats a few pixels; text and controls never move. Pausing freezes the drift and
+  dims the illumination, and every loop stops under Reduce Motion, off-screen or in the background.
+- **Six presentations**, each with its own words and its own headline figure:
+  **Fokusa hazır** (the configured length), **Fokus** (counting down), **Pauzadadır** (frozen remainder),
+  **Fokus tamamlandı** (the completed duration, one more cycle marker, a single ring pulse, "Fasiləyə başla"),
+  **Sessiya dayandırıldı** (the time actually focused as the headline, "Planlaşdırılan: 25 dəqiqə" beneath,
+  no marker, no celebration, "Yenidən fokuslan"), and **Qısa/Uzun fasilə**. A finished session never shows the
+  time that was left as its headline.
+- **Offline** the whole timer works. A finished focus run is written to a durable, account-scoped outbox
+  before anything is sent, and retried later; the screen says how many records are waiting.
+- **Notifications**: one local alarm for the running phase, cancelled or replaced on pause, resume, end and
+  phase change. Permission is asked when a phase is first started, never at launch, and a refusal changes
+  nothing about the timer. Fokus and Yuxu own separate channels and identifiers; neither cancels the other's.
 
 ## Yuxu (sleep)
 
@@ -225,10 +337,43 @@ the background.
 - **States**: loading skeletons, the empty week, an error with retry, a stale notice that keeps cached figures on
   screen after a failed refresh, and the pending-wake banner.
 
-## Placeholder modules
+## Libra AI (assistant)
 
-AI renders the shared placeholder composition (module accent, code-native illustration, "Tezliklə", an
-honest description and an "upcoming" list). It contains no data and no actions.
+The tab opens on a landing composition and gives way to the conversation on the first question.
+
+**Landing.** A "Libra AI" header with a history control (and, once a conversation exists, "new conversation");
+a compact animated orb of soft light layers; the heading "Bu gün nəyə diqqət edək?"; four prompt cards —
+"Günümü təhlil et", "Pul hara gedir?", "Qidalanmam necədir?", "Günümü planlaşdır" — each carrying its own
+module scope; a context control stating the period and the modules in words *and* the resolved dates beneath
+them; and a composer pinned above the navigation region. The introduction collapses on the first message,
+including while that first answer is still in flight, so the conversation gets the space.
+
+**An answered turn.** The question as a trailing bubble, then a card holding: the outcome when it is not a
+plain answer ("Kifayət qədər məlumat yoxdur", "Dəqiqləşdirmə lazımdır", "Bu suala cavab verilmir"); a fixture
+badge when the answer came from the development fixture; a short summary; metric cards built **only** from the
+facts the answer cited, rendered from the stored snapshot rather than from the assistant's prose; the
+observations; suggestions under their own "Təkliflər" heading so a proposal never reads as a finding; a
+"Mənbələr (n)" control; and follow-up questions as chips.
+
+**Mənbələr.** A sheet listing every fact the snapshot carried — label, figure, the period it covers, its
+caveat — with the range and the collection time at the top and an "Aç" button that opens the module screen the
+figure came from. A day with no entries reads "Qeyd yoxdur", never a zero; a module that could not be read
+reads "Oxuna bilmədi".
+
+**Scope.** The context sheet selects the period (Bu gün / Son 7 gün) and the modules. Applying it starts a new
+conversation, and the sheet says so, because an earlier turn must not reintroduce data that is now excluded.
+
+**States.** Loading is the real request and nothing more: "Qeydləriniz oxunur…" beside a still orb — no
+percentage, no invented reasoning transcript, no simulated streaming. A failed send keeps the question in a
+retry strip and resends it under the same request id, so a retry is the same turn. With no provider key the
+screen says "AI köməkçi hələ aktiv deyil", the composer is disabled and nothing canned stands in for an
+answer. History shows loading, an empty line, pagination and a confirmed delete.
+
+**Motion.** The orb drifts three light layers slowly and carries no state — it never indicates progress or
+thinking. It stops under Reduce Motion, when the tab is not in view, and when the app is backgrounded.
+
+This version is read-only: nothing on this screen creates a record, completes a task, changes a goal, starts a
+timer or schedules a notification.
 
 ## Copy and formatting
 

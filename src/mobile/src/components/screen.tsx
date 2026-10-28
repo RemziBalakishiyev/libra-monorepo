@@ -27,6 +27,10 @@ type ScreenProps = PropsWithChildren<{
  * Page container: canvas background, safe areas, keyboard avoidance, and a deliberate max width so desktop web
  * is a composed layout instead of a stretched phone. The phone tab bar is laid out below this container by the
  * navigator (it is not an overlay), so tab screens never need extra clearance.
+ *
+ * The top safe area is owned by the opaque root view, not by the scroll content: the status bar region stays
+ * canvas-coloured and scrolled content passes under it as under any other chrome, never behind the status bar
+ * text. Nothing else applies the top inset, so it is counted exactly once.
  */
 export function Screen({ children, scroll = true, refreshing = false, onRefresh, edges = ['top', 'bottom'], tabInset = false, maxWidth = Layout.maxContent, footer, contentStyle, scrollRef, testID }: ScreenProps) {
   const { colors, pagePadding, layout } = useTheme();
@@ -34,10 +38,10 @@ export function Screen({ children, scroll = true, refreshing = false, onRefresh,
   const top = edges.includes('top') ? insets.top : 0;
   const bottom = edges.includes('bottom') && !footer && !tabInset ? insets.bottom : 0;
   const paddingBottom = Spacing.xxl + bottom;
-  const paddingTop = top + (layout === 'wide' ? Spacing.xxl : Spacing.md);
+  const paddingTop = layout === 'wide' ? Spacing.xxl : Spacing.md;
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.canvas }]} testID={testID}>
+    <View style={[styles.root, { backgroundColor: colors.canvas, paddingTop: top }]} testID={testID}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {scroll ? (
           <ScrollView

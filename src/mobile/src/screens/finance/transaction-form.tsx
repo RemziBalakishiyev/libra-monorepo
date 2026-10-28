@@ -105,7 +105,7 @@ interface SubmissionBaseline {
 type FieldKey = 'amount' | 'accountId' | 'categoryId' | 'date' | 'note';
 
 /** Field order on screen, used to scroll the first invalid one into view. */
-const FIELD_ORDER: FieldKey[] = ['amount', 'accountId', 'categoryId', 'date', 'note'];
+const FIELD_ORDER: FieldKey[] = ['amount', 'categoryId', 'accountId', 'date', 'note'];
 
 function TransactionEditor({ transaction, initialType, accounts, categories }: EditorProps) {
   const router = useRouter();
@@ -297,8 +297,23 @@ function TransactionEditor({ transaction, initialType, accounts, categories }: E
         />
       </View>
 
-      <View onLayout={(event) => onFieldLayout('accountId', event)}>
-        <SelectRow
+      <View onLayout={(event) => onFieldLayout('categoryId', event)}>
+        <Controller
+          control={control}
+          name="categoryId"
+          render={({ field: { onChange, value } }) => (
+            <CategoryField categories={typeCategories.map((item) => ({ id: item.id, name: item.name, kind: item.kind }))} value={value} onChange={onChange} error={formState.errors.categoryId?.message} disabled={busy} recentIds={recentIds} shortcutLimit={4} />
+          )}
+        />
+      </View>
+
+      {/* Account, date and the optional note form one calm section under the amount and category. */}
+      <View style={styles.details}>
+        <AppText variant="overline" color="textMuted">
+          TƏFƏRRÜATLAR
+        </AppText>
+        <View onLayout={(event) => onFieldLayout('accountId', event)}>
+          <SelectRow
           label="Hesab"
           value={account?.name}
           hint={account ? `${accountVisual(account.type).label} · ${account.currencyCode}` : undefined}
@@ -308,16 +323,6 @@ function TransactionEditor({ transaction, initialType, accounts, categories }: E
           onPress={() => setAccountSheet(true)}
           error={formState.errors.accountId?.message}
           disabled={busy}
-        />
-      </View>
-
-      <View onLayout={(event) => onFieldLayout('categoryId', event)}>
-        <Controller
-          control={control}
-          name="categoryId"
-          render={({ field: { onChange, value } }) => (
-            <CategoryField categories={typeCategories.map((item) => ({ id: item.id, name: item.name, kind: item.kind }))} value={value} onChange={onChange} error={formState.errors.categoryId?.message} disabled={busy} recentIds={recentIds} />
-          )}
         />
       </View>
 
@@ -333,6 +338,7 @@ function TransactionEditor({ transaction, initialType, accounts, categories }: E
             <TextField label="Qeyd (istəyə bağlı)" icon="create-outline" value={value} onChangeText={onChange} onBlur={onBlur} error={formState.errors.note?.message} editable={!busy} placeholder="Məsələn, Bravo" returnKeyType="done" onSubmitEditing={submit} />
           )}
         />
+      </View>
       </View>
 
       {impact && !wide ? <BudgetImpactNote impact={impact} currencyCode={currencyCode} editing={Boolean(transaction)} /> : null}
@@ -465,6 +471,9 @@ function LiveSummary({ account, category, spentInCategory, impact, currencyCode,
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
+  },
+  details: {
+    gap: Spacing.md,
   },
   stack: {
     gap: Spacing.lg,

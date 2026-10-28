@@ -1,4 +1,5 @@
 using FluentValidation;
+using Libra.Application.Assistant;
 using Libra.Application.Finance;
 using Libra.Application.Finance.Accounts;
 using Libra.Application.Finance.Budgets;
@@ -9,6 +10,7 @@ using Libra.Application.Finance.Recurring;
 using Libra.Application.Finance.Setup;
 using Libra.Application.Finance.Transactions;
 using Libra.Application.Finance.Transfers;
+using Libra.Application.Focus;
 using Libra.Application.Identity;
 using Libra.Application.Identity.Login;
 using Libra.Application.Identity.Logout;
@@ -39,6 +41,7 @@ public static class DependencyInjection
             .Validate(options => options.IsValid(), "Ai:FoodAnalysis limits are outside their allowed ranges.")
             .ValidateOnStart();
         services.AddOptions<OpenAiOptions>().Bind(configuration.GetSection(OpenAiOptions.SectionName));
+        services.AddOptions<AssistantOptions>().Bind(configuration.GetSection(AssistantOptions.SectionName));
 
         services.AddOptions<AuthOptions>()
             .Bind(configuration.GetSection(AuthOptions.SectionName))
@@ -84,6 +87,13 @@ public static class DependencyInjection
 
         // Sleep
         services.AddScoped<SleepHandler>();
+
+        // Focus
+        services.AddScoped<FocusHandler>();
+
+        // Assistant
+        services.AddScoped<AssistantContextBuilder>();
+        services.AddScoped<AssistantHandler>();
 
         return services;
     }

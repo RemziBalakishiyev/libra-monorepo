@@ -137,6 +137,43 @@ export function gramsDifferenceLabel(progress: TargetProgress): string {
   return progress.over ? `${formatGrams(Math.abs(progress.remaining))} artıq` : `${formatGrams(progress.remaining)} qalıb`;
 }
 
+/** The three macros in display order, with their token names. Screens never hard-code a macro colour. */
+export const macroKinds = [
+  { key: 'protein', label: 'Zülal', short: 'Z', fill: 'protein', text: 'proteinText' },
+  { key: 'carb', label: 'Karbohidrat', short: 'K', fill: 'carb', text: 'carbText' },
+  { key: 'fat', label: 'Yağ', short: 'Y', fill: 'fat', text: 'fatText' },
+] as const satisfies readonly { key: string; label: string; short: string; fill: MacroColorToken; text: MacroColorToken }[];
+
+type MacroColorToken = 'protein' | 'proteinText' | 'carb' | 'carbText' | 'fat' | 'fatText';
+
+export type MacroKind = (typeof macroKinds)[number];
+
+/** The three macro figures of a totals record, paired with their definition. */
+export function macroBreakdown(totals: NutritionTotals, goal: { proteinGrams: number | null; carbGrams: number | null; fatGrams: number | null } | null | undefined) {
+  const consumed = { protein: totals.proteinGrams, carb: totals.carbGrams, fat: totals.fatGrams } as const;
+  const target = { protein: goal?.proteinGrams, carb: goal?.carbGrams, fat: goal?.fatGrams } as const;
+  return macroKinds.map((macro) => ({
+    ...macro,
+    value: consumed[macro.key],
+    // Each macro goal is independently optional: an untracked one still reports its recorded grams.
+    progress: targetProgress(consumed[macro.key], target[macro.key]),
+  }));
+}
+
+/**
+ * The share of the target a ring should draw: clamped to 0–100 so an exceeded target cannot wrap the arc, while
+ * the exact consumed and exceeded figures stay readable next to it. Reaching the target is not a completion
+ * state, so nothing here reports "done".
+ */
+export function ringPercent(progress: TargetProgress | null): number {
+  return progress ? Math.min(100, Math.max(0, progress.percent)) : 0;
+}
+
+/** Whole-percent label for the ring's centre; null when there is no target to be a share of. */
+export function ringLabel(progress: TargetProgress | null): string | null {
+  return progress ? `${Math.round((progress.consumed / progress.target) * 100)}%` : null;
+}
+
 /** Entry name for lists: the first item, plus how many more the meal held. */
 export function describeEntry(items: readonly { name: string }[]): string {
   if (items.length === 0) {

@@ -22,6 +22,109 @@ namespace Libra.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Libra.Domain.Assistant.AssistantConversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("Modules")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("modules");
+
+                    b.Property<string>("Period")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("period");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_assistant_conversations");
+
+                    b.HasIndex("UserId", "UpdatedAtUtc")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_assistant_conversations_user_id_updated_at_utc");
+
+                    b.ToTable("assistant_conversations", (string)null);
+                });
+
+            modelBuilder.Entity("Libra.Domain.Assistant.AssistantMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AnswerJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("answer_json");
+
+                    b.Property<Guid?>("ClientRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_request_id");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("conversation_id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer")
+                        .HasColumnName("role");
+
+                    b.Property<string>("SnapshotJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("snapshot_json");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_assistant_messages");
+
+                    b.HasIndex("ConversationId")
+                        .HasDatabaseName("ix_assistant_messages_conversation_id");
+
+                    b.HasIndex("UserId", "ClientRequestId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_assistant_messages_client")
+                        .HasFilter("client_request_id IS NOT NULL");
+
+                    b.HasIndex("UserId", "ConversationId", "CreatedAtUtc")
+                        .HasDatabaseName("ix_assistant_messages_user_id_conversation_id_created_at_utc");
+
+                    b.ToTable("assistant_messages", (string)null);
+                });
+
             modelBuilder.Entity("Libra.Domain.Finance.AccountTransfer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -729,6 +832,81 @@ namespace Libra.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_recurring_transactions_range", "end_date IS NULL OR end_date >= start_date");
 
                             t.HasCheckConstraint("ck_recurring_transactions_type", "type IN ('Income', 'Expense')");
+                        });
+                });
+
+            modelBuilder.Entity("Libra.Domain.Focus.FocusSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<TimeSpan>("ActiveDuration")
+                        .HasColumnType("interval")
+                        .HasColumnName("active_duration");
+
+                    b.Property<Guid>("ClientSessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_session_id");
+
+                    b.Property<TimeSpan>("ConfiguredDuration")
+                        .HasColumnType("interval")
+                        .HasColumnName("configured_duration");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<DateTime>("EndedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ended_at_utc");
+
+                    b.Property<int>("Outcome")
+                        .HasColumnType("integer")
+                        .HasColumnName("outcome");
+
+                    b.Property<DateTime>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at_utc");
+
+                    b.Property<Guid?>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id");
+
+                    b.Property<string>("TaskTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("task_title");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_focus_sessions");
+
+                    b.HasIndex("TaskId")
+                        .HasDatabaseName("ix_focus_sessions_task_id");
+
+                    b.HasIndex("UserId", "ClientSessionId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_focus_sessions_client");
+
+                    b.HasIndex("UserId", "EndedAtUtc")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_focus_sessions_user_id_ended_at_utc");
+
+                    b.HasIndex("UserId", "TaskId")
+                        .HasDatabaseName("ix_focus_sessions_user_id_task_id")
+                        .HasFilter("task_id IS NOT NULL");
+
+                    b.ToTable("focus_sessions", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_focus_sessions_active", "active_duration > INTERVAL '0' AND active_duration <= (ended_at_utc - started_at_utc) + INTERVAL '1 second'");
+
+                            t.HasCheckConstraint("ck_focus_sessions_configured", "configured_duration >= INTERVAL '1 minute' AND configured_duration <= INTERVAL '4 hours'");
+
+                            t.HasCheckConstraint("ck_focus_sessions_interval", "ended_at_utc > started_at_utc");
                         });
                 });
 
@@ -1639,6 +1817,33 @@ namespace Libra.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Libra.Domain.Assistant.AssistantConversation", b =>
+                {
+                    b.HasOne("Libra.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_assistant_conversations_users_user_id");
+                });
+
+            modelBuilder.Entity("Libra.Domain.Assistant.AssistantMessage", b =>
+                {
+                    b.HasOne("Libra.Domain.Assistant.AssistantConversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_assistant_messages_assistant_conversations_conversation_id");
+
+                    b.HasOne("Libra.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_assistant_messages_users_user_id");
+                });
+
             modelBuilder.Entity("Libra.Domain.Finance.AccountTransfer", b =>
                 {
                     b.HasOne("Libra.Domain.Finance.FinancialAccount", null)
@@ -1802,6 +2007,51 @@ namespace Libra.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_recurring_transactions_users_user_id");
+                });
+
+            modelBuilder.Entity("Libra.Domain.Focus.FocusSession", b =>
+                {
+                    b.HasOne("Libra.Domain.Tasks.TaskItem", null)
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_focus_sessions_tasks_task_id");
+
+                    b.HasOne("Libra.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_focus_sessions_users_user_id");
+
+                    b.OwnsMany("Libra.Domain.Focus.FocusInterval", "Intervals", b1 =>
+                        {
+                            b1.Property<Guid>("FocusSessionId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<DateTime>("EndedAtUtc")
+                                .HasJsonPropertyName("ended_at_utc");
+
+                            b1.Property<DateTime>("StartedAtUtc")
+                                .HasJsonPropertyName("started_at_utc");
+
+                            b1.HasKey("FocusSessionId", "__synthesizedOrdinal")
+                                .HasName("pk_focus_sessions");
+
+                            b1.ToTable("focus_sessions");
+
+                            b1
+                                .ToJson("active_intervals")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("FocusSessionId")
+                                .HasConstraintName("fk_focus_sessions_focus_sessions_focus_session_id");
+                        });
+
+                    b.Navigation("Intervals");
                 });
 
             modelBuilder.Entity("Libra.Domain.Identity.RefreshToken", b =>

@@ -1,0 +1,24 @@
+{
+  "shots": [
+    {
+      "name": "20-unavailable-light-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    },
+    {
+      "name": "20-unavailable-dark-390x844",
+      "pageOverflow": false,
+      "wide": [],
+      "clipped": []
+    }
+  ],
+  "checks": {
+    "composerDisabled_light": true,
+    "noPromptCards_light": true,
+    "composerDisabled_dark": true,
+    "noPromptCards_dark": true
+  },
+  "text": {},
+  "consoleErrors": []
+}
